@@ -2521,7 +2521,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   <div class="shell">
     <header class="statusbar">
-      <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> SERPENTINE UNIT 3H-9</span>
+      <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9</span>
       <span class="statusbar-right">
         <i class="led" id="uplinkLed"></i>
         <span id="uplinkText">AI UPLINK // CHECKING</span>
@@ -3495,7 +3495,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   function initHydraPersonality() {
     const booted = sessionStorage.getItem('hydra.core.booted');
-    const name = localStorage.getItem('hydra.commander.name') || 'Commander';
+    const name = localStorage.getItem('hydra.commander.name') || 'Tejaswinp';
     if (!booted) {
       sessionStorage.setItem('hydra.core.booted', 'true');
       hydraTone('startup');
@@ -5343,7 +5343,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       const profile = JSON.parse(localStorage.getItem('hydra_user') || '{}');
       if (typeof profile.name === 'string' && profile.name.trim()) return profile.name.trim();
     } catch {}
-    return 'Commander';
+    return 'Tejaswinp';
   }
 
   async function announceWakeReady() {
