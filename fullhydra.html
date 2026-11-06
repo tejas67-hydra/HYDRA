@@ -3098,6 +3098,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
             <button class="desktop-icon" data-app="Studio"><b>✦</b>HYDRA STUDIO</button>
             <button class="desktop-icon" data-app="Code"><b>{ }</b>CODE STUDIO</button>
             <button class="desktop-icon" data-app="Files"><b>▰</b>FILES</button>
+            <button class="desktop-icon" data-app="Notes"><b>≡</b>NOTES</button>
+            <button class="desktop-icon" data-app="Calculator"><b>＋</b>CALCULATOR</button>
+            <button class="desktop-icon" data-app="Clock"><b>◷</b>CLOCK</button>
+            <button class="desktop-icon" data-app="System"><b>▥</b>SYSTEM</button>
+            <button class="desktop-icon" data-app="Search"><b>⌕</b>HYDRA SEARCH</button>
+            <button class="desktop-icon" data-app="Settings"><b>⚙</b>SETTINGS</button>
             <button class="desktop-icon" data-app="App Store"><b>⬡</b>APP STORE</button>
             <button class="desktop-icon" data-app="Plugin Store"><b>⌁</b>PLUGINS</button>
             <button class="desktop-icon" data-app="Music"><b>♫</b>MUSIC</button>
@@ -6897,6 +6903,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   let windowHydraZ = 100;
 
+  function formatHydraDuration(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return [hours, minutes, seconds].map(value => String(value).padStart(2, '0')).join(':');
+  }
+
   async function askHydraDesktopAI(prompt, options = {}) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
@@ -6970,6 +6983,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       + '<iframe sandbox="allow-scripts" class="preview-frame" id="codePreview" title="Isolated live code preview"></iframe></div>';
     if (name === 'Music') return '<audio controls style="width:100%"><source src="mascot-song.mpeg" type="audio/mpeg"></audio><p class="live-note">HYDRA Mascot Song · local music player</p>';
     if (name === 'Files') return '<div class="file-list"><button>📁 HYDRA PROJECTS</button><button>📁 Desktop</button><button>📄 hydra.html</button><button>📄 fullhydra.html</button><button>🎵 mascot-song.mpeg</button><button>🖼️ hydra-mascot.png</button></div>';
+    if (name === 'Notes') return '<div class="browser-bar"><input id="notesTitle" placeholder="Note title" value="HYDRA Mission Note"><button class="rig-btn" data-action="new-note">NEW</button></div><textarea id="notesEditor" style="width:100%;height:220px" placeholder="Write a note..."></textarea><p><button class="rig-btn" data-action="save-note">SAVE NOTE</button><button class="rig-btn" data-action="export-note">EXPORT</button></p><div id="notesList" class="notifications"></div><span id="notesStatus" class="live-note">Notes are saved automatically in this browser.</span>';
+    if (name === 'Calculator') return '<div class="notice" id="calculatorDisplay">0</div><div class="store-grid" id="calculatorKeys"><button class="rig-btn">7</button><button class="rig-btn">8</button><button class="rig-btn">9</button><button class="rig-btn">÷</button><button class="rig-btn">4</button><button class="rig-btn">5</button><button class="rig-btn">6</button><button class="rig-btn">×</button><button class="rig-btn">1</button><button class="rig-btn">2</button><button class="rig-btn">3</button><button class="rig-btn">−</button><button class="rig-btn">0</button><button class="rig-btn">.</button><button class="rig-btn">C</button><button class="rig-btn">+</button><button class="rig-btn" style="grid-column:1/-1">=</button></div>';
+    if (name === 'Clock') return '<div class="notice"><strong id="clockTime">--:--:--</strong><p id="clockDate"></p></div><div class="browser-bar"><input id="timerMinutes" type="number" min="0" max="180" value="5" aria-label="Timer minutes"><button class="rig-btn" data-action="start-timer">START TIMER</button><button class="rig-btn" data-action="stop-timer">STOP</button></div><div id="timerStatus" class="notice">Timer ready.</div>';
+    if (name === 'System') return '<div class="metric-grid"><div>PLATFORM<strong>' + navigator.platform + '</strong></div><div>SCREEN<strong>' + screen.width + ' × ' + screen.height + '</strong></div><div>CORE MEMORY<strong>' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown') + '</strong></div><div>CONNECTION<strong id="systemConnection">Checking</strong></div></div><div class="notice">HYDRA OS · Browser Edition<br>Owner: Tejaswinp</div>';
+    if (name === 'Search') return '<form class="browser-bar"><input id="hydraSearchInput" placeholder="Search apps and commands"><button class="rig-btn">SEARCH</button></form><div id="hydraSearchResults" class="notifications"><div class="notice">Try: notes, calculator, weather, tasks, terminal.</div></div>';
+    if (name === 'Settings') return '<div class="help-panel"><article><strong>Operator</strong><p id="settingsOperator">Tejaswinp</p></article><article><strong>Voice</strong><p>Automatic speech and wake-word settings are controlled from the home console.</p></article><article><strong>Storage</strong><p>HYDRA keeps personal notes, tasks, memory, preferences, and account data in browser storage.</p></article></div><div class="browser-bar"><button class="rig-btn" data-action="export-settings">EXPORT SETTINGS</button><button class="rig-btn" data-action="clear-session">CLEAR HYDRA SESSION</button></div><div id="settingsStatus" class="live-note"></div>';
     if (name === 'App Store' || name === 'Plugin Store') return '<div class="store-grid"><article class="store-card"><h3>Hydra Vision</h3><p>Screen intelligence.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Neon Forge</h3><p>Desktop theme pack.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Robot Pilot</h3><p>Telemetry automation.</p><button class="rig-btn">INSTALL</button></article></div>';
     if (name === 'Robot') return '<div class="metric-grid"><div>BATTERY<strong> 84%</strong></div><div>SIGNAL<strong> 97%</strong></div><div>MOTOR A <input type="range" value="42"></div><div>MOTOR B <input type="range" value="58"></div></div><p class="live-note">Live robot controls require a connected controller or WebSocket.</p>';
     if (name === 'Bluetooth') return '<p>Bluetooth devices are accessed through the browser Web Bluetooth API.</p><button class="rig-btn" data-action="bluetooth">SCAN DEVICES</button><div id="appResult" class="notice">No device linked.</div>';
@@ -6977,15 +6996,147 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Face') return '<video autoplay muted style="width:100%;max-height:260px;background:#000"></video><button class="rig-btn" data-action="camera">START CAMERA</button><p class="live-note">Camera is local and permission-based.</p>';
     if (name === 'Games') return '<div class="store-grid"><article class="store-card"><h3>Neon Snake</h3><button class="rig-btn" onclick="alert(\'Game module ready for HYDRA integration.\')">PLAY</button></article><article class="store-card"><h3>Hydra Arena</h3><button class="rig-btn">PLAY</button></article><article class="store-card"><h3>Core Puzzle</h3><button class="rig-btn">PLAY</button></article></div>';
     if (name === 'Weather') return '<div class="metric-grid"><div>LOCAL WEATHER<strong id="weatherTemp">--</strong></div><div>CONDITION<strong id="weatherText">Loading</strong></div></div><button class="rig-btn" data-action="weather">REFRESH</button>';
-    if (name === 'Tasks') return '<form class="browser-bar"><input id="taskInput" placeholder="Add a scheduled task"><button class="rig-btn">ADD</button></form><div id="taskList" class="notifications"><div class="notice">Morning system scan · 08:00</div></div>';
+    if (name === 'Tasks') return '<form class="browser-bar"><input id="taskInput" placeholder="Add a mission or reminder"><button class="rig-btn">ADD</button></form><div id="taskList" class="notifications"></div><button class="rig-btn" data-action="clear-tasks">CLEAR COMPLETED</button>';
     if (name === 'Notifications') return '<div class="notifications"><div class="notice">HYDRA core connected</div><div class="notice">Mascot song ready</div><div class="notice">Desktop workspace optimized</div></div>';
     if (name === 'Themes') return '<label>Accent <input type="color" value="#c084fc" id="themeAccent"></label><p><button class="rig-btn" data-action="theme">APPLY NEON GLASS</button></p>';
-    if (name === 'Accounts') return '<label>Display name <input value="HYDRA Operator" style="width:100%"></label><p class="live-note">Profiles are stored locally in this browser.</p>';
+    if (name === 'Accounts') return '<label>Display name <input id="accountName" value="' + getHydraOperatorName().replace(/[<>&"]/g, '') + '" style="width:100%"></label><p><button class="rig-btn" data-action="save-account">SAVE ACCOUNT</button></p><div id="accountStatus" class="live-note">Personal profile is stored locally in this browser.</div>';
     if (name === 'Automation' || name === 'Vision') return '<div class="metric-grid"><div>Screen Vision<strong> READY</strong></div><div>Automation<strong> AI ASSISTED</strong></div></div><textarea id="aiFeaturePrompt" style="width:100%;height:180px">When HYDRA starts, open Robot Dashboard and scan notifications.</textarea><button class="rig-btn" data-action="ai-feature">AI ANALYZE AND BUILD</button><pre id="aiFeatureResult" class="live-note"></pre>';
     return '<div class="notice">HYDRA feature module ready.</div>';
   }
 
   function wireHydraApp(win, name) {
+    if (name === 'Accounts') win.querySelector('[data-action="save-account"]').addEventListener('click', () => {
+      const nameValue = win.querySelector('#accountName').value.trim();
+      if (!nameValue) return;
+      localStorage.setItem('hydra.commander.name', nameValue);
+      localStorage.setItem('hydra_user', JSON.stringify({ name: nameValue }));
+      win.querySelector('#accountStatus').textContent = 'Account saved as ' + nameValue + '.';
+    });
+    if (name === 'Notes') {
+      const notesKey = 'hydra.notes';
+      const readNotes = () => {
+        try { return JSON.parse(localStorage.getItem(notesKey) || '[]'); } catch { return []; }
+      };
+      const renderNotes = () => {
+        const list = win.querySelector('#notesList');
+        list.innerHTML = readNotes().map((note, index) =>
+          '<div class="notice"><strong>' + String(note.title).replace(/[<>&]/g, '') + '</strong><br>' +
+          String(note.body).slice(0, 120).replace(/[<>&]/g, '') +
+          '<button class="rig-btn" data-note-open="' + index + '" style="margin-left:8px">OPEN</button></div>'
+        ).join('');
+      };
+      renderNotes();
+      win.querySelector('[data-action="save-note"]').addEventListener('click', () => {
+        const title = win.querySelector('#notesTitle').value.trim() || 'Untitled';
+        const body = win.querySelector('#notesEditor').value;
+        const notes = readNotes();
+        notes.unshift({ title, body, updatedAt: new Date().toISOString() });
+        localStorage.setItem(notesKey, JSON.stringify(notes.slice(0, 100)));
+        win.querySelector('#notesStatus').textContent = 'Note saved: ' + new Date().toLocaleString();
+        renderNotes();
+      });
+      win.querySelector('[data-action="new-note"]').addEventListener('click', () => {
+        win.querySelector('#notesTitle').value = 'HYDRA Mission Note';
+        win.querySelector('#notesEditor').value = '';
+      });
+      win.querySelector('[data-action="export-note"]').addEventListener('click', () => {
+        const blob = new Blob([win.querySelector('#notesEditor').value], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'hydra-note.txt';
+        link.click();
+      });
+      win.querySelector('#notesList').addEventListener('click', (event) => {
+        const index = event.target.dataset.noteOpen;
+        if (index === undefined) return;
+        const note = readNotes()[Number(index)];
+        if (!note) return;
+        win.querySelector('#notesTitle').value = note.title;
+        win.querySelector('#notesEditor').value = note.body;
+      });
+    }
+    if (name === 'Calculator') {
+      let expression = '';
+      const display = win.querySelector('#calculatorDisplay');
+      win.querySelector('#calculatorKeys').addEventListener('click', (event) => {
+        const key = event.target.textContent.trim();
+        if (!key) return;
+        if (key === 'C') expression = '';
+        else if (key === '=') {
+          if (!/^[0-9+\-*/.×÷−() ]+$/.test(expression)) return;
+          const safe = expression.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+          try {
+            const result = Function('"use strict";return (' + safe + ')')();
+            expression = Number.isFinite(result) ? String(Number(result.toPrecision(12))) : 'Error';
+          } catch { expression = 'Error'; }
+        } else expression += key;
+        display.textContent = expression || '0';
+      });
+    }
+    if (name === 'Clock') {
+      let timerHandle;
+      const updateClock = () => {
+        win.querySelector('#clockTime').textContent = new Date().toLocaleTimeString();
+        win.querySelector('#clockDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      };
+      updateClock();
+      timerHandle = setInterval(updateClock, 1000);
+      win.addEventListener('remove', () => clearInterval(timerHandle));
+      win.querySelector('[data-action="start-timer"]').addEventListener('click', () => {
+        clearInterval(win.timerCountdown);
+        let seconds = Math.max(0, Math.floor(Number(win.querySelector('#timerMinutes').value) * 60));
+        const status = win.querySelector('#timerStatus');
+        status.textContent = formatHydraDuration(seconds);
+        win.timerCountdown = setInterval(() => {
+          seconds -= 1;
+          status.textContent = seconds > 0 ? formatHydraDuration(seconds) : 'Timer complete.';
+          if (seconds <= 0) clearInterval(win.timerCountdown);
+        }, 1000);
+      });
+      win.querySelector('[data-action="stop-timer"]').addEventListener('click', () => {
+        clearInterval(win.timerCountdown);
+        win.querySelector('#timerStatus').textContent = 'Timer stopped.';
+      });
+    }
+    if (name === 'System') {
+      win.querySelector('#systemConnection').textContent = navigator.onLine ? 'Online' : 'Offline';
+      window.addEventListener('online', () => win.querySelector('#systemConnection').textContent = 'Online');
+      window.addEventListener('offline', () => win.querySelector('#systemConnection').textContent = 'Offline');
+    }
+    if (name === 'Search') {
+      win.querySelector('form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const query = win.querySelector('#hydraSearchInput').value.trim().toLowerCase();
+        const matches = [...document.querySelectorAll('.desktop-icon')]
+          .map(icon => ({ name: icon.dataset.app, label: icon.textContent.trim() }))
+          .filter(app => !query || (app.name + ' ' + app.label).toLowerCase().includes(query));
+        win.querySelector('#hydraSearchResults').innerHTML = matches.map(app =>
+          '<button class="notice" data-search-app="' + app.name.replace(/"/g, '&quot;') + '" style="display:block;width:100%;text-align:left">' +
+          app.label + '</button>'
+        ).join('') || '<div class="notice">No HYDRA app found.</div>';
+      });
+      win.querySelector('#hydraSearchResults').addEventListener('click', (event) => {
+        const app = event.target.closest('[data-search-app]')?.dataset.searchApp;
+        if (app) openHydraApp(app);
+      });
+    }
+    if (name === 'Settings') {
+      win.querySelector('[data-action="export-settings"]').addEventListener('click', () => {
+        const settings = {};
+        for (let index = 0; index < localStorage.length; index++) {
+          const key = localStorage.key(index);
+          if (key && key.startsWith('hydra')) settings[key] = localStorage.getItem(key);
+        }
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }));
+        link.download = 'hydra-os-settings.json';
+        link.click();
+      });
+      win.querySelector('[data-action="clear-session"]').addEventListener('click', () => {
+        sessionStorage.clear();
+        win.querySelector('#settingsStatus').textContent = 'HYDRA session data cleared.';
+      });
+    }
     if (name === 'Memory') {
       const editor = win.querySelector('#memoryEditor');
       editor.value = localStorage.getItem('hydra.memory') || '';
@@ -7214,12 +7365,37 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       });
     }
     if (name === 'Tasks') {
+      const taskKey = 'hydra.tasks';
+      const readTasks = () => {
+        try { return JSON.parse(localStorage.getItem(taskKey) || '[]'); } catch { return []; }
+      };
+      const renderTasks = () => {
+        win.querySelector('#taskList').innerHTML = readTasks().map((task, index) =>
+          '<div class="notice"><label><input type="checkbox" data-task-index="' + index + '" ' + (task.done ? 'checked' : '') + '> ' +
+          String(task.text).replace(/[<>&]/g, '') + '</label></div>'
+        ).join('');
+      };
+      renderTasks();
       win.querySelector('form').addEventListener('submit', (event) => {
         event.preventDefault();
         const input = win.querySelector('#taskInput');
         if (!input.value.trim()) return;
-        win.querySelector('#taskList').insertAdjacentHTML('beforeend', '<div class="notice">' + input.value.replace(/[<>&]/g, '') + '</div>');
+        const tasks = readTasks();
+        tasks.push({ text: input.value.trim(), done: false });
+        localStorage.setItem(taskKey, JSON.stringify(tasks));
+        renderTasks();
         input.value = '';
+      });
+      win.querySelector('#taskList').addEventListener('change', (event) => {
+        const index = Number(event.target.dataset.taskIndex);
+        if (!Number.isInteger(index)) return;
+        const tasks = readTasks();
+        tasks[index].done = event.target.checked;
+        localStorage.setItem(taskKey, JSON.stringify(tasks));
+      });
+      win.querySelector('[data-action="clear-tasks"]').addEventListener('click', () => {
+        localStorage.setItem(taskKey, JSON.stringify(readTasks().filter(task => !task.done)));
+        renderTasks();
       });
     }
     if (name === 'Face') win.querySelector('[data-action="camera"]').addEventListener('click', async () => {
@@ -7236,9 +7412,16 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Weather') {
       const refresh = async () => {
         try {
-          const geo = await fetch('https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m,weather_code').then(r => r.json());
+          const location = await new Promise(resolve => {
+            if (!navigator.geolocation) return resolve({ coords: { latitude: 28.6139, longitude: 77.2090 } });
+            navigator.geolocation.getCurrentPosition(resolve, () => resolve({ coords: { latitude: 28.6139, longitude: 77.2090 } }), { timeout: 5000 });
+          });
+          const latitude = location.coords.latitude;
+          const longitude = location.coords.longitude;
+          const geo = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude + '&current=temperature_2m,weather_code').then(r => r.json());
           win.querySelector('#weatherTemp').textContent = geo.current.temperature_2m + ' °C';
-          win.querySelector('#weatherText').textContent = 'Code ' + geo.current.weather_code;
+          const codes = { 0: 'Clear sky', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Snow', 95: 'Thunderstorm' };
+          win.querySelector('#weatherText').textContent = codes[geo.current.weather_code] || 'Weather code ' + geo.current.weather_code;
         } catch { win.querySelector('#weatherText').textContent = 'Offline'; }
       };
       win.querySelector('[data-action="weather"]').addEventListener('click', refresh);
