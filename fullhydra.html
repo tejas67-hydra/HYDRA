@@ -6995,7 +6995,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Personality') return '<label>Personality<select id="personalitySelect"><option>Battle Commander</option><option>Friendly Companion</option><option>Calm Advisor</option><option>Technical Engineer</option><option>Creative Mentor</option></select></label><p><button class="rig-btn" data-action="personality">ACTIVATE</button></p><div class="notice" id="personalityStatus">Current personality: Battle Commander</div>';
     if (name === 'Video' || name === 'PDF') return '<input type="file" accept="' + (name === 'PDF' ? '.pdf,application/pdf' : 'video/*') + '" id="mediaInput"><div id="mediaOutput" style="margin-top:12px"></div>';
     if (name === 'Image Generator') return '<form class="browser-bar"><input id="imagePrompt" value="Futuristic HYDRA battlefield mascot" aria-label="Image prompt"><button class="rig-btn">GENERATE</button></form><img id="generatedImage" src="battlefield.png" style="width:100%;max-height:340px;object-fit:cover">';
-    if (name === 'Video Generator') return '<form class="browser-bar"><input id="videoPrompt" value="HYDRA robotic battle animation" aria-label="Video prompt"><button class="rig-btn">CREATE AI PREVIEW</button></form><div id="videoPreview" style="height:280px;background:url(battlefield.png) center/cover;animation:hydraFloat 4s ease-in-out infinite"></div><div class="notice" id="videoGeneratorStatus">AI will write a cinematic video storyboard.</div>';
+    if (name === 'Video Generator') return '<form class="browser-bar"><input id="videoPrompt" value="HYDRA robotic battle animation" aria-label="Video prompt"><button class="rig-btn">CREATE STORYBOARD</button></form><div id="videoPreview" style="height:280px;background:url(battlefield.png) center/cover;animation:hydraFloat 4s ease-in-out infinite"></div><div class="notice" id="videoGeneratorStatus">Generate a downloadable AI production storyboard.</div><button class="rig-btn" data-action="download-storyboard" disabled>DOWNLOAD STORYBOARD</button>';
     if (name === 'Website Builder' || name === 'Game Builder' || name === 'App Builder') return '<h3>' + name + '</h3><input id="builderPrompt" value="Create a neon HYDRA dashboard" style="width:100%;margin-bottom:10px"><div class="studio-canvas" id="studioCanvas"><div style="left:12%;top:18%">HEADER</div><div style="left:12%;top:48%">CONTENT</div></div><p><button class="rig-btn" data-action="ai-builder">AI BUILD PROJECT</button><button class="rig-btn" data-action="export-builder">EXPORT</button></p><pre class="live-note" id="builderPlan"></pre>';
     if (name === 'Cloud') return '<div class="notice">Cloud workspace ready. Sign in with a provider to synchronize files and conversations.</div><div class="browser-bar"><button class="rig-btn" data-action="cloud-sync">SYNC NOW</button><button class="rig-btn" data-action="cloud-export">EXPORT BACKUP</button></div><div id="cloudStatus" class="live-note">Local backup available.</div>';
     if (name === 'Performance') return '<div class="metric-grid"><div>CPU <strong id="cpuMetric">--%</strong></div><div>MEMORY <strong id="memMetric">--</strong></div><div>WINDOWS <strong>' + 0 + '</strong></div><div>NETWORK <strong>ONLINE</strong></div></div><canvas id="performanceChart" width="500" height="160" style="width:100%"></canvas>';
@@ -7048,8 +7048,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'HUD') return '<div class="hud-grid"><div><span>SPEED ESTIMATE</span><strong><input id="hudSpeed" type="number" value="0" style="width:80px"> km/h</strong></div><div><span>MISSION TIME</span><strong id="hudTimer">00:00</strong></div><div><span>BATTERY</span><strong><input id="hudBattery" type="number" value="100" min="0" max="100" style="width:70px">%</strong></div><div><span>HYDRA STATUS</span><strong><select id="hudStatus"><option>READY</option><option>RUNNING</option><option>CAUTION</option><option>OFFLINE</option></select></strong></div></div><input id="hudMessage" value="Awaiting Commander Tejaswinp" style="width:100%;margin-top:12px"><button class="rig-btn" data-action="show-hud">UPDATE HUD</button><div id="hudDisplay" class="notice">AWAITING COMMANDER TEJASWINP</div>';
     if (name === 'App Store' || name === 'Plugin Store') return '<div class="store-grid"><article class="store-card"><h3>Hydra Vision</h3><p>Screen intelligence.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Neon Forge</h3><p>Desktop theme pack.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Robot Pilot</h3><p>Telemetry automation.</p><button class="rig-btn">INSTALL</button></article></div>';
     if (name === 'Robot') return '<div class="metric-grid"><div>BATTERY<strong> 84%</strong></div><div>SIGNAL<strong> 97%</strong></div><div>MOTOR A <input type="range" value="42"></div><div>MOTOR B <input type="range" value="58"></div></div><p class="live-note">Live robot controls require a connected controller or WebSocket.</p>';
-    if (name === 'Bluetooth') return '<p>Bluetooth devices are accessed through the browser Web Bluetooth API.</p><button class="rig-btn" data-action="bluetooth">SCAN DEVICES</button><div id="appResult" class="notice">No device linked.</div>';
-    if (name === 'WiFi') return '<div class="notice">System Wi-Fi scanning requires an installed HYDRA companion service.</div><div class="metric-grid"><div>HYDRA-CORE<strong> -42 dBm</strong></div><div>LAB-MESH<strong> -67 dBm</strong></div></div>';
+    if (name === 'Bluetooth') return '<p>Pair a device that exposes compatible Web Bluetooth services. Chrome or Edge on desktop is required.</p><div class="browser-bar"><button class="rig-btn" data-action="bluetooth">CHOOSE DEVICE</button><button class="rig-btn" data-action="bluetooth-paired">SHOW PAIRED</button><button class="rig-btn" data-action="bluetooth-disconnect" disabled>DISCONNECT</button></div><div id="appResult" class="notice">No device linked.</div><div id="bluetoothServices" class="notifications"></div>';
+    if (name === 'WiFi') return '<p>Browsers cannot discover nearby Wi-Fi passwords or signal strengths. HYDRA reports the current connection through browser information.</p><div class="metric-grid"><div>STATUS<strong id="wifiStatus">Checking</strong></div><div>CONNECTION<strong id="wifiType">Unknown</strong></div><div>EST. DOWNLOAD<strong id="wifiDownlink">Unknown</strong></div><div>ROUND TRIP<strong id="wifiRtt">Unknown</strong></div></div><button class="rig-btn" data-action="wifi-refresh">REFRESH NETWORK</button><div id="wifiResult" class="notice">Network details update automatically.</div>';
     if (name === 'Face') return '<video autoplay muted style="width:100%;max-height:260px;background:#000"></video><button class="rig-btn" data-action="camera">START CAMERA</button><p class="live-note">Camera is local and permission-based.</p>';
     if (name === 'Games') return '<div class="store-grid"><article class="store-card"><h3>Neon Snake</h3><button class="rig-btn" onclick="alert(\'Game module ready for HYDRA integration.\')">PLAY</button></article><article class="store-card"><h3>Hydra Arena</h3><button class="rig-btn">PLAY</button></article><article class="store-card"><h3>Core Puzzle</h3><button class="rig-btn">PLAY</button></article></div>';
     if (name === 'Weather') return '<div class="metric-grid"><div>LOCAL WEATHER<strong id="weatherTemp">--</strong></div><div>CONDITION<strong id="weatherText">Loading</strong></div></div><button class="rig-btn" data-action="weather">REFRESH</button>';
@@ -7466,10 +7466,22 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         try {
           const storyboard = await askHydraDesktopAI('Write a 6-shot cinematic storyboard for: ' + prompt + '. Include shot, camera movement, visual action, duration, and transition. Keep it under 180 words.');
           status.textContent = storyboard || 'Storyboard generated.';
+          status.dataset.storyboard = storyboard || '';
           win.querySelector('#videoPreview').style.animationDuration = '2.2s';
+          win.querySelector('[data-action="download-storyboard"]').disabled = false;
         } catch (error) {
           status.textContent = 'AI storyboard unavailable: ' + error.message;
         }
+      });
+      win.querySelector('[data-action="download-storyboard"]').addEventListener('click', () => {
+        const status = win.querySelector('#videoGeneratorStatus');
+        const text = status.dataset.storyboard || status.textContent;
+        const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'hydra-video-storyboard.txt';
+        link.click();
+        URL.revokeObjectURL(url);
       });
     }
     if (name === 'Website Builder' || name === 'Game Builder' || name === 'App Builder') {
@@ -7672,14 +7684,68 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Face') win.querySelector('[data-action="camera"]').addEventListener('click', async () => {
       try { win.querySelector('video').srcObject = await navigator.mediaDevices.getUserMedia({ video: true }); } catch (error) { alert(error.message); }
     });
-    if (name === 'Bluetooth') win.querySelector('[data-action="bluetooth"]').addEventListener('click', async () => {
+    if (name === 'Bluetooth') {
       const result = win.querySelector('#appResult');
-      if (!navigator.bluetooth?.requestDevice) { result.textContent = 'Web Bluetooth is unavailable in this browser.'; return; }
-      try {
-        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-        result.textContent = 'Connected device: ' + (device.name || device.id);
-      } catch (error) { result.textContent = 'Scan cancelled or unavailable.'; }
-    });
+      const services = win.querySelector('#bluetoothServices');
+      let connectedDevice = null;
+      win.querySelector('[data-action="bluetooth"]').addEventListener('click', async () => {
+        if (!navigator.bluetooth?.requestDevice) {
+          result.textContent = 'Web Bluetooth is unavailable. Use Chrome or Edge over HTTPS and enable Bluetooth.';
+          return;
+        }
+        try {
+          result.textContent = 'Waiting for device selection…';
+          const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+          connectedDevice = device;
+          result.textContent = 'Selected device: ' + (device.name || 'Unnamed') + ' (' + device.id + ')';
+          services.textContent = 'Device selected. GATT connection is opened when the device requires services.';
+          win.querySelector('[data-action="bluetooth-disconnect"]').disabled = false;
+          if (typeof device.gatt?.connect === 'function') {
+            await device.gatt.connect();
+            result.textContent += ' · Connected';
+          }
+          device.addEventListener?.('gattserverdisconnected', () => {
+            result.textContent = 'Device disconnected: ' + (device.name || device.id);
+            win.querySelector('[data-action="bluetooth-disconnect"]').disabled = true;
+          });
+        } catch (error) {
+          result.textContent = error.name === 'NotFoundError' ? 'No compatible device selected.' : 'Bluetooth unavailable: ' + error.message;
+        }
+      });
+      win.querySelector('[data-action="bluetooth-paired"]').addEventListener('click', async () => {
+        if (!navigator.bluetooth?.getDevices) {
+          result.textContent = 'Previously paired devices are only available in supporting Chromium browsers.';
+          return;
+        }
+        try {
+          const devices = await navigator.bluetooth.getDevices();
+          services.innerHTML = devices.length
+            ? devices.map(device => '<div class="notice">' + String(device.name || 'Unnamed device').replace(/[<>&]/g, '') + '<br>' + device.id + '</div>').join('')
+            : '<div class="notice">No previously paired Web Bluetooth devices found.</div>';
+        } catch (error) {
+          result.textContent = 'Could not read paired devices: ' + error.message;
+        }
+      });
+      win.querySelector('[data-action="bluetooth-disconnect"]').addEventListener('click', () => {
+        connectedDevice?.gatt?.disconnect();
+        connectedDevice = null;
+        win.querySelector('[data-action="bluetooth-disconnect"]').disabled = true;
+      });
+    }
+    if (name === 'WiFi') {
+      const refreshNetwork = () => {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        win.querySelector('#wifiStatus').textContent = navigator.onLine ? 'ONLINE' : 'OFFLINE';
+        win.querySelector('#wifiType').textContent = connection?.type || connection?.effectiveType || 'Browser-reported';
+        win.querySelector('#wifiDownlink').textContent = connection?.downlink ? connection.downlink + ' Mbps' : 'Unavailable';
+        win.querySelector('#wifiRtt').textContent = Number.isFinite(connection?.rtt) ? connection.rtt + ' ms' : 'Unavailable';
+        win.querySelector('#wifiResult').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      };
+      win.querySelector('[data-action="wifi-refresh"]').addEventListener('click', refreshNetwork);
+      window.addEventListener('online', refreshNetwork);
+      window.addEventListener('offline', refreshNetwork);
+      refreshNetwork();
+    }
     if (name === 'Weather') {
       const refresh = async () => {
         try {
