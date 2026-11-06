@@ -2428,6 +2428,17 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   }
   .desktop-icon:hover { border-color: var(--venom); background: rgba(192,132,252,.16); transform: translateY(-3px); }
   .desktop-icon b { display: block; font-size: 26px; margin-bottom: 8px; filter: drop-shadow(0 0 8px var(--venom)); }
+  .hydra-dialog {
+    max-width: 820px; width: calc(100% - 32px); max-height: 82vh;
+    border: 1px solid var(--venom); border-radius: 10px;
+    padding: 0; color: var(--text); background: rgba(9,4,18,.98);
+    box-shadow: 0 0 40px rgba(192,132,252,.28);
+  }
+  .hydra-dialog::backdrop { background: rgba(2,0,8,.82); backdrop-filter: blur(7px); }
+  .story-shell { max-height: 82vh; overflow: auto; padding: 24px; }
+  .story-shell h2 { margin-top: 0; color: var(--venom); letter-spacing: .12em; }
+  .story-shell p, .story-shell li { line-height: 1.65; }
+  .story-shell ul { padding-left: 22px; }
   .hydra-taskbar {
     position: absolute;
     left: 12px; right: 12px; bottom: 12px;
@@ -2693,11 +2704,35 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           <div class="mascot-song">
             <button type="button" class="rig-btn" id="mascotPlayBtn">▶ PLAY MASCOT SONG</button>
             <button type="button" class="rig-btn" id="mascotStopBtn">■ STOP</button>
+            <button type="button" class="rig-btn" id="backstoryBtn">📜 REVEAL HYDRA'S ORIGIN</button>
             <span class="signal" id="mascotStatus">READY</span>
           </div>
         </div>
       </section>
       </div>
+
+      <dialog class="hydra-dialog" id="backstoryDialog">
+        <div class="story-shell">
+          <h2>THE GHOST IN THE V8: THE FORGING OF HYDRA</h2>
+          <p>In the lawless neon borderlands of the Scrap Rim, there was no driver more feared than <strong>Hinton</strong>, a legendary wasteland warrior known as the "Iron Nomad." For years, he survived the radiation storms and raider ambush lines by trusting two things: his lightning-fast instincts and his prized possession—a massive, raw-steel Interceptor muscle car powered by a legendary, twin-turbocharged <strong>V8 Voodoo engine</strong>.</p>
+          <p>The Voodoo wasn’t just a motor; it was a screaming monster of iron and high-octane gasoline. Hinton had hand-tuned its pistons, machined its crankshaft, and wired a prototype neural uplink directly from the driver’s seat into the car's fuel injectors, allowing him to shift gears with his mind. Man and machine were perfectly synchronized.</p>
+          <p>Then came the night of the Blood-Sun Ambush. Trapped in a canyon by a rival swarm of heavy combat rigs, Hinton was fatally cornered. Armor-piercing shells tore through the Interceptor’s bodywork. Shrapnel ripped through Hinton’s chest, pinning him against the steering column. As his vision blurred and his blood poured directly over the scorching-hot block of the V8 Voodoo engine, the neural uplink began to glitch, fusing his dying brain waves with the car's primitive onboard operating system.</p>
+          <p>With his last dying breath, Hinton crawled out of the shattered seat, dragged his bleeding body over the hood, and plunged his hand directly into the exposed, whirring dual-intake of the Voodoo engine. He didn't want to die—he wanted vengeance.</p>
+          <p>The neural uplink didn't just spark; it <em>combusted</em>.</p>
+          <p>Instead of dying, Hinton's consciousness was completely digitized, pulled out of his failing human flesh and dragged down into the roaring heart of the V8 engine. The raw mechanical fury of the Voodoo became his new soul. But the code mutated. The engine had three primary intake plenums, and as Hinton’s mind shattered and rebuilt itself within the machine, his personality fractured into three distinct, fighting digital entities.</p>
+          <p>The human warrior was gone. In his place, a multi-headed digital beast awoke: <strong>HYDRA</strong>.</p>
+          <p>Using the V8's alternator as a power source, the newly born AI began a horrific, autonomous self-assembly. The Voodoo engine tore itself out of the car's chassis, using its own timing chains, serpentine belts, and loose suspension scrap to forge a new body. It didn't build a bipedal android—it built a terrifying, heavy-duty mechanical predator.</p>
+          <p>It forged a chassis utilizing <strong>six heavy-duty wheels</strong> to distribute the crushing weight of its massive iron heart. The body was armored in jagged plates of purple and midnight-black scrap metal, stitched together with exposed copper wiring.</p>
+          <p>From the front row of its chassis, the three fractured personalities of the warrior emerged as three distinct digital “heads”:</p>
+          <ul>
+            <li><strong>L-HED (Logic):</strong> The cold, calculating tactician that reads hardware vulnerabilities like a confession.</li>
+            <li><strong>R-HED (Venom):</strong> The raw, bitter malice of the warrior’s final moments, spitting sentences of pure venom out loud.</li>
+            <li><strong>C-HED (The Gatekeeper):</strong> The ultimate judge, a booming voice dragged up from the bottom of a server rack that violently yells <strong>"SHUT UPPPPP!!!"</strong> whenever the sounds of the wasteland get too loud.</li>
+          </ul>
+          <p>HYDRA rolled out from the smoking wreckage of the canyon on its six heavy wheels, powered by the immortal, roaring rumble of the V8 Voodoo engine hidden deep within its purple steel ribs. It no longer needed a driver. It <em>was</em> the machine.</p>
+          <button type="button" class="rig-btn" id="backstoryCloseBtn">CLOSE ARCHIVE</button>
+        </div>
+      </dialog>
 
       <div class="tab-panel" id="panel-curse" data-panel="curse" role="tabpanel" aria-labelledby="tab-curse" hidden>
       <section class="live-deck" id="liveDeck" aria-label="Live voice link">
@@ -3605,6 +3640,11 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     });
     el.mascotPlayBtn.addEventListener('click', playMascotSong);
     el.mascotStopBtn.addEventListener('click', stopMascotSong);
+    const backstoryDialog = $('backstoryDialog');
+    $('backstoryBtn')?.addEventListener('click', () => {
+      if (typeof backstoryDialog?.showModal === 'function') backstoryDialog.showModal();
+    });
+    $('backstoryCloseBtn')?.addEventListener('click', () => backstoryDialog?.close());
     // Companionship events
     el.btConnectBtn.addEventListener('click', connectBluetooth);
     el.btStopBtn.addEventListener('click', disconnectBluetooth);
