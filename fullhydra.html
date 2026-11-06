@@ -3104,6 +3104,16 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
             <button class="desktop-icon" data-app="System"><b>▥</b>SYSTEM</button>
             <button class="desktop-icon" data-app="Search"><b>⌕</b>HYDRA SEARCH</button>
             <button class="desktop-icon" data-app="Settings"><b>⚙</b>SETTINGS</button>
+            <button class="desktop-icon" data-app="Preflight"><b>✓</b>DRIVING CHECKLIST</button>
+            <button class="desktop-icon" data-app="Mission Timer"><b>◴</b>MISSION TIMER</button>
+            <button class="desktop-icon" data-app="Stopwatch"><b>⏱</b>STOPWATCH / LAPS</button>
+            <button class="desktop-icon" data-app="Compass"><b>⌖</b>DIGITAL COMPASS</button>
+            <button class="desktop-icon" data-app="Repairs"><b>⌕</b>REPAIR LOG</button>
+            <button class="desktop-icon" data-app="Battery Track"><b>▣</b>BATTERY TRACKER</button>
+            <button class="desktop-icon" data-app="Performance Score"><b>★</b>PERFORMANCE SCORE</button>
+            <button class="desktop-icon" data-app="Strategy"><b>⌗</b>MATCH STRATEGY</button>
+            <button class="desktop-icon" data-app="Voice Reminder"><b>◉</b>VOICE REMINDERS</button>
+            <button class="desktop-icon" data-app="HUD"><b>⌁</b>MISSION HUD</button>
             <button class="desktop-icon" data-app="App Store"><b>⬡</b>APP STORE</button>
             <button class="desktop-icon" data-app="Plugin Store"><b>⌁</b>PLUGINS</button>
             <button class="desktop-icon" data-app="Music"><b>♫</b>MUSIC</button>
@@ -6989,6 +6999,16 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'System') return '<div class="metric-grid"><div>PLATFORM<strong>' + navigator.platform + '</strong></div><div>SCREEN<strong>' + screen.width + ' × ' + screen.height + '</strong></div><div>CORE MEMORY<strong>' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown') + '</strong></div><div>CONNECTION<strong id="systemConnection">Checking</strong></div></div><div class="notice">HYDRA OS · Browser Edition<br>Owner: Tejaswinp</div>';
     if (name === 'Search') return '<form class="browser-bar"><input id="hydraSearchInput" placeholder="Search apps and commands"><button class="rig-btn">SEARCH</button></form><div id="hydraSearchResults" class="notifications"><div class="notice">Try: notes, calculator, weather, tasks, terminal.</div></div>';
     if (name === 'Settings') return '<div class="help-panel"><article><strong>Operator</strong><p id="settingsOperator">Tejaswinp</p></article><article><strong>Voice</strong><p>Automatic speech and wake-word settings are controlled from the home console.</p></article><article><strong>Storage</strong><p>HYDRA keeps personal notes, tasks, memory, preferences, and account data in browser storage.</p></article></div><div class="browser-bar"><button class="rig-btn" data-action="export-settings">EXPORT SETTINGS</button><button class="rig-btn" data-action="clear-session">CLEAR HYDRA SESSION</button></div><div id="settingsStatus" class="live-note"></div>';
+    if (name === 'Preflight') return '<h3>Driving Checklist</h3><div id="preflightList" class="notifications"><label class="notice"><input type="checkbox"> Battery checked?</label><label class="notice"><input type="checkbox"> Weapons safe?</label><label class="notice"><input type="checkbox"> Start recording?</label><label class="notice"><input type="checkbox"> Drive area clear?</label><label class="notice"><input type="checkbox"> Ready to drive?</label></div><div id="preflightStatus" class="notice">Checklist incomplete.</div><button class="rig-btn" data-action="reset-preflight">RESET</button>';
+    if (name === 'Mission Timer') return '<div class="notice"><strong id="missionTimerDisplay">00:00</strong><p id="missionTimerStatus">Match timer ready.</p></div><div class="browser-bar"><input id="missionSeconds" type="number" min="1" max="3600" value="180"><button class="rig-btn" data-action="mission-start">START</button><button class="rig-btn" data-action="mission-pause">PAUSE</button><button class="rig-btn" data-action="mission-reset">RESET</button></div>';
+    if (name === 'Stopwatch') return '<div class="notice"><strong id="stopwatchDisplay">00:00.000</strong></div><div class="browser-bar"><button class="rig-btn" data-action="stopwatch-start">START</button><button class="rig-btn" data-action="stopwatch-lap">LAP</button><button class="rig-btn" data-action="stopwatch-reset">RESET</button></div><div id="lapList" class="notifications"></div>';
+    if (name === 'Compass') return '<div class="notice" style="text-align:center"><strong id="compassBearing" style="font-size:42px">000°</strong><p id="compassDirection">N</p></div><label>Bearing <input id="compassInput" type="range" min="0" max="359" value="0"></label><button class="rig-btn" data-action="save-compass">SAVE DIRECTION</button><div id="compassStatus" class="live-note"></div>';
+    if (name === 'Repairs') return '<form class="browser-bar"><input id="repairInput" placeholder="Problem found after run"><button class="rig-btn">LOG</button></form><div id="repairList" class="notifications"></div><button class="rig-btn" data-action="clear-repairs">CLEAR LOG</button>';
+    if (name === 'Battery Track') return '<div class="metric-grid"><label>Before % <input id="batteryBefore" type="number" min="0" max="100"></label><label>After % <input id="batteryAfter" type="number" min="0" max="100"></label><label>Runtime min <input id="batteryMinutes" type="number" min="1"></label></div><button class="rig-btn" data-action="save-battery">CALCULATE & SAVE</button><div id="batteryResult" class="notice">No battery run recorded.</div><div id="batteryHistory" class="notifications"></div>';
+    if (name === 'Performance Score') return '<div class="metric-grid"><label>Speed <input data-score="speed" type="range" min="1" max="10" value="5"></label><label>Turning <input data-score="turning" type="range" min="1" max="10" value="5"></label><label>Stability <input data-score="stability" type="range" min="1" max="10" value="5"></label><label>Durability <input data-score="durability" type="range" min="1" max="10" value="5"></label></div><button class="rig-btn" data-action="save-score">SAVE TEST SCORE</button><div id="scoreResult" class="notice">Average score: 5.0 / 10</div><div id="scoreHistory" class="notifications"></div>';
+    if (name === 'Strategy') return '<div class="browser-bar"><input id="targetPriority" placeholder="Target priority"><button class="rig-btn" data-action="add-target">ADD</button></div><textarea id="strategyPlan" style="width:100%;height:180px" placeholder="Describe the battle plan..."></textarea><div id="strategyTargets" class="notifications"></div><button class="rig-btn" data-action="save-strategy">SAVE STRATEGY</button><div id="strategyStatus" class="live-note"></div>';
+    if (name === 'Voice Reminder') return '<div class="notice">Browser voice can speak reminders without a robot connection.</div><form class="browser-bar"><input id="reminderText" value="Drive carefully"><input id="reminderSeconds" type="number" min="1" value="10" aria-label="Delay seconds"><button class="rig-btn">SCHEDULE</button></form><div id="reminderList" class="notifications"></div>';
+    if (name === 'HUD') return '<div class="hud-grid"><div><span>SPEED ESTIMATE</span><strong><input id="hudSpeed" type="number" value="0" style="width:80px"> km/h</strong></div><div><span>MISSION TIME</span><strong id="hudTimer">00:00</strong></div><div><span>BATTERY</span><strong><input id="hudBattery" type="number" value="100" min="0" max="100" style="width:70px">%</strong></div><div><span>HYDRA STATUS</span><strong><select id="hudStatus"><option>READY</option><option>RUNNING</option><option>CAUTION</option><option>OFFLINE</option></select></strong></div></div><input id="hudMessage" value="Awaiting Commander Tejaswinp" style="width:100%;margin-top:12px"><button class="rig-btn" data-action="show-hud">UPDATE HUD</button><div id="hudDisplay" class="notice">AWAITING COMMANDER TEJASWINP</div>';
     if (name === 'App Store' || name === 'Plugin Store') return '<div class="store-grid"><article class="store-card"><h3>Hydra Vision</h3><p>Screen intelligence.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Neon Forge</h3><p>Desktop theme pack.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Robot Pilot</h3><p>Telemetry automation.</p><button class="rig-btn">INSTALL</button></article></div>';
     if (name === 'Robot') return '<div class="metric-grid"><div>BATTERY<strong> 84%</strong></div><div>SIGNAL<strong> 97%</strong></div><div>MOTOR A <input type="range" value="42"></div><div>MOTOR B <input type="range" value="58"></div></div><p class="live-note">Live robot controls require a connected controller or WebSocket.</p>';
     if (name === 'Bluetooth') return '<p>Bluetooth devices are accessed through the browser Web Bluetooth API.</p><button class="rig-btn" data-action="bluetooth">SCAN DEVICES</button><div id="appResult" class="notice">No device linked.</div>';
@@ -7005,6 +7025,83 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   }
 
   function wireHydraApp(win, name) {
+    if (name === 'Preflight') {
+      const key = 'hydra.preflight';
+      try {
+        const saved = JSON.parse(localStorage.getItem(key) || '[]');
+        [...win.querySelectorAll('input[type="checkbox"]')].forEach((box, index) => { box.checked = !!saved[index]; });
+      } catch {}
+      const update = () => {
+        const boxes = [...win.querySelectorAll('input[type="checkbox"]')];
+        localStorage.setItem(key, JSON.stringify(boxes.map(box => box.checked)));
+        win.querySelector('#preflightStatus').textContent = boxes.every(box => box.checked) ? 'All systems ready. Drive authorized.' : 'Checklist incomplete.';
+      };
+      win.querySelectorAll('input[type="checkbox"]').forEach(box => box.addEventListener('change', update));
+      win.querySelector('[data-action="reset-preflight"]').addEventListener('click', () => {
+        win.querySelectorAll('input[type="checkbox"]').forEach(box => { box.checked = false; });
+        update();
+      });
+      update();
+    }
+    if (name === 'Mission Timer') {
+      let remaining = Number(win.querySelector('#missionSeconds').value);
+      let interval = null;
+      const render = () => {
+        win.querySelector('#missionTimerDisplay').textContent = formatHydraDuration(remaining).slice(3);
+      };
+      render();
+      win.querySelector('[data-action="mission-start"]').addEventListener('click', () => {
+        remaining = Number(win.querySelector('#missionSeconds').value) || remaining;
+        clearInterval(interval);
+        interval = setInterval(() => {
+          remaining = Math.max(0, remaining - 1);
+          render();
+          if (!remaining) {
+            clearInterval(interval);
+            win.querySelector('#missionTimerStatus').textContent = 'Mission complete.';
+            if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance('Mission complete.'));
+          }
+        }, 1000);
+      });
+      win.querySelector('[data-action="mission-pause"]').addEventListener('click', () => clearInterval(interval));
+      win.querySelector('[data-action="mission-reset"]').addEventListener('click', () => {
+        clearInterval(interval);
+        remaining = Number(win.querySelector('#missionSeconds').value) || 180;
+        win.querySelector('#missionTimerStatus').textContent = 'Match timer ready.';
+        render();
+      });
+    }
+    if (name === 'Stopwatch') {
+      let started = 0, elapsed = 0, interval = null;
+      const render = () => {
+        const value = elapsed + (interval ? performance.now() - started : 0);
+        const minutes = Math.floor(value / 60000);
+        const seconds = Math.floor((value % 60000) / 1000);
+        const millis = Math.floor(value % 1000);
+        win.querySelector('#stopwatchDisplay').textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + '.' + String(millis).padStart(3, '0');
+      };
+      win.querySelector('[data-action="stopwatch-start"]').addEventListener('click', (event) => {
+        if (interval) {
+          elapsed += performance.now() - started;
+          clearInterval(interval);
+          interval = null;
+          event.target.textContent = 'START';
+        } else {
+          started = performance.now();
+          interval = setInterval(render, 31);
+          event.target.textContent = 'STOP';
+        }
+        render();
+      });
+      win.querySelector('[data-action="stopwatch-lap"]').addEventListener('click', () => {
+        const time = win.querySelector('#stopwatchDisplay').textContent;
+        win.querySelector('#lapList').insertAdjacentHTML('afterbegin', '<div class="notice">LAP · ' + time + '</div>');
+      });
+      win.querySelector('[data-action="stopwatch-reset"]').addEventListener('click', () => {
+        clearInterval(interval); interval = null; elapsed = 0; win.querySelector('#lapList').innerHTML = '';
+        win.querySelector('[data-action="stopwatch-start"]').textContent = 'START'; render();
+      });
+    }
     if (name === 'Accounts') win.querySelector('[data-action="save-account"]').addEventListener('click', () => {
       const nameValue = win.querySelector('#accountName').value.trim();
       if (!nameValue) return;
@@ -7135,6 +7232,113 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       win.querySelector('[data-action="clear-session"]').addEventListener('click', () => {
         sessionStorage.clear();
         win.querySelector('#settingsStatus').textContent = 'HYDRA session data cleared.';
+      });
+    }
+    if (name === 'Compass') {
+      const compassNames = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      const input = win.querySelector('#compassInput');
+      const update = () => {
+        const bearing = Number(input.value);
+        win.querySelector('#compassBearing').textContent = String(bearing).padStart(3, '0') + '°';
+        win.querySelector('#compassDirection').textContent = compassNames[Math.round(bearing / 45) % 8];
+      };
+      input.addEventListener('input', update);
+      win.querySelector('[data-action="save-compass"]').addEventListener('click', () => {
+        localStorage.setItem('hydra.compass', input.value);
+        win.querySelector('#compassStatus').textContent = 'Direction saved: ' + input.value + ' degrees.';
+      });
+      input.value = localStorage.getItem('hydra.compass') || '0';
+      update();
+    }
+    if (name === 'Repairs') {
+      const key = 'hydra.repairs';
+      const read = () => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+      const render = () => win.querySelector('#repairList').innerHTML = read().map(item =>
+        '<div class="notice"><strong>' + item.date + '</strong><br>' + String(item.text).replace(/[<>&]/g, '') + '</div>').join('');
+      render();
+      win.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();
+        const input = win.querySelector('#repairInput');
+        if (!input.value.trim()) return;
+        const items = read();
+        items.unshift({ date: new Date().toLocaleString(), text: input.value.trim() });
+        localStorage.setItem(key, JSON.stringify(items.slice(0, 100)));
+        input.value = ''; render();
+      });
+      win.querySelector('[data-action="clear-repairs"]').addEventListener('click', () => { localStorage.removeItem(key); render(); });
+    }
+    if (name === 'Battery Track') {
+      const key = 'hydra.battery-history';
+      const read = () => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+      const render = () => win.querySelector('#batteryHistory').innerHTML = read().map(run =>
+        '<div class="notice">' + run.date + ' · ' + run.used + '% used · ' + run.minutes + ' min · ~' + run.runtime + ' min runtime</div>').join('');
+      render();
+      win.querySelector('[data-action="save-battery"]').addEventListener('click', () => {
+        const before = Number(win.querySelector('#batteryBefore').value);
+        const after = Number(win.querySelector('#batteryAfter').value);
+        const minutes = Number(win.querySelector('#batteryMinutes').value);
+        const used = Math.max(0, before - after);
+        if (!used || !minutes) return;
+        const runtime = Math.round(minutes * 100 / used);
+        win.querySelector('#batteryResult').textContent = used + '% used. Estimated full-battery runtime: ' + runtime + ' minutes.';
+        const runs = read(); runs.unshift({ date: new Date().toLocaleString(), used, minutes, runtime });
+        localStorage.setItem(key, JSON.stringify(runs.slice(0, 30))); render();
+      });
+    }
+    if (name === 'Performance Score') {
+      const key = 'hydra.performance-scores';
+      const read = () => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+      const render = () => win.querySelector('#scoreHistory').innerHTML = read().map(score =>
+        '<div class="notice">' + score.date + ' · Total ' + score.average + '/10</div>').join('');
+      render();
+      win.querySelector('[data-action="save-score"]').addEventListener('click', () => {
+        const scores = [...win.querySelectorAll('[data-score]')].map(input => Number(input.value));
+        const average = (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1);
+        win.querySelector('#scoreResult').textContent = 'Average score: ' + average + ' / 10';
+        const history = read(); history.unshift({ date: new Date().toLocaleString(), average }); localStorage.setItem(key, JSON.stringify(history.slice(0, 30))); render();
+      });
+    }
+    if (name === 'Strategy') {
+      const strategyKey = 'hydra.strategy';
+      const targetsKey = 'hydra.strategy.targets';
+      win.querySelector('#strategyPlan').value = localStorage.getItem(strategyKey) || '';
+      const renderTargets = () => {
+        let targets = []; try { targets = JSON.parse(localStorage.getItem(targetsKey) || '[]'); } catch {}
+        win.querySelector('#strategyTargets').innerHTML = targets.map((target, index) =>
+          '<div class="notice"><strong>' + (index + 1) + '</strong> · ' + String(target).replace(/[<>&]/g, '') + '</div>').join('');
+      };
+      renderTargets();
+      win.querySelector('[data-action="add-target"]').addEventListener('click', () => {
+        const input = win.querySelector('#targetPriority');
+        if (!input.value.trim()) return;
+        let targets = []; try { targets = JSON.parse(localStorage.getItem(targetsKey) || '[]'); } catch {}
+        targets.push(input.value.trim()); localStorage.setItem(targetsKey, JSON.stringify(targets)); input.value = ''; renderTargets();
+      });
+      win.querySelector('[data-action="save-strategy"]').addEventListener('click', () => {
+        localStorage.setItem(strategyKey, win.querySelector('#strategyPlan').value);
+        win.querySelector('#strategyStatus').textContent = 'Strategy saved locally.';
+      });
+    }
+    if (name === 'Voice Reminder') {
+      win.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();
+        const text = win.querySelector('#reminderText').value.trim();
+        const seconds = Math.max(1, Number(win.querySelector('#reminderSeconds').value) || 10);
+        const item = document.createElement('div'); item.className = 'notice';
+        item.textContent = 'Scheduled in ' + seconds + ' seconds: ' + text;
+        win.querySelector('#reminderList').prepend(item);
+        setTimeout(() => {
+          item.textContent = text;
+          if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+        }, seconds * 1000);
+      });
+    }
+    if (name === 'HUD') {
+      win.querySelector('[data-action="show-hud"]').addEventListener('click', () => {
+        win.querySelector('#hudDisplay').textContent =
+          'SPEED ' + win.querySelector('#hudSpeed').value + ' KM/H · BATTERY ' +
+          win.querySelector('#hudBattery').value + '% · ' + win.querySelector('#hudStatus').value + ' · ' +
+          win.querySelector('#hudMessage').value;
       });
     }
     if (name === 'Memory') {
