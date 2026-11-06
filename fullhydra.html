@@ -3203,10 +3203,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   <span class="sr-only" id="liveRegion" aria-live="polite"></span>
 
-  <audio id="mascotAudio" loop preload="auto">
-    <source src="mascot-song.mp3" type="audio/mpeg" />
-    <source src="mascot-song.mpeg" type="audio/mpeg" />
-  </audio>
+  <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
+  <audio id="backstoryAudio" preload="auto" src="hydra-origin.wav"></audio>
 
   <script>
 (() => {
@@ -3641,10 +3639,30 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     el.mascotPlayBtn.addEventListener('click', playMascotSong);
     el.mascotStopBtn.addEventListener('click', stopMascotSong);
     const backstoryDialog = $('backstoryDialog');
+    const backstoryAudio = $('backstoryAudio');
     $('backstoryBtn')?.addEventListener('click', () => {
       if (typeof backstoryDialog?.showModal === 'function') backstoryDialog.showModal();
+      if (backstoryAudio) {
+        backstoryAudio.src = 'hydra-origin.wav';
+        backstoryAudio.currentTime = 0;
+        backstoryAudio.play().catch(() => {
+          el.mascotStatus.textContent = 'NARRATION BLOCKED';
+          if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+            const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
+            narration.rate = 0.88;
+            speechSynthesis.resume();
+            speechSynthesis.speak(narration);
+          }
+        });
+      }
     });
-    $('backstoryCloseBtn')?.addEventListener('click', () => backstoryDialog?.close());
+    const closeBackstory = () => {
+      backstoryAudio?.pause();
+      backstoryDialog?.close();
+    };
+    $('backstoryCloseBtn')?.addEventListener('click', closeBackstory);
+    backstoryDialog?.addEventListener('close', () => backstoryAudio?.pause());
     // Companionship events
     el.btConnectBtn.addEventListener('click', connectBluetooth);
     el.btStopBtn.addEventListener('click', disconnectBluetooth);
@@ -5808,7 +5826,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           if (remaining <= 0) finish();
         };
         try {
+          window.speechSynthesis.resume();
           window.speechSynthesis.speak(utterance);
+          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
         } catch {
           setVoiceState('VOICE ENGINE REFUSED');
           finish();
@@ -6411,6 +6431,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   function playMascotSong() {
     if (!el.mascotAudio) return;
     el.mascotStatus.textContent = 'LOADING';
+    el.mascotAudio.src = 'mascot-song.wav';
     el.mascotAudio.load();
     const playAttempt = el.mascotAudio.play();
     if (!playAttempt) {
@@ -6425,7 +6446,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     }).catch(err => {
       el.mascotStatus.textContent = 'ERROR';
       el.mascotStatus.style.color = '#ff3366';
-      addStrategyLog('Song play failed: ' + err.message);
+      addStrategyLog('Song play failed: ' + (err && err.message ? err.message : String(err)));
+      el.mascotStatus.title = err && err.message ? err.message : '';
     });
   }
 
@@ -7646,7 +7668,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         win.querySelector('#musicLibrary').textContent = 'Music library cleared.';
       });
       win.querySelector('[data-action="play-mascot"]').addEventListener('click', () => {
-        player.src = 'mascot-song.mpeg';
+        player.src = 'mascot-song.wav';
         player.play().catch(() => win.querySelector('#musicLibrary').textContent = 'Mascot audio could not play.');
       });
     }
