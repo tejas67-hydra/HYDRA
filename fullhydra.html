@@ -7012,7 +7012,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       + '<section class="editor-pane"><div class="editor-tabbar"><span id="codeTabName">index.html</span><button class="editor-run" id="runHydraCode">RUN CODE</button></div>'
       + '<div class="editor-scroll"><div class="editor-lines" id="editorLines">1</div><pre class="editor-highlight" id="editorHighlight"></pre><textarea id="hydraCode" aria-label="Code editor" spellcheck="false"></textarea></div></section>'
       + '<iframe sandbox="allow-scripts" class="preview-frame" id="codePreview" title="Isolated live code preview"></iframe></div>';
-    if (name === 'Music') return '<audio controls style="width:100%"><source src="mascot-song.mpeg" type="audio/mpeg"></audio><p class="live-note">HYDRA Mascot Song · local music player</p>';
+    if (name === 'Music') return '<div class="browser-bar"><input type="file" id="musicFiles" accept="audio/*" multiple><button class="rig-btn" data-action="play-mascot">PLAY HYDRA THEME</button></div><audio id="hydraMusicPlayer" controls style="width:100%"></audio><div class="browser-bar"><button class="rig-btn" data-action="music-prev">PREVIOUS</button><button class="rig-btn" data-action="music-next">NEXT</button><button class="rig-btn" data-action="clear-music">CLEAR LIBRARY</button></div><div id="musicLibrary" class="notifications"></div>';
     if (name === 'Files') return '<div class="file-list"><button>📁 HYDRA PROJECTS</button><button>📁 Desktop</button><button>📄 hydra.html</button><button>📄 fullhydra.html</button><button>🎵 mascot-song.mpeg</button><button>🖼️ hydra-mascot.png</button></div>';
     if (name === 'Notes') return '<div class="browser-bar"><input id="notesTitle" placeholder="Note title" value="HYDRA Mission Note"><button class="rig-btn" data-action="new-note">NEW</button></div><textarea id="notesEditor" style="width:100%;height:220px" placeholder="Write a note..."></textarea><p><button class="rig-btn" data-action="save-note">SAVE NOTE</button><button class="rig-btn" data-action="export-note">EXPORT</button></p><div id="notesList" class="notifications"></div><span id="notesStatus" class="live-note">Notes are saved automatically in this browser.</span>';
     if (name === 'Calculator') return '<div class="help-panel">'
@@ -7035,18 +7035,19 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Clock') return '<div class="notice"><strong id="clockTime">--:--:--</strong><p id="clockDate"></p></div><div class="browser-bar"><input id="timerMinutes" type="number" min="0" max="180" value="5" aria-label="Timer minutes"><button class="rig-btn" data-action="start-timer">START TIMER</button><button class="rig-btn" data-action="stop-timer">STOP</button></div><div id="timerStatus" class="notice">Timer ready.</div>';
     if (name === 'System') return '<div class="metric-grid"><div>PLATFORM<strong>' + navigator.platform + '</strong></div><div>SCREEN<strong>' + screen.width + ' × ' + screen.height + '</strong></div><div>CORE MEMORY<strong>' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown') + '</strong></div><div>CONNECTION<strong id="systemConnection">Checking</strong></div></div><div class="notice">HYDRA OS · Browser Edition<br>Owner: Tejaswinp</div>';
     if (name === 'Search') return '<form class="browser-bar"><input id="hydraSearchInput" placeholder="Search apps and commands"><button class="rig-btn">SEARCH</button></form><div id="hydraSearchResults" class="notifications"><div class="notice">Try: notes, calculator, weather, tasks, terminal.</div></div>';
-    if (name === 'Settings') return '<div class="help-panel"><article><strong>Operator</strong><p id="settingsOperator">Tejaswinp</p></article><article><strong>Voice</strong><p>Automatic speech and wake-word settings are controlled from the home console.</p></article><article><strong>Storage</strong><p>HYDRA keeps personal notes, tasks, memory, preferences, and account data in browser storage.</p></article></div><div class="browser-bar"><button class="rig-btn" data-action="export-settings">EXPORT SETTINGS</button><button class="rig-btn" data-action="clear-session">CLEAR HYDRA SESSION</button></div><div id="settingsStatus" class="live-note"></div>';
+    if (name === 'Settings') return '<div class="help-panel"><article><strong>Operator</strong><input id="settingsOperator" value="' + getHydraOperatorName().replace(/[<>&"]/g, '') + '" style="width:100%"><button class="rig-btn" data-action="save-operator">SAVE OPERATOR</button></article><article><strong>Voice</strong><label><input id="voiceEnabled" type="checkbox" checked> Speak HYDRA responses</label><label><input id="wakeEnabled" type="checkbox" checked> Enable wake word</label><label>Voice speed <input id="voiceRate" type="range" min="0.7" max="1.5" step="0.1" value="1"></label></article><article><strong>Desktop</strong><label>Accent <input id="settingsAccent" type="color" value="#c084fc"></label><label><input id="compactDesktop" type="checkbox"> Compact desktop icons</label></article><article><strong>Storage</strong><p>Notes, mission data, memory, preferences, and account details are stored in this browser.</p></article></div><div class="browser-bar"><button class="rig-btn" data-action="export-settings">EXPORT SETTINGS</button><button class="rig-btn" data-action="import-settings">IMPORT SETTINGS</button><input type="file" id="settingsImportFile" accept="application/json" hidden><button class="rig-btn" data-action="clear-session">CLEAR SESSION</button></div><div id="settingsStatus" class="live-note"></div>';
     if (name === 'Preflight') return '<h3>Driving Checklist</h3><div id="preflightList" class="notifications"><label class="notice"><input type="checkbox"> Battery checked?</label><label class="notice"><input type="checkbox"> Weapons safe?</label><label class="notice"><input type="checkbox"> Start recording?</label><label class="notice"><input type="checkbox"> Drive area clear?</label><label class="notice"><input type="checkbox"> Ready to drive?</label></div><div id="preflightStatus" class="notice">Checklist incomplete.</div><button class="rig-btn" data-action="reset-preflight">RESET</button>';
     if (name === 'Mission Timer') return '<div class="notice"><strong id="missionTimerDisplay">00:00</strong><p id="missionTimerStatus">Match timer ready.</p></div><div class="browser-bar"><input id="missionSeconds" type="number" min="1" max="3600" value="180"><button class="rig-btn" data-action="mission-start">START</button><button class="rig-btn" data-action="mission-pause">PAUSE</button><button class="rig-btn" data-action="mission-reset">RESET</button></div>';
     if (name === 'Stopwatch') return '<div class="notice"><strong id="stopwatchDisplay">00:00.000</strong></div><div class="browser-bar"><button class="rig-btn" data-action="stopwatch-start">START</button><button class="rig-btn" data-action="stopwatch-lap">LAP</button><button class="rig-btn" data-action="stopwatch-reset">RESET</button></div><div id="lapList" class="notifications"></div>';
-    if (name === 'Compass') return '<div class="notice" style="text-align:center"><strong id="compassBearing" style="font-size:42px">000°</strong><p id="compassDirection">N</p></div><label>Bearing <input id="compassInput" type="range" min="0" max="359" value="0"></label><button class="rig-btn" data-action="save-compass">SAVE DIRECTION</button><div id="compassStatus" class="live-note"></div>';
+    if (name === 'Compass') return '<div class="notice" style="text-align:center"><strong id="compassBearing" style="font-size:42px">000°</strong><p id="compassDirection">N</p></div><div class="browser-bar"><button class="rig-btn" data-action="compass-live">USE DEVICE COMPASS</button><button class="rig-btn" data-action="compass-stop">STOP</button></div><label>Manual bearing <input id="compassInput" type="range" min="0" max="359" value="0"></label><button class="rig-btn" data-action="save-compass">SAVE DIRECTION</button><div id="compassStatus" class="live-note">Uses your device compass where supported; manual mode works everywhere.</div>';
     if (name === 'Repairs') return '<form class="browser-bar"><input id="repairInput" placeholder="Problem found after run"><button class="rig-btn">LOG</button></form><div id="repairList" class="notifications"></div><button class="rig-btn" data-action="clear-repairs">CLEAR LOG</button>';
     if (name === 'Battery Track') return '<div class="metric-grid"><label>Before % <input id="batteryBefore" type="number" min="0" max="100"></label><label>After % <input id="batteryAfter" type="number" min="0" max="100"></label><label>Runtime min <input id="batteryMinutes" type="number" min="1"></label></div><button class="rig-btn" data-action="save-battery">CALCULATE & SAVE</button><div id="batteryResult" class="notice">No battery run recorded.</div><div id="batteryHistory" class="notifications"></div>';
     if (name === 'Performance Score') return '<div class="metric-grid"><label>Speed <input data-score="speed" type="range" min="1" max="10" value="5"></label><label>Turning <input data-score="turning" type="range" min="1" max="10" value="5"></label><label>Stability <input data-score="stability" type="range" min="1" max="10" value="5"></label><label>Durability <input data-score="durability" type="range" min="1" max="10" value="5"></label></div><button class="rig-btn" data-action="save-score">SAVE TEST SCORE</button><div id="scoreResult" class="notice">Average score: 5.0 / 10</div><div id="scoreHistory" class="notifications"></div>';
     if (name === 'Strategy') return '<div class="browser-bar"><input id="targetPriority" placeholder="Target priority"><button class="rig-btn" data-action="add-target">ADD</button></div><textarea id="strategyPlan" style="width:100%;height:180px" placeholder="Describe the battle plan..."></textarea><div id="strategyTargets" class="notifications"></div><button class="rig-btn" data-action="save-strategy">SAVE STRATEGY</button><div id="strategyStatus" class="live-note"></div>';
-    if (name === 'Voice Reminder') return '<div class="notice">Browser voice can speak reminders without a robot connection.</div><form class="browser-bar"><input id="reminderText" value="Drive carefully"><input id="reminderSeconds" type="number" min="1" value="10" aria-label="Delay seconds"><button class="rig-btn">SCHEDULE</button></form><div id="reminderList" class="notifications"></div>';
+    if (name === 'Voice Reminder') return '<div class="notice">Schedule a spoken alert, mission cue, or warning.</div><form><label>Reminder message <input id="reminderText" value="Drive carefully" style="width:100%"></label><div class="metric-grid"><label>Amount <input id="reminderAmount" type="number" min="1" value="10"></label><label>Unit <select id="reminderUnit"><option value="seconds">Seconds</option><option value="minutes">Minutes</option><option value="hours">Hours</option></select></label></div><button class="rig-btn">SCHEDULE VOICE ALERT</button></form><div class="browser-bar"><button class="rig-btn" data-action="test-voice">TEST VOICE NOW</button><button class="rig-btn" data-action="clear-reminders">CLEAR ALERTS</button></div><div id="reminderList" class="notifications"></div>';
     if (name === 'HUD') return '<div class="hud-grid"><div><span>SPEED ESTIMATE</span><strong><input id="hudSpeed" type="number" value="0" style="width:80px"> km/h</strong></div><div><span>MISSION TIME</span><strong id="hudTimer">00:00</strong></div><div><span>BATTERY</span><strong><input id="hudBattery" type="number" value="100" min="0" max="100" style="width:70px">%</strong></div><div><span>HYDRA STATUS</span><strong><select id="hudStatus"><option>READY</option><option>RUNNING</option><option>CAUTION</option><option>OFFLINE</option></select></strong></div></div><input id="hudMessage" value="Awaiting Commander Tejaswinp" style="width:100%;margin-top:12px"><button class="rig-btn" data-action="show-hud">UPDATE HUD</button><div id="hudDisplay" class="notice">AWAITING COMMANDER TEJASWINP</div>';
-    if (name === 'App Store' || name === 'Plugin Store') return '<div class="store-grid"><article class="store-card"><h3>Hydra Vision</h3><p>Screen intelligence.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Neon Forge</h3><p>Desktop theme pack.</p><button class="rig-btn">INSTALL</button></article><article class="store-card"><h3>Robot Pilot</h3><p>Telemetry automation.</p><button class="rig-btn">INSTALL</button></article></div>';
+    if (name === 'App Store') return '<p>Install local HYDRA extensions into this browser.</p><div class="store-grid"><article class="store-card"><h3>Mission HUD+</h3><p>Enhanced telemetry and alerts.</p><button class="rig-btn" data-store-app="mission-hud-plus">INSTALL</button></article><article class="store-card"><h3>Robot Map</h3><p>Manual route and waypoint board.</p><button class="rig-btn" data-store-app="robot-map">INSTALL</button></article><article class="store-card"><h3>Emergency Tools</h3><p>Quick battery, obstacle, and recovery actions.</p><button class="rig-btn" data-store-app="emergency-tools">INSTALL</button></article></div><div id="storeStatus" class="live-note"></div>';
+    if (name === 'Plugin Store') return '<p>Enable browser plugins and HYDRA automation features.</p><div class="store-grid"><article class="store-card"><h3>Neon Theme</h3><p>Purple battle interface accent.</p><button class="rig-btn" data-plugin="neon-theme">ENABLE</button></article><article class="store-card"><h3>Voice Countdown</h3><p>Speak countdowns for timed missions.</p><button class="rig-btn" data-plugin="voice-countdown">ENABLE</button></article><article class="store-card"><h3>Desktop Clock</h3><p>Always show HYDRA time in the taskbar.</p><button class="rig-btn" data-plugin="desktop-clock">ENABLE</button></article></div><div id="pluginStatus" class="live-note"></div>';
     if (name === 'Robot') return '<div class="metric-grid"><div>BATTERY<strong> 84%</strong></div><div>SIGNAL<strong> 97%</strong></div><div>MOTOR A <input type="range" value="42"></div><div>MOTOR B <input type="range" value="58"></div></div><p class="live-note">Live robot controls require a connected controller or WebSocket.</p>';
     if (name === 'Bluetooth') return '<p>Pair a device that exposes compatible Web Bluetooth services. Chrome or Edge on desktop is required.</p><div class="browser-bar"><button class="rig-btn" data-action="bluetooth">CHOOSE DEVICE</button><button class="rig-btn" data-action="bluetooth-paired">SHOW PAIRED</button><button class="rig-btn" data-action="bluetooth-disconnect" disabled>DISCONNECT</button></div><div id="appResult" class="notice">No device linked.</div><div id="bluetoothServices" class="notifications"></div>';
     if (name === 'WiFi') return '<p>Browsers cannot discover nearby Wi-Fi passwords or signal strengths. HYDRA reports the current connection through browser information.</p><div class="metric-grid"><div>STATUS<strong id="wifiStatus">Checking</strong></div><div>CONNECTION<strong id="wifiType">Unknown</strong></div><div>EST. DOWNLOAD<strong id="wifiDownlink">Unknown</strong></div><div>ROUND TRIP<strong id="wifiRtt">Unknown</strong></div></div><button class="rig-btn" data-action="wifi-refresh">REFRESH NETWORK</button><div id="wifiResult" class="notice">Network details update automatically.</div>';
@@ -7057,7 +7058,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Notifications') return '<div class="notifications"><div class="notice">HYDRA core connected</div><div class="notice">Mascot song ready</div><div class="notice">Desktop workspace optimized</div></div>';
     if (name === 'Themes') return '<label>Accent <input type="color" value="#c084fc" id="themeAccent"></label><p><button class="rig-btn" data-action="theme">APPLY NEON GLASS</button></p>';
     if (name === 'Accounts') return '<label>Display name <input id="accountName" value="' + getHydraOperatorName().replace(/[<>&"]/g, '') + '" style="width:100%"></label><p><button class="rig-btn" data-action="save-account">SAVE ACCOUNT</button></p><div id="accountStatus" class="live-note">Personal profile is stored locally in this browser.</div>';
-    if (name === 'Automation' || name === 'Vision') return '<div class="metric-grid"><div>Screen Vision<strong> READY</strong></div><div>Automation<strong> AI ASSISTED</strong></div></div><textarea id="aiFeaturePrompt" style="width:100%;height:180px">When HYDRA starts, open Robot Dashboard and scan notifications.</textarea><button class="rig-btn" data-action="ai-feature">AI ANALYZE AND BUILD</button><pre id="aiFeatureResult" class="live-note"></pre>';
+    if (name === 'Vision') return '<p>Share a screen or window locally, inspect it, and capture a frame. HYDRA never uploads captured frames automatically.</p><div class="browser-bar"><button class="rig-btn" data-action="vision-start">START SCREEN SHARE</button><button class="rig-btn" data-action="vision-stop">STOP</button><button class="rig-btn" data-action="vision-capture">CAPTURE FRAME</button></div><video id="visionVideo" autoplay muted style="width:100%;max-height:280px;background:#000"></video><canvas id="visionCanvas" style="display:none"></canvas><div id="visionStatus" class="notice">Screen sharing is ready.</div><img id="visionCapture" style="display:none;width:100%;max-height:280px;object-fit:contain">';
+    if (name === 'Automation') return '<div class="metric-grid"><div>Screen Vision<strong> READY</strong></div><div>Automation<strong> AI ASSISTED</strong></div></div><textarea id="aiFeaturePrompt" style="width:100%;height:180px">When HYDRA starts, open Robot Dashboard and scan notifications.</textarea><button class="rig-btn" data-action="ai-feature">AI ANALYZE AND BUILD</button><pre id="aiFeatureResult" class="live-note"></pre>';
     return '<div class="notice">HYDRA feature module ready.</div>';
   }
 
@@ -7285,6 +7287,41 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       });
     }
     if (name === 'Settings') {
+      const loadSetting = (key, fallback) => localStorage.getItem(key) ?? fallback;
+      win.querySelector('#voiceEnabled').checked = loadSetting('hydra.settings.voiceEnabled', 'true') === 'true';
+      win.querySelector('#wakeEnabled').checked = loadSetting('hydra.settings.wakeEnabled', 'true') === 'true';
+      win.querySelector('#voiceRate').value = loadSetting('hydra.settings.voiceRate', '1');
+      win.querySelector('#settingsAccent').value = loadSetting('hydra.accent', '#c084fc');
+      win.querySelector('#compactDesktop').checked = loadSetting('hydra.settings.compactDesktop', 'false') === 'true';
+      win.querySelector('[data-action="save-operator"]').addEventListener('click', () => {
+        const name = win.querySelector('#settingsOperator').value.trim();
+        if (!name) return;
+        localStorage.setItem('hydra.operatorName', name);
+        win.querySelector('#settingsStatus').textContent = 'Operator saved: ' + name;
+      });
+      const saveControls = () => {
+        localStorage.setItem('hydra.settings.voiceEnabled', win.querySelector('#voiceEnabled').checked);
+        localStorage.setItem('hydra.settings.wakeEnabled', win.querySelector('#wakeEnabled').checked);
+        localStorage.setItem('hydra.settings.voiceRate', win.querySelector('#voiceRate').value);
+        localStorage.setItem('hydra.settings.compactDesktop', win.querySelector('#compactDesktop').checked);
+        document.querySelector('.desktop-grid')?.classList.toggle('compact', win.querySelector('#compactDesktop').checked);
+        win.querySelector('#settingsStatus').textContent = 'Hydra settings saved automatically.';
+      };
+      win.querySelectorAll('#voiceEnabled,#wakeEnabled,#voiceRate,#compactDesktop').forEach(control => control.addEventListener('change', saveControls));
+      win.querySelector('#settingsAccent').addEventListener('input', () => {
+        document.documentElement.style.setProperty('--venom', win.querySelector('#settingsAccent').value);
+        localStorage.setItem('hydra.accent', win.querySelector('#settingsAccent').value);
+      });
+      win.querySelector('[data-action="import-settings"]').addEventListener('click', () => win.querySelector('#settingsImportFile').click());
+      win.querySelector('#settingsImportFile').addEventListener('change', async event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const imported = JSON.parse(await file.text());
+          Object.entries(imported).forEach(([key, value]) => localStorage.setItem(key, String(value)));
+          win.querySelector('#settingsStatus').textContent = 'Settings imported. Refresh HYDRA to apply all values.';
+        } catch (error) { win.querySelector('#settingsStatus').textContent = 'Import failed: ' + error.message; }
+      });
       win.querySelector('[data-action="export-settings"]').addEventListener('click', () => {
         const settings = {};
         for (let index = 0; index < localStorage.length; index++) {
@@ -7304,12 +7341,39 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Compass') {
       const compassNames = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
       const input = win.querySelector('#compassInput');
+      let orientationHandler = null;
       const update = () => {
         const bearing = Number(input.value);
         win.querySelector('#compassBearing').textContent = String(bearing).padStart(3, '0') + '°';
         win.querySelector('#compassDirection').textContent = compassNames[Math.round(bearing / 45) % 8];
       };
       input.addEventListener('input', update);
+      win.querySelector('[data-action="compass-live"]').addEventListener('click', async () => {
+        if (!('DeviceOrientationEvent' in window)) {
+          win.querySelector('#compassStatus').textContent = 'Device compass is not available. Manual bearing remains active.';
+          return;
+        }
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') return;
+        }
+        orientationHandler = event => {
+          const bearing = typeof event.webkitCompassHeading === 'number'
+            ? event.webkitCompassHeading
+            : typeof event.alpha === 'number' ? 360 - event.alpha : null;
+          if (bearing === null) return;
+          const rounded = Math.round(bearing) % 360;
+          input.value = rounded;
+          update();
+          win.querySelector('#compassStatus').textContent = 'Live device compass active.';
+        };
+        window.addEventListener('deviceorientation', orientationHandler);
+      });
+      win.querySelector('[data-action="compass-stop"]').addEventListener('click', () => {
+        if (orientationHandler) window.removeEventListener('deviceorientation', orientationHandler);
+        orientationHandler = null;
+        win.querySelector('#compassStatus').textContent = 'Live compass stopped. Manual bearing active.';
+      });
       win.querySelector('[data-action="save-compass"]').addEventListener('click', () => {
         localStorage.setItem('hydra.compass', input.value);
         win.querySelector('#compassStatus').textContent = 'Direction saved: ' + input.value + ' degrees.';
@@ -7390,15 +7454,27 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       win.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
         const text = win.querySelector('#reminderText').value.trim();
-        const seconds = Math.max(1, Number(win.querySelector('#reminderSeconds').value) || 10);
+        if (!text) return;
+        const amount = Math.max(1, Number(win.querySelector('#reminderAmount').value) || 1);
+        const unit = win.querySelector('#reminderUnit').value;
+        const seconds = amount * ({ seconds: 1, minutes: 60, hours: 3600 }[unit]);
         const item = document.createElement('div'); item.className = 'notice';
-        item.textContent = 'Scheduled in ' + seconds + ' seconds: ' + text;
+        item.textContent = 'Scheduled in ' + amount + ' ' + unit + ': ' + text;
         win.querySelector('#reminderList').prepend(item);
         setTimeout(() => {
           item.textContent = text;
-          if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = Number(localStorage.getItem('hydra.settings.voiceRate') || 1);
+            speechSynthesis.speak(utterance);
+          }
         }, seconds * 1000);
       });
+      win.querySelector('[data-action="test-voice"]').addEventListener('click', () => {
+        const text = win.querySelector('#reminderText').value.trim() || 'Hydra voice alert test.';
+        if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+      });
+      win.querySelector('[data-action="clear-reminders"]').addEventListener('click', () => win.querySelector('#reminderList').replaceChildren());
     }
     if (name === 'HUD') {
       win.querySelector('[data-action="show-hud"]').addEventListener('click', () => {
@@ -7426,7 +7502,74 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       localStorage.setItem('hydra.personality', personality);
       win.querySelector('#personalityStatus').textContent = 'Current personality: ' + personality;
     });
-    if (name === 'Automation' || name === 'Vision') win.querySelector('[data-action="ai-feature"]').addEventListener('click', async () => {
+    if (name === 'Music') {
+      const player = win.querySelector('#hydraMusicPlayer');
+      let tracks = [];
+      let trackIndex = 0;
+      const playAt = index => {
+        if (!tracks.length) return;
+        trackIndex = (index + tracks.length) % tracks.length;
+        player.src = URL.createObjectURL(tracks[trackIndex]);
+        player.play().catch(() => {});
+        win.querySelector('#musicLibrary').textContent = 'Now playing: ' + tracks[trackIndex].name;
+      };
+      win.querySelector('#musicFiles').addEventListener('change', event => {
+        tracks = [...event.target.files];
+        playAt(0);
+        win.querySelector('#musicLibrary').innerHTML = tracks.map((track, index) =>
+          '<button class="notice" data-music-track="' + index + '" style="display:block;width:100%;text-align:left">' + String(track.name).replace(/[<>&]/g, '') + '</button>'
+        ).join('');
+      });
+      win.querySelector('#musicLibrary').addEventListener('click', event => {
+        const button = event.target.closest('[data-music-track]');
+        if (button) playAt(Number(button.dataset.musicTrack));
+      });
+      win.querySelector('[data-action="music-prev"]').addEventListener('click', () => playAt(trackIndex - 1));
+      win.querySelector('[data-action="music-next"]').addEventListener('click', () => playAt(trackIndex + 1));
+      win.querySelector('[data-action="clear-music"]').addEventListener('click', () => {
+        player.pause(); player.removeAttribute('src'); tracks = []; trackIndex = 0;
+        win.querySelector('#musicLibrary').textContent = 'Music library cleared.';
+      });
+      win.querySelector('[data-action="play-mascot"]').addEventListener('click', () => {
+        player.src = 'mascot-song.mpeg';
+        player.play().catch(() => win.querySelector('#musicLibrary').textContent = 'Mascot audio could not play.');
+      });
+    }
+    if (name === 'Vision') {
+      let stream = null;
+      const video = win.querySelector('#visionVideo');
+      win.querySelector('[data-action="vision-start"]').addEventListener('click', async () => {
+        if (!navigator.mediaDevices?.getDisplayMedia) {
+          win.querySelector('#visionStatus').textContent = 'Screen capture is unavailable in this browser.';
+          return;
+        }
+        try {
+          stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: false });
+          video.srcObject = stream;
+          const track = stream.getVideoTracks()[0];
+          win.querySelector('#visionStatus').textContent = 'Sharing: ' + (track.label || 'screen') + '. Frames stay in this browser.';
+          track.addEventListener('ended', () => { win.querySelector('#visionStatus').textContent = 'Screen sharing stopped.'; });
+        } catch (error) {
+          win.querySelector('#visionStatus').textContent = 'Screen sharing cancelled: ' + error.message;
+        }
+      });
+      win.querySelector('[data-action="vision-stop"]').addEventListener('click', () => {
+        stream?.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        win.querySelector('#visionStatus').textContent = 'Screen sharing stopped.';
+      });
+      win.querySelector('[data-action="vision-capture"]').addEventListener('click', () => {
+        if (!video.videoWidth) { win.querySelector('#visionStatus').textContent = 'Start screen sharing before capturing a frame.'; return; }
+        const canvas = win.querySelector('#visionCanvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const capture = win.querySelector('#visionCapture');
+        capture.src = canvas.toDataURL('image/png');
+        capture.style.display = '';
+        win.querySelector('#visionStatus').textContent = canvas.width + ' × ' + canvas.height + ' frame captured locally.';
+      });
+    }
+    if (name === 'Automation') win.querySelector('[data-action="ai-feature"]').addEventListener('click', async () => {
       const prompt = win.querySelector('#aiFeaturePrompt').value.trim();
       const result = win.querySelector('#aiFeatureResult');
       result.textContent = 'HYDRA AI is analyzing…';
@@ -7438,6 +7581,38 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         result.textContent = 'AI analysis unavailable: ' + error.message;
       }
     });
+    if (name === 'App Store') {
+      const refreshStore = () => {
+        win.querySelectorAll('[data-store-app]').forEach(button => {
+          const installed = localStorage.getItem('hydra.store.' + button.dataset.storeApp) === 'installed';
+          button.textContent = installed ? 'INSTALLED' : 'INSTALL';
+          button.disabled = installed;
+        });
+      };
+      win.querySelectorAll('[data-store-app]').forEach(button => button.addEventListener('click', () => {
+        localStorage.setItem('hydra.store.' + button.dataset.storeApp, 'installed');
+        refreshStore();
+        win.querySelector('#storeStatus').textContent = button.parentElement.querySelector('h3').textContent + ' installed and ready.';
+      }));
+      refreshStore();
+    }
+    if (name === 'Plugin Store') {
+      const refreshPlugins = () => {
+        win.querySelectorAll('[data-plugin]').forEach(button => {
+          const enabled = localStorage.getItem('hydra.plugin.' + button.dataset.plugin) === 'enabled';
+          button.textContent = enabled ? 'ENABLED' : 'ENABLE';
+        });
+      };
+      win.querySelectorAll('[data-plugin]').forEach(button => button.addEventListener('click', () => {
+        const key = 'hydra.plugin.' + button.dataset.plugin;
+        const enabled = localStorage.getItem(key) === 'enabled';
+        if (enabled) localStorage.removeItem(key); else localStorage.setItem(key, 'enabled');
+        if (button.dataset.plugin === 'neon-theme' && !enabled) document.documentElement.style.setProperty('--venom', '#c084fc');
+        refreshPlugins();
+        win.querySelector('#pluginStatus').textContent = enabled ? 'Plugin disabled.' : 'Plugin enabled.';
+      }));
+      refreshPlugins();
+    }
     if (name === 'Video' || name === 'PDF') win.querySelector('#mediaInput').addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (!file) return;
