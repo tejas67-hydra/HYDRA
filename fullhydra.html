@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#07030f" />
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="pragma" content="no-cache" />
+  <meta http-equiv="expires" content="0" />
   <meta name="description" content="HYDRA is a three-headed battlebot intelligence: two heads curse your hardware, the third tells them to shut up." />
   <title>HYDRA // TRI-CORE BATTLE INTELLIGENCE</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2307030f'/%3E%3Cpath d='M8 26c2-8-1-12 2-17M16 27c0-11-2-13 0-20M24 26c-2-8 1-12-2-17' stroke='%23c084fc' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='9' r='2' fill='%23ff3df2'/%3E%3Ccircle cx='16' cy='6' r='2' fill='%23ff3df2'/%3E%3Ccircle cx='22' cy='9' r='2' fill='%23ff3df2'/%3E%3C/svg%3E" />
@@ -6994,7 +6997,23 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Music') return '<audio controls style="width:100%"><source src="mascot-song.mpeg" type="audio/mpeg"></audio><p class="live-note">HYDRA Mascot Song · local music player</p>';
     if (name === 'Files') return '<div class="file-list"><button>📁 HYDRA PROJECTS</button><button>📁 Desktop</button><button>📄 hydra.html</button><button>📄 fullhydra.html</button><button>🎵 mascot-song.mpeg</button><button>🖼️ hydra-mascot.png</button></div>';
     if (name === 'Notes') return '<div class="browser-bar"><input id="notesTitle" placeholder="Note title" value="HYDRA Mission Note"><button class="rig-btn" data-action="new-note">NEW</button></div><textarea id="notesEditor" style="width:100%;height:220px" placeholder="Write a note..."></textarea><p><button class="rig-btn" data-action="save-note">SAVE NOTE</button><button class="rig-btn" data-action="export-note">EXPORT</button></p><div id="notesList" class="notifications"></div><span id="notesStatus" class="live-note">Notes are saved automatically in this browser.</span>';
-    if (name === 'Calculator') return '<div class="notice" id="calculatorDisplay">0</div><div class="store-grid" id="calculatorKeys"><button class="rig-btn">7</button><button class="rig-btn">8</button><button class="rig-btn">9</button><button class="rig-btn">÷</button><button class="rig-btn">4</button><button class="rig-btn">5</button><button class="rig-btn">6</button><button class="rig-btn">×</button><button class="rig-btn">1</button><button class="rig-btn">2</button><button class="rig-btn">3</button><button class="rig-btn">−</button><button class="rig-btn">0</button><button class="rig-btn">.</button><button class="rig-btn">C</button><button class="rig-btn">+</button><button class="rig-btn" style="grid-column:1/-1">=</button></div>';
+    if (name === 'Calculator') return '<div class="help-panel">'
+      + '<article><strong>Wheel circumference</strong>'
+      + '<div class="browser-bar"><input id="wheelRadius" type="number" step="any" min="0" value="5" aria-label="Wheel radius in centimetres"><button class="rig-btn" data-engineering="circumference">CALCULATE</button></div>'
+      + '<p class="live-note">Formula: C = 2πr · Radius in centimetres</p><div id="circumferenceResult" class="notice">Enter radius, then calculate.</div></article>'
+      + '<article><strong>Wheel torque</strong>'
+      + '<div class="metric-grid"><label>Motor torque (N·m) <input id="motorTorque" type="number" step="any" value="0.5"></label><label>Gear ratio <input id="gearRatio" type="number" step="any" value="10"></label><label>Efficiency (%) <input id="gearEfficiency" type="number" min="0" max="100" value="85"></label></div>'
+      + '<button class="rig-btn" data-engineering="torque">CALCULATE TORQUE</button>'
+      + '<p class="live-note">Formula: Wheel torque = motor torque × gear ratio × efficiency</p><div id="torqueResult" class="notice">Enter motor specifications, then calculate.</div></article>'
+      + '<article><strong>Speed</strong>'
+      + '<div class="metric-grid"><label>Distance (metres) <input id="speedDistance" type="number" step="any" value="100"></label><label>Time (seconds) <input id="speedTime" type="number" step="any" value="20"></label></div>'
+      + '<button class="rig-btn" data-engineering="speed">CALCULATE KM/H</button>'
+      + '<p class="live-note">Formula: km/h = (distance ÷ 1000) ÷ (time ÷ 3600)</p><div id="speedResult" class="notice">Enter distance and time, then calculate.</div></article>'
+      + '<article><strong>Motor speed from wheel</strong>'
+      + '<div class="metric-grid"><label>Wheel RPM <input id="wheelRpm" type="number" step="any" value="120"></label><label>Wheel diameter (cm) <input id="wheelDiameter" type="number" step="any" value="10"></label></div>'
+      + '<button class="rig-btn" data-engineering="wheel-speed">CALCULATE RPM SPEED</button>'
+      + '<p class="live-note">Formula: km/h = wheel RPM × circumference × 60 ÷ 100000</p><div id="wheelSpeedResult" class="notice">Enter wheel data, then calculate.</div></article>'
+      + '</div>';
     if (name === 'Clock') return '<div class="notice"><strong id="clockTime">--:--:--</strong><p id="clockDate"></p></div><div class="browser-bar"><input id="timerMinutes" type="number" min="0" max="180" value="5" aria-label="Timer minutes"><button class="rig-btn" data-action="start-timer">START TIMER</button><button class="rig-btn" data-action="stop-timer">STOP</button></div><div id="timerStatus" class="notice">Timer ready.</div>';
     if (name === 'System') return '<div class="metric-grid"><div>PLATFORM<strong>' + navigator.platform + '</strong></div><div>SCREEN<strong>' + screen.width + ' × ' + screen.height + '</strong></div><div>CORE MEMORY<strong>' + (navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown') + '</strong></div><div>CONNECTION<strong id="systemConnection">Checking</strong></div></div><div class="notice">HYDRA OS · Browser Edition<br>Owner: Tejaswinp</div>';
     if (name === 'Search') return '<form class="browser-bar"><input id="hydraSearchInput" placeholder="Search apps and commands"><button class="rig-btn">SEARCH</button></form><div id="hydraSearchResults" class="notifications"><div class="notice">Try: notes, calculator, weather, tasks, terminal.</div></div>';
@@ -7153,21 +7172,51 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       });
     }
     if (name === 'Calculator') {
-      let expression = '';
-      const display = win.querySelector('#calculatorDisplay');
-      win.querySelector('#calculatorKeys').addEventListener('click', (event) => {
-        const key = event.target.textContent.trim();
-        if (!key) return;
-        if (key === 'C') expression = '';
-        else if (key === '=') {
-          if (!/^[0-9+\-*/.×÷−() ]+$/.test(expression)) return;
-          const safe = expression.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-          try {
-            const result = Function('"use strict";return (' + safe + ')')();
-            expression = Number.isFinite(result) ? String(Number(result.toPrecision(12))) : 'Error';
-          } catch { expression = 'Error'; }
-        } else expression += key;
-        display.textContent = expression || '0';
+      win.querySelector('[data-engineering="circumference"]').addEventListener('click', () => {
+        const radiusCm = Number(win.querySelector('#wheelRadius').value);
+        if (!(radiusCm > 0)) {
+          win.querySelector('#circumferenceResult').textContent = 'Enter a radius greater than zero.';
+          return;
+        }
+        const circumferenceCm = 2 * Math.PI * radiusCm;
+        win.querySelector('#circumferenceResult').textContent =
+          circumferenceCm.toFixed(3) + ' cm circumference · ' + (circumferenceCm / 100).toFixed(4) + ' metres per wheel turn';
+      });
+      win.querySelector('[data-engineering="torque"]').addEventListener('click', () => {
+        const motorTorque = Number(win.querySelector('#motorTorque').value);
+        const gearRatio = Number(win.querySelector('#gearRatio').value);
+        const efficiency = Number(win.querySelector('#gearEfficiency').value);
+        if (!(motorTorque >= 0 && gearRatio >= 0 && efficiency >= 0 && efficiency <= 100)) {
+          win.querySelector('#torqueResult').textContent = 'Enter valid motor torque, gear ratio, and efficiency.';
+          return;
+        }
+        const wheelTorque = motorTorque * gearRatio * efficiency / 100;
+        win.querySelector('#torqueResult').textContent =
+          wheelTorque.toFixed(3) + ' N·m at the wheel · ' + (wheelTorque * 100).toFixed(1) + ' N·cm';
+      });
+      win.querySelector('[data-engineering="speed"]').addEventListener('click', () => {
+        const distance = Number(win.querySelector('#speedDistance').value);
+        const timeSeconds = Number(win.querySelector('#speedTime').value);
+        if (!(distance >= 0 && timeSeconds > 0)) {
+          win.querySelector('#speedResult').textContent = 'Enter distance and a positive time.';
+          return;
+        }
+        const metresPerSecond = distance / timeSeconds;
+        const kmPerHour = metresPerSecond * 3.6;
+        win.querySelector('#speedResult').textContent =
+          kmPerHour.toFixed(2) + ' km/h · ' + metresPerSecond.toFixed(3) + ' m/s';
+      });
+      win.querySelector('[data-engineering="wheel-speed"]').addEventListener('click', () => {
+        const rpm = Number(win.querySelector('#wheelRpm').value);
+        const diameterCm = Number(win.querySelector('#wheelDiameter').value);
+        if (!(rpm >= 0 && diameterCm > 0)) {
+          win.querySelector('#wheelSpeedResult').textContent = 'Enter wheel RPM and a positive diameter.';
+          return;
+        }
+        const circumferenceCm = Math.PI * diameterCm;
+        const kmPerHour = rpm * circumferenceCm * 60 / 100000;
+        win.querySelector('#wheelSpeedResult').textContent =
+          kmPerHour.toFixed(2) + ' km/h · Circumference ' + circumferenceCm.toFixed(2) + ' cm';
       });
     }
     if (name === 'Clock') {
