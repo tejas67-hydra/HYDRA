@@ -3150,6 +3150,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           <div class="hydra-taskbar">
             <button class="rig-btn task-start" type="button" id="desktopStart">HYDRA</button>
             <button class="rig-btn task-app" type="button" id="desktopHomeApp">SYSTEM HOME</button>
+            <button class="rig-btn task-app" type="button" id="desktopShowApps">SHOW DESKTOP</button>
             <button class="rig-btn help-fab" type="button" id="desktopHelp" title="HYDRA Help">?</button>
             <span class="task-clock" id="desktopClock">--:--:--</span>
           </div>
@@ -6878,7 +6879,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       }
     });
     document.querySelectorAll('.desktop-icon').forEach((icon) => {
-      icon.addEventListener('click', () => openHydraApp(icon.dataset.app));
+      icon.addEventListener('click', () => {
+        const desktop = document.getElementById('hydraDesktop');
+        desktop?.querySelectorAll('.hydra-window').forEach((win) => {
+          if (win.dataset.app !== icon.dataset.app) win.style.display = 'none';
+        });
+        openHydraApp(icon.dataset.app);
+      });
     });
     document.getElementById('desktopHelp')?.addEventListener('click', () => openHydraApp('Help'));
     document.getElementById('desktopStart')?.addEventListener('click', () => {
@@ -6887,6 +6894,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     document.getElementById('desktopHomeApp')?.addEventListener('click', () => {
       desktop.querySelectorAll('.hydra-window').forEach((win) => win.remove());
       activateTab('home');
+    });
+    document.getElementById('desktopShowApps')?.addEventListener('click', () => {
+      desktop.querySelectorAll('.hydra-window').forEach((win) => {
+        win.style.display = 'none';
+      });
+      desktop.querySelector('.desktop-grid')?.scrollTo({ top: 0, behavior: 'smooth' });
     });
     setInterval(() => {
       const clock = document.getElementById('desktopClock');
@@ -6899,7 +6912,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (!desktop) return;
     const existing = [...desktop.querySelectorAll('.hydra-window')]
       .find((win) => win.dataset.app === name);
-    if (existing) { existing.style.zIndex = ++windowHydraZ; existing.scrollIntoView({ behavior: 'smooth' }); return; }
+    if (existing) {
+      existing.style.display = '';
+      existing.style.zIndex = ++windowHydraZ;
+      existing.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     const win = document.createElement('section');
     win.className = 'hydra-window';
     win.dataset.app = name;
