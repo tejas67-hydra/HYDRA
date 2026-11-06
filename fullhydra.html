@@ -3643,7 +3643,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     $('backstoryBtn')?.addEventListener('click', () => {
       if (typeof backstoryDialog?.showModal === 'function') backstoryDialog.showModal();
       if (backstoryAudio) {
-        backstoryAudio.src = 'hydra-origin.wav';
+        backstoryAudio.src = location.hostname.endsWith('github.io')
+          ? 'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.wav'
+          : 'hydra-origin.wav';
         backstoryAudio.currentTime = 0;
         backstoryAudio.play().catch(() => {
           el.mascotStatus.textContent = 'NARRATION BLOCKED';
@@ -6431,7 +6433,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   function playMascotSong() {
     if (!el.mascotAudio) return;
     el.mascotStatus.textContent = 'LOADING';
-    el.mascotAudio.src = 'mascot-song.wav';
+    el.mascotAudio.src = location.hostname.endsWith('github.io')
+      ? 'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/mascot-song.wav'
+      : 'mascot-song.wav';
     el.mascotAudio.load();
     const playAttempt = el.mascotAudio.play();
     if (!playAttempt) {
