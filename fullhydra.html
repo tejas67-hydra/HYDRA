@@ -6878,14 +6878,22 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         if (windows.length) windows.sort((a, b) => Number(b.style.zIndex) - Number(a.style.zIndex))[0].remove();
       }
     });
-    document.querySelectorAll('.desktop-icon').forEach((icon) => {
-      icon.addEventListener('click', () => {
+    desktop.querySelector('.desktop-grid')?.addEventListener('click', event => {
+      const icon = event.target.closest('.desktop-icon');
+      if (icon) {
         const desktop = document.getElementById('hydraDesktop');
         desktop?.querySelectorAll('.hydra-window').forEach((win) => {
           if (win.dataset.app !== icon.dataset.app) win.style.display = 'none';
         });
         openHydraApp(icon.dataset.app);
-      });
+      }
+    });
+    [
+      ['hydra.store.mission-hud-plus', 'Mission HUD+', '⌁', 'Enhanced telemetry dashboard'],
+      ['hydra.store.robot-map', 'Robot Map', '⌗', 'Manual route and waypoint board'],
+      ['hydra.store.emergency-tools', 'Emergency Tools', '⚠', 'Battery and recovery alerts']
+    ].forEach(([key, appName, icon, description]) => {
+      if (localStorage.getItem(key) === 'installed') installHydraDesktopApp(appName, icon, description);
     });
     document.getElementById('desktopHelp')?.addEventListener('click', () => openHydraApp('Help'));
     document.getElementById('desktopStart')?.addEventListener('click', () => {
@@ -6930,6 +6938,18 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     desktop.appendChild(win);
     makeHydraWindow(win);
     wireHydraApp(win, name);
+  }
+
+  function installHydraDesktopApp(appName, icon, description) {
+    const grid = document.querySelector('#hydraDesktop .desktop-grid');
+    if (!grid || grid.querySelector('.desktop-icon[data-app="' + appName.replace(/"/g, '\\"') + '"]')) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'desktop-icon installed-app';
+    button.dataset.app = appName;
+    button.title = description;
+    button.innerHTML = '<b>' + icon + '</b>' + appName.toUpperCase();
+    grid.appendChild(button);
   }
 
   let windowHydraZ = 100;
@@ -6990,6 +7010,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   }
 
   function hydraAppContent(name) {
+    if (name === 'Mission HUD+') return '<div class="hud-grid"><div><span>SPEED</span><strong><input id="hudPlusSpeed" type="number" value="0"> km/h</strong></div><div><span>HEADING</span><strong><input id="hudPlusHeading" type="number" value="0">°</strong></div><div><span>BATTERY</span><strong><input id="hudPlusBattery" type="number" value="100">%</strong></div><div><span>RANGE</span><strong><input id="hudPlusRange" type="number" value="0"> m</strong></div></div><div class="browser-bar"><button class="rig-btn" data-action="update-hud-plus">UPDATE TELEMETRY</button><button class="rig-btn" data-action="speak-hud-plus">VOICE ALERT</button></div><div id="hudPlusDisplay" class="notice">TELEMETRY READY</div>';
+    if (name === 'Robot Map') return '<p>Tap the map grid to add waypoints. Waypoints are saved in this browser.</p><canvas id="robotMapCanvas" width="520" height="280" style="width:100%;background:#07030f;border:1px solid var(--line);touch-action:none"></canvas><div class="browser-bar"><button class="rig-btn" data-action="clear-map">CLEAR ROUTE</button><button class="rig-btn" data-action="export-map">EXPORT ROUTE</button></div><div id="robotMapStatus" class="notice">Tap to place waypoint 1.</div>';
+    if (name === 'Emergency Tools') return '<div class="store-grid"><article class="store-card"><h3>Battery Alert</h3><p>Test a battery warning.</p><button class="rig-btn" data-action="emergency-battery">TEST ALERT</button></article><article class="store-card"><h3>Obstacle Warning</h3><p>Test the obstacle response.</p><button class="rig-btn" data-action="emergency-obstacle">TEST WARNING</button></article><article class="store-card"><h3>Recovery</h3><p>Run a safe recovery checklist.</p><button class="rig-btn" data-action="emergency-recovery">RUN CHECKLIST</button></article></div><div id="emergencyStatus" class="notice">Emergency tools ready.</div>';
     if (name === 'Help') return '<div class="help-panel"><article><strong>HYDRA Desktop</strong><p>Click an icon to launch it. Drag the title bar to move windows, resize from the lower-right corner, and use −, □, × to minimize, maximize, or close.</p></article><article><strong>Voice conversation</strong><p>Enable Live Duplex, allow microphone access, then say “Hey Hydra” followed by your question. HYDRA listens and reads its reply aloud when AUTO SPEAK is on.</p></article><article><strong>Keyboard</strong><p>Ctrl+Space opens HYDRA Help. Escape closes an open desktop window.</p></article><article><strong>Hardware tools</strong><p>Bluetooth, camera, face login, file access, Wi-Fi, and robot hardware depend on browser or companion-service support.</p></article></div>';
     if (name === 'Memory') return '<h3>Conversation Memory</h3><textarea id="memoryEditor" style="width:100%;height:230px"></textarea><p><button class="rig-btn" data-action="save-memory">SAVE MEMORY</button><button class="rig-btn" data-action="clear-memory">CLEAR MEMORY</button></p><span class="live-note" id="memoryStatus">Stored only in this browser.</span>';
     if (name === 'Personality') return '<label>Personality<select id="personalitySelect"><option>Battle Commander</option><option>Friendly Companion</option><option>Calm Advisor</option><option>Technical Engineer</option><option>Creative Mentor</option></select></label><p><button class="rig-btn" data-action="personality">ACTIVATE</button></p><div class="notice" id="personalityStatus">Current personality: Battle Commander</div>';
@@ -7502,6 +7525,58 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       localStorage.setItem('hydra.personality', personality);
       win.querySelector('#personalityStatus').textContent = 'Current personality: ' + personality;
     });
+    if (name === 'Mission HUD+') {
+      win.querySelector('[data-action="update-hud-plus"]').addEventListener('click', () => {
+        win.querySelector('#hudPlusDisplay').textContent = 'SPEED ' + win.querySelector('#hudPlusSpeed').value + ' KM/H · HEADING ' +
+          win.querySelector('#hudPlusHeading').value + '° · BATTERY ' + win.querySelector('#hudPlusBattery').value +
+          '% · RANGE ' + win.querySelector('#hudPlusRange').value + ' M';
+      });
+      win.querySelector('[data-action="speak-hud-plus"]').addEventListener('click', () => {
+        if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(win.querySelector('#hudPlusDisplay').textContent));
+      });
+    }
+    if (name === 'Robot Map') {
+      const canvas = win.querySelector('#robotMapCanvas');
+      const context = canvas.getContext('2d');
+      const key = 'hydra.robot-map';
+      let points = [];
+      try { points = JSON.parse(localStorage.getItem(key) || '[]'); } catch { points = []; }
+      const draw = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = '#c084fc'; context.lineWidth = 2;
+        context.beginPath();
+        points.forEach((point, index) => {
+          if (index === 0) context.moveTo(point.x, point.y); else context.lineTo(point.x, point.y);
+        });
+        context.stroke();
+        points.forEach((point, index) => {
+          context.fillStyle = '#ff3df2'; context.beginPath(); context.arc(point.x, point.y, 8, 0, Math.PI * 2); context.fill();
+          context.fillStyle = '#fff'; context.font = '12px monospace'; context.fillText(String(index + 1), point.x - 4, point.y + 4);
+        });
+      };
+      canvas.addEventListener('pointerdown', event => {
+        const rect = canvas.getBoundingClientRect();
+        points.push({ x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height });
+        localStorage.setItem(key, JSON.stringify(points));
+        draw();
+        win.querySelector('#robotMapStatus').textContent = 'Waypoint ' + points.length + ' saved.';
+      });
+      win.querySelector('[data-action="clear-map"]').addEventListener('click', () => { points = []; localStorage.removeItem(key); draw(); win.querySelector('#robotMapStatus').textContent = 'Route cleared.'; });
+      win.querySelector('[data-action="export-map"]').addEventListener('click', () => {
+        const url = URL.createObjectURL(new Blob([JSON.stringify(points, null, 2)], { type: 'application/json' }));
+        const link = document.createElement('a'); link.href = url; link.download = 'hydra-route.json'; link.click(); URL.revokeObjectURL(url);
+      });
+      draw();
+    }
+    if (name === 'Emergency Tools') {
+      const announce = message => {
+        win.querySelector('#emergencyStatus').textContent = message;
+        if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(message));
+      };
+      win.querySelector('[data-action="emergency-battery"]').addEventListener('click', () => announce('Battery level is low. Return HYDRA to a charging location.'));
+      win.querySelector('[data-action="emergency-obstacle"]').addEventListener('click', () => announce('Obstacle detected. Stop and scan the route.'));
+      win.querySelector('[data-action="emergency-recovery"]').addEventListener('click', () => announce('Recovery checklist: stop motors, inspect wheels, check battery, clear route, reconnect controller.'));
+    }
     if (name === 'Music') {
       const player = win.querySelector('#hydraMusicPlayer');
       let tracks = [];
@@ -7582,6 +7657,14 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       }
     });
     if (name === 'App Store') {
+      const installedApps = {
+        'mission-hud-plus': ['Mission HUD+', '⌁', 'Enhanced telemetry dashboard'],
+        'robot-map': ['Robot Map', '⌗', 'Manual route and waypoint board'],
+        'emergency-tools': ['Emergency Tools', '⚠', 'Battery and recovery alerts']
+      };
+      Object.entries(installedApps).forEach(([id, app]) => {
+        if (localStorage.getItem('hydra.store.' + id) === 'installed') installHydraDesktopApp(app[0], app[1], app[2]);
+      });
       const refreshStore = () => {
         win.querySelectorAll('[data-store-app]').forEach(button => {
           const installed = localStorage.getItem('hydra.store.' + button.dataset.storeApp) === 'installed';
@@ -7590,9 +7673,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         });
       };
       win.querySelectorAll('[data-store-app]').forEach(button => button.addEventListener('click', () => {
-        localStorage.setItem('hydra.store.' + button.dataset.storeApp, 'installed');
+        const appId = button.dataset.storeApp;
+        localStorage.setItem('hydra.store.' + appId, 'installed');
+        const app = installedApps[appId];
+        installHydraDesktopApp(app[0], app[1], app[2]);
         refreshStore();
         win.querySelector('#storeStatus').textContent = button.parentElement.querySelector('h3').textContent + ' installed and ready.';
+        openHydraApp(app[0]);
       }));
       refreshStore();
     }
