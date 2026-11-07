@@ -2730,6 +2730,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
             <li><strong>C-HED (The Gatekeeper):</strong> The ultimate judge, a booming voice dragged up from the bottom of a server rack that violently yells <strong>"SHUT UPPPPP!!!"</strong> whenever the sounds of the wasteland get too loud.</li>
           </ul>
           <p>HYDRA rolled out from the smoking wreckage of the canyon on its six heavy wheels, powered by the immortal, roaring rumble of the V8 Voodoo engine hidden deep within its purple steel ribs. It no longer needed a driver. It <em>was</em> the machine.</p>
+          <button type="button" class="rig-btn" id="backstoryStopBtn">⏹ STOP AUDIO</button>
           <button type="button" class="rig-btn" id="backstoryCloseBtn">CLOSE ARCHIVE</button>
         </div>
       </dialog>
@@ -2837,6 +2838,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
           <div class="voice-rig" role="group" aria-label="Voice rig">
             <button type="button" class="rig-btn is-on" id="voiceBtn" aria-pressed="true">AUTO SPEAK: ON</button>
+            <button type="button" class="rig-btn" id="eleVoiceBtn" title="Set ElevenLabs API key for HYDRA's voice">ELE VOICE</button>
             <button type="button" class="rig-btn is-on" id="caveBtn" aria-pressed="true">CAVE AUDIO</button>
             <span class="gear-row" id="gearRow" role="group" aria-label="Cave sound gears">
               <button type="button" class="gear-btn" data-gear="1" aria-pressed="false" title="Gear 1 - cave bed on">&#9881;<em>I</em></button>
@@ -3204,7 +3206,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   <span class="sr-only" id="liveRegion" aria-live="polite"></span>
 
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
-  <audio id="backstoryAudio" preload="auto" src="hydra-origin.wav"></audio>
+  <audio id="backstoryAudio" preload="auto" src="hydra-origin.webm?v=20261107-1020"></audio>
 
   <script>
 (() => {
@@ -3289,7 +3291,17 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   // listeners can hear a third mouth cut in.
   const SHUSH_HEAD = { id: 'C-HED', pitch: 0.3, rate: 1.28, hint: /ravi/i };
   const SHUSH_TEXT = 'SHUT UPPPPP!!!!!';
+  const SHUSH_AUDIO = 'curse-head-shut-up.mp3?v=20261107-1020';
+
   const THIRD_TEXT = 'You are not worthy to talk to me.';
+  const THIRD_AUDIO = 'third-head-line.mp3?v=20261107-1020';
+
+  // ElevenLabs voice for all HYDRA speech: Harry - Fierce Warrior. The API key
+  // lives in localStorage ('hydra_elevenlabs_api_key') so it is never shipped
+  // inside this file; the local relay on :4174 is tried when direct fetch fails.
+  const ELE_VOICE_ID = 'SOYHLrjzK2X1ezoPC6cr';
+  const ELE_KEY_STORAGE = 'hydra_elevenlabs_api_key';
+  const ELE_VOICE_STORAGE = 'hydra_elevenlabs_voice_id';;
 
   // Core damage sim state: 700 HP, fixed chart, one hit per part.
   const DAMAGE_MAX = 700;
@@ -3370,6 +3382,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     curseSpeakBtn: $('curseSpeakBtn'),
     curseSpeakAllBtn: $('curseSpeakAllBtn'),
     voiceBtn: $('voiceBtn'),
+    eleVoiceBtn: $('eleVoiceBtn'),
     caveBtn: $('caveBtn'),
     gearRow: $('gearRow'),
     pitchSlider: $('pitchSlider'),
@@ -3486,6 +3499,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     voiceToken: 0,
     voiceFinish: null,
     voiceCut: false,
+    shushAudio: null,
+    eleAudio: null,
+    thirdAudio: null,
     revealToken: 0,
     revealTimer: null,
     cave: null,
@@ -3519,6 +3535,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     initWebSocket();
     initCompanionship();
     initHydraPersonality();
+    updateEleUi();
     updateRigUi();
     updateCastUi();
     updateGrudgeUi();
@@ -3588,6 +3605,17 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       transmit(text, 'typed');
     });
     el.voiceBtn.addEventListener('click', () => { wakeCave(); setPref('voice', !state.prefs.voice); });
+    el.eleVoiceBtn?.addEventListener('click', () => {
+      wakeCave();
+      const current = (localStorage.getItem('hydra_elevenlabs_api_key') || '').trim();
+      const next = window.prompt('Paste your ElevenLabs API key (sk_...). Leave empty to remove.', current);
+      if (next === null) return;
+      const key = next.trim();
+      if (key) localStorage.setItem('hydra_elevenlabs_api_key', key);
+      else localStorage.removeItem('hydra_elevenlabs_api_key');
+      updateEleUi();
+      setVoiceState(key ? 'ELE VOICE ARMED' : 'ELE VOICE OFF');
+    });
     el.caveBtn.addEventListener('click', () => { wakeCave(); setPref('cave', !state.prefs.cave); });
     el.gearRow.addEventListener('click', (event) => {
       const btn = event.target.closest ? event.target.closest('.gear-btn') : null;
@@ -3643,26 +3671,76 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     $('backstoryBtn')?.addEventListener('click', () => {
       if (typeof backstoryDialog?.showModal === 'function') backstoryDialog.showModal();
       if (backstoryAudio) {
-        backstoryAudio.src = location.hostname.endsWith('github.io')
-          ? 'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.wav'
-          : 'hydra-origin.wav';
-        backstoryAudio.currentTime = 0;
-        backstoryAudio.play().catch(() => {
-          el.mascotStatus.textContent = 'NARRATION BLOCKED';
-          if ('speechSynthesis' in window) {
-            speechSynthesis.cancel();
-            const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
-            narration.rate = 0.88;
-            speechSynthesis.resume();
-            speechSynthesis.speak(narration);
+        const hosted = location.hostname.endsWith('github.io');
+        const sources = hosted
+          ? ['https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.webm?v=20261107-1020',
+             'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.mp3?v=20261107-1020',
+             'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.wav?v=20261107-1020']
+          : ['hydra-origin.webm?v=20261107-1020', 'hydra-origin.mp3?v=20261107-1020', 'hydra-origin.wav?v=20261107-1020'];
+        let index = 0;
+        const attempt = () => {
+          backstoryAudio.onerror = () => {
+            index += 1;
+            if (index < sources.length) attempt();
+            else {
+              // Don't use mascotStatus for narration errors - it's for the song
+              if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
+                narration.rate = 0.88;
+                speechSynthesis.resume();
+                speechSynthesis.speak(narration);
+              }
+            }
+          };
+          backstoryAudio.src = sources[index];
+          backstoryAudio.currentTime = 0;
+          backstoryAudio.load();
+          const playAttempt = backstoryAudio.play();
+          if (!playAttempt) {
+            index += 1;
+            if (index < sources.length) attempt();
+            else {
+              // Don't use mascotStatus for narration errors - it's for the song
+              if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
+                narration.rate = 0.88;
+                speechSynthesis.resume();
+                speechSynthesis.speak(narration);
+              }
+            }
+            return;
           }
-        });
+          playAttempt.catch(() => {
+            index += 1;
+            if (index < sources.length) attempt();
+            else {
+              // Don't use mascotStatus for narration errors - it's for the song
+              if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
+                narration.rate = 0.88;
+                speechSynthesis.resume();
+                speechSynthesis.speak(narration);
+              }
+            }
+          });
+        };
+        attempt();
       }
     });
     const closeBackstory = () => {
       backstoryAudio?.pause();
       backstoryDialog?.close();
     };
+    $('backstoryStopBtn')?.addEventListener('click', () => {
+      if (backstoryAudio) {
+        backstoryAudio.pause();
+        backstoryAudio.currentTime = 0;
+      }
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+    });
     $('backstoryCloseBtn')?.addEventListener('click', closeBackstory);
     backstoryDialog?.addEventListener('close', () => backstoryAudio?.pause());
     // Companionship events
@@ -3930,9 +4008,39 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           setTimeout(() => center.classList.remove('is-shouting'), 1200);
         }
         appendBubble('msg--hydra msg--hed msg--shush', SHUSH_HEAD.id, SHUSH_TEXT);
-        speakItems([{ text: SHUSH_TEXT, voice: SHUSH_HEAD, volume: 100 }], 'curse')
-          .then(resolve, resolve);
+        playShushAudio().then(resolve, resolve);
       }, 320);
+    });
+  }
+
+  function playShushAudio() {
+    if (!state.prefs.voice) {
+      setMode('idle');
+      return Promise.resolve();
+    }
+    state.voiceCut = false;
+    cancelSpeech();
+    const audio = new Audio(SHUSH_AUDIO);
+    audio.volume = clamp(state.prefs.level == null ? 100 : state.prefs.level, 0, 100) / 100;
+    state.shushAudio = audio;
+    state.speaking = true;
+    setMode('speaking');
+    updateStopUi();
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        if (state.shushAudio === audio) state.shushAudio = null;
+        state.speaking = false;
+        setMode('idle');
+        updateStopUi();
+        resolve();
+      };
+      audio.addEventListener('ended', finish, { once: true });
+      audio.addEventListener('error', finish, { once: true });
+      audio.play().catch(finish);
     });
   }
 
@@ -5557,7 +5665,37 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       setTimeout(() => stage.classList.remove('is-denied'), 600);
     }
     wakeCave();
-    speakItems([{ text: THIRD_TEXT, voice: SHUSH_HEAD, volume: 100 }], 'chat');
+    if (!state.prefs.voice) {
+      setMode('idle');
+      return;
+    }
+    state.voiceCut = false;
+    cancelSpeech();
+    const audio = new Audio(THIRD_AUDIO);
+    audio.volume = clamp(state.prefs.level == null ? 100 : state.prefs.level, 0, 100) / 100;
+    state.thirdAudio = audio;
+    state.speaking = true;
+    setMode('speaking');
+    updateStopUi();
+    appendBubble('msg--hydra msg--hed msg--shush', SHUSH_HEAD.id, THIRD_TEXT);
+    audio.play().catch(() => {
+      state.thirdAudio = null;
+      state.speaking = false;
+      setMode('idle');
+      updateStopUi();
+    });
+    audio.addEventListener('ended', () => {
+      state.thirdAudio = null;
+      state.speaking = false;
+      setMode('idle');
+      updateStopUi();
+    }, { once: true });
+    audio.addEventListener('error', () => {
+      state.thirdAudio = null;
+      state.speaking = false;
+      setMode('idle');
+      updateStopUi();
+    }, { once: true });
   }
 
   // Terminal health sim, ported as-is: 700 HP, fixed damage chart, cooling that
@@ -5737,6 +5875,50 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     return clamp(base * factor, 0.12, 1.9);
   }
 
+  function eleApiKey() {
+    try { return (localStorage.getItem(ELE_KEY_STORAGE) || '').trim(); } catch { return ''; }
+  }
+
+  function updateEleUi() {
+    const btn = el.eleVoiceBtn;
+    if (!btn) return;
+    const armed = !!eleApiKey();
+    btn.classList.toggle('is-on', armed);
+    btn.textContent = armed ? 'ELE VOICE: ON' : 'ELE VOICE';
+    btn.title = armed
+      ? 'ElevenLabs voice active - click to change or remove the API key'
+      : 'Set ElevenLabs API key for HYDRA\'s voice';
+  }
+
+  // Returns an object URL for ELE audio, or null when every route failed.
+  async function eleFetchAudio(text) {
+    const key = eleApiKey();
+    const voice = (() => { try { return localStorage.getItem(ELE_VOICE_STORAGE) || ELE_VOICE_ID; } catch { return ELE_VOICE_ID; } })();
+    if (key) {
+      try {
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream`, {
+          method: 'POST',
+          headers: { 'xi-api-key': key, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: { stability: 0.5, similarity_boost: 0.85, style: 0.4, use_speaker_boost: true }
+          })
+        });
+        if (response.ok) return URL.createObjectURL(await response.blob());
+      } catch { /* CORS or offline - try the local relay next */ }
+    }
+    try {
+      const response = await fetch('http://127.0.0.1:4174/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (response.ok) return URL.createObjectURL(await response.blob());
+    } catch { /* relay not running */ }
+    return null;
+  }
+
   function speak(text, options) {
     const kind = (options && options.kind) || 'chat';
     const head = options && typeof options.head === 'number' ? options.head : 1;
@@ -5745,7 +5927,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   // Each head speaks its own line in its own voice, dry - no word-tail echo.
   function speakItems(items, kind) {
-    if (!('speechSynthesis' in window) || !state.prefs.voice || !items) {
+    const canSpeak = ('speechSynthesis' in window) || !!eleApiKey();
+    if (!canSpeak || !state.prefs.voice || !items) {
       setMode('idle');
       return Promise.resolve();
     }
@@ -5799,7 +5982,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       state.voiceFinish = finish;
       const guard = setTimeout(finish, Math.min(120000, 5000 + estimated));
 
-      queue.forEach((entry) => {
+      const legacyEntry = (entry) => {
+        if (typeof SpeechSynthesisUtterance === 'undefined') {
+          remaining -= 1;
+          if (remaining <= 0) finish();
+          return;
+        }
         const voice = pickVoice(entry.head);
         const utterance = new SpeechSynthesisUtterance(entry.text);
         if (voice) utterance.voice = voice;
@@ -5835,7 +6023,47 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           setVoiceState('VOICE ENGINE REFUSED');
           finish();
         }
-      });
+      };
+
+      // ElevenLabs path: each head's line is synthesized with the ELE voice and
+      // played back at that head's own rate, so L-HED/R-HED/C-HED still sound
+      // distinct. Any line the API cannot serve drops back to the browser voice.
+      const runEleQueue = async () => {
+        for (const entry of queue) {
+          if (settled || token !== state.voiceToken) return;
+          const url = await eleFetchAudio(entry.text);
+          if (settled || token !== state.voiceToken) {
+            if (url) URL.revokeObjectURL(url);
+            return;
+          }
+          if (!url) { legacyEntry(entry); continue; }
+          await new Promise((done) => {
+            const audio = new Audio(url);
+            state.eleAudio = audio;
+            audio.volume = entry.volume;
+            audio.playbackRate = clamp(entry.rate, 0.75, 1.35);
+            let released = false;
+            const release = () => {
+              if (released) return;
+              released = true;
+              URL.revokeObjectURL(url);
+              if (state.eleAudio === audio) state.eleAudio = null;
+              remaining -= 1;
+              if (remaining <= 0) finish();
+              done();
+            };
+            audio.onended = release;
+            audio.onerror = release;
+            audio.onpause = () => { if (!audio.ended) release(); };
+            if (state.cave) {
+              state.cave.swell(entry.dry ? 1 : entry.volume);
+              if (entry.growl) state.cave.growl();
+            }
+            audio.play().catch(release);
+          });
+        }
+      };
+      runEleQueue();
     });
   }
 
@@ -5846,6 +6074,18 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     state.voiceFinish = null;
     if ('speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch { /* no speech engine */ }
+    }
+    if (state.eleAudio) {
+      try { state.eleAudio.pause(); } catch { /* audio already stopped */ }
+      state.eleAudio = null;
+    }
+    if (state.thirdAudio) {
+      try { state.thirdAudio.pause(); } catch { /* audio already stopped */ }
+      state.thirdAudio = null;
+    }
+    if (state.shushAudio) {
+      try { state.shushAudio.pause(); } catch { /* audio already stopped */ }
+      state.shushAudio = null;
     }
     state.speaking = false;
     document.body.classList.remove('is-speaking');
@@ -6433,13 +6673,24 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   function playMascotSong() {
     if (!el.mascotAudio) return;
     el.mascotStatus.textContent = 'LOADING';
-    el.mascotAudio.src = location.hostname.endsWith('github.io')
+    el.mascotStatus.style.color = '';
+    el.mascotStatus.title = '';
+    const hosted = location.hostname.endsWith('github.io');
+    const src = hosted
       ? 'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/mascot-song.wav'
       : 'mascot-song.wav';
+    el.mascotAudio.onerror = (e) => {
+      el.mascotStatus.textContent = 'ERROR: AUDIO FILE';
+      el.mascotStatus.style.color = '#ff3366';
+      addStrategyLog('Song file failed to load');
+    };
+    el.mascotAudio.src = src;
     el.mascotAudio.load();
     const playAttempt = el.mascotAudio.play();
     if (!playAttempt) {
-      el.mascotStatus.textContent = 'ERROR: AUDIO API UNAVAILABLE';
+      el.mascotStatus.textContent = 'ERROR';
+      el.mascotStatus.style.color = '#ff3366';
+      addStrategyLog('Song play failed: AUDIO API UNAVAILABLE');
       return;
     }
     playAttempt.then(() => {
@@ -6459,8 +6710,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (!el.mascotAudio) return;
     el.mascotAudio.pause();
     el.mascotAudio.currentTime = 0;
-    el.mascotStatus.textContent = 'STOPPED';
-    el.mascotStatus.style.color = '#ff3366';
+    el.mascotStatus.textContent = 'READY';
+    el.mascotStatus.style.color = '';
     el.mascotPlayBtn.disabled = false;
     addStrategyLog('Mascot song stopped');
   }
