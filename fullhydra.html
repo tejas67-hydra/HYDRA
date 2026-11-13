@@ -11,6 +11,8 @@
   <meta name="description" content="HYDRA is a three-headed battlebot intelligence: two heads curse your hardware, the third tells them to shut up." />
   <title>HYDRA // TRI-CORE BATTLE INTELLIGENCE</title>
   <link rel="icon" href="hydra-icon.jpg" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./hydra-icon-192.png" />
   <style>
 :root {
   --bg: #07030f;
@@ -2560,6 +2562,18 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   .studio-canvas div { position:absolute; padding:10px; border:1px solid var(--venom); background:#140c24; }
   @keyframes hydraFloat { 50% { transform: translateY(-8px) rotateY(3deg); } }
   @keyframes hydraPulse { 50% { box-shadow: 0 0 34px rgba(255,61,242,.68), 0 0 70px rgba(192,132,252,.25); } }
+  
+  .tabs { border-bottom: 0; }
+  .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+  .manual-item { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13, 7, 24, .8); }
+  .manual-item h3 { margin: 0 0 8px; color: var(--venom-bright); font-size: 11px; letter-spacing: .12em; }
+  .manual-item p, .manual-safety-note { color: var(--steel); font-size: 12px; line-height: 1.6; }
+  .manual-safety-note { color: var(--warning); }
+  .manual-question-form { display: flex; gap: 8px; }
+  .manual-question-form input { min-width: 0; flex: 1; padding: 10px; background: var(--bg-deep); border: 1px solid var(--line); color: var(--lilac); }
+  .manual-answer { margin-top: 12px; padding: 12px; border-left: 2px solid var(--venom); color: var(--lilac); background: rgba(192,132,252,.08); }
+  .manual-question-form .rig-btn { min-height: 38px; }
+  @media (max-width: 480px) { .avatar-stage { min-height: 340px; padding-bottom: 52px; } .hydra-photo { width: min(220px, 72vw); height: min(220px, 72vw); } .avatar-labels { bottom: 30px; gap: 5px; font-size: 6px; letter-spacing: .08em; } .avatar-caption { bottom: 8px; font-size: 6px; letter-spacing: .12em; } .manual-question-form { flex-wrap: wrap; } .manual-question-form .rig-btn { flex: 1 1 100%; } }
   </style>
 </head>
 <body>
@@ -2573,6 +2587,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         <i class="led" id="uplinkLed"></i>
         <span id="uplinkText">AI UPLINK // CHECKING</span>
       </span>
+      <button type="button" class="rig-btn" id="installAppBtn">ADD TO DEVICE</button>
     </header>
 
     <main class="console">
@@ -2586,6 +2601,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         <button type="button" class="tab-btn" id="tab-hydra-ai" data-tab="hydra-ai" role="tab" aria-selected="false" aria-controls="panel-hydra-ai" tabindex="-1">HYDRA AI<small>CHAT INTERFACE</small></button>
         <button type="button" class="tab-btn" id="tab-companionship" data-tab="companionship" role="tab" aria-selected="false" aria-controls="panel-companionship" tabindex="-1">COMPANIONSHIP<small>SMARTWATCH</small></button>
         <button type="button" class="tab-btn" id="tab-os" data-tab="os" role="tab" aria-selected="false" aria-controls="panel-os" tabindex="-1">HYDRA OS<small>DESKTOP</small></button>
+        <button type="button" class="tab-btn" id="tab-manual" data-tab="manual" role="tab" aria-selected="false" aria-controls="panel-manual" tabindex="-1">MANUAL<small>APP GUIDE</small></button>
       </nav>
 
       <div class="tab-panel" id="panel-home" data-panel="home" role="tabpanel" aria-labelledby="tab-home">
@@ -3243,10 +3259,28 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         </section>
       </div>
 
+      <div class="tab-panel" id="panel-manual" data-panel="manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
+        <section class="card" aria-label="HYDRA app manual">
+          <header class="card-head"><span>HYDRA MANUAL // APP GUIDE</span><span class="signal">C-HED KNOWLEDGE LINK</span></header>
+          <div class="damage-body">
+            <p class="small-note">This guide covers the HYDRA website interface only. Physical hardware setup and operation instructions are intentionally not included.</p>
+            <div class="manual-grid">
+              <article class="manual-item"><h3>INSTALL THE APP</h3><p>Use ADD TO DEVICE above. If no prompt appears, use your browser menu to install the app or add it to your home screen. On iPhone or iPad, use Safari's Share menu and choose Add to Home Screen.</p></article>
+              <article class="manual-item"><h3>FIND THE HEADS</h3><p>The Health Head is the second tab. C-HED is in the Third Head tab. Ask HYDRA AI to bring you to either head to switch directly.</p></article>
+              <article class="manual-item"><h3>ANALYZE AN IMAGE</h3><p>Open Health Head, choose an image in Battlebot Scan, set a Pollinations vision key, then select ANALYZE. The selected image is sent to Pollinations; do not upload sensitive images.</p></article>
+            </div>
+            <p class="manual-safety-note">The supplied presentation is not embedded: it contains physical-operation steps that need safety review, and its 120 MB file exceeds GitHub's 100 MB per-file limit.</p>
+            <form class="manual-question-form" id="manualQuestionForm"><label class="sr-only" for="manualQuestionInput">Ask C-HED about using the HYDRA app</label><input id="manualQuestionInput" maxlength="180" placeholder="ASK C-HED ABOUT THE APP…" autocomplete="off" /><button type="submit" class="rig-btn">ASK C-HED</button></form>
+            <p class="manual-answer" id="manualAnswer" role="status" aria-live="polite" hidden></p>
+          </div>
+        </section>
+      </div>
+
       <footer class="console-footer">
         <span>QCA STREAM → HYDRA PROTOCOL → CAVE VOX</span>
         <span>AI VENOM · CAVE VOX · LIVE DUPLEX · NO SAVED LOGS</span>
       </footer>
+      <dialog id="installHelpDialog"><div class="dialog-card"><h2>ADD HYDRA TO YOUR DEVICE</h2><p>Use your browser menu to install the app or add it to your home screen. On iPhone or iPad, use Safari Share → Add to Home Screen.</p><button type="button" class="rig-btn" id="installHelpCloseBtn">CLOSE</button></div></dialog>
     </main>
 
     <p class="page-foot">TWO CURSE HEADS. ONE GATEKEEPER. ONE SHUT-UP. BUILT ON QODER SITES + CLOUD AGENTS.</p>
@@ -3351,6 +3385,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   const ELE_VOICE_ID = 'SOYHLrjzK2X1ezoPC6cr';
   const ELE_KEY_STORAGE = 'hydra_elevenlabs_api_key';
   const VISION_KEY_STORAGE = 'hydra_vision_api_key';
+  let deferredInstallPrompt = null;
   const ELE_VOICE_STORAGE = 'hydra_elevenlabs_voice_id';;
 
   // Core damage sim state: 700 HP, fixed chart, one hit per part.
@@ -3493,6 +3528,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     scanHealth: $('scanHealth'),
     scanDamage: $('scanDamage'),
     scanStatusText: $('scanStatusText'),
+    manualQuestionForm: $('manualQuestionForm'),
+    manualQuestionInput: $('manualQuestionInput'),
+    manualAnswer: $('manualAnswer'),
+    installAppBtn: $('installAppBtn'),
+    installHelpDialog: $('installHelpDialog'),
+    installHelpCloseBtn: $('installHelpCloseBtn'),
     autopilotToggle: $('autopilotToggle'),
     autopilotLabel: $('autopilotLabel'),
     strategyLog: $('strategyLog'),
@@ -3583,6 +3624,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     loadGrudge();
     loadLedger();
     wireEvents();
+    initPwa();
     initVoices();
     initDamageSim();
     initTabs();
@@ -3770,6 +3812,29 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     } catch (error) {
       addStrategyLog('Vision key storage is unavailable in this browser: ' + error.message);
     }
+    el.manualQuestionForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const question = el.manualQuestionInput.value.trim();
+      if (!question) return;
+      const answer = manualAppAnswer(question);
+      el.manualAnswer.textContent = 'C-HED // ' + answer;
+      el.manualAnswer.hidden = false;
+      el.manualQuestionInput.value = '';
+    });
+    el.installAppBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) { el.installHelpDialog.showModal(); return; }
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        el.installAppBtn.textContent = choice.outcome === 'accepted' ? 'APP INSTALLED' : 'ADD TO DEVICE';
+      } catch (error) {
+        el.installAppBtn.textContent = 'INSTALL UNAVAILABLE';
+        addStrategyLog('App install prompt failed: ' + error.message);
+      }
+    });
+    el.installHelpCloseBtn.addEventListener('click', () => el.installHelpDialog.close());
     el.analyzeScanBtn.addEventListener('click', analyzeBattlebotImage);
     el.scanSpeakBtn.addEventListener('click', () => {
       if (scanSpeechSummary) speak(scanSpeechSummary, { head: 1 });
@@ -3876,6 +3941,35 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     });
     window.addEventListener('pointerdown', wakeCave, { once: true });
     window.addEventListener('pagehide', cleanupOnExit);
+  }
+
+  function initPwa() {
+    const installableOrigin = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if ('serviceWorker' in navigator && installableOrigin) {
+      navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+        el.installAppBtn.title = 'App install support could not start: ' + error.message;
+        addStrategyLog('Service worker registration failed: ' + error.message);
+      });
+    }
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      el.installAppBtn.textContent = 'INSTALL APP';
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      el.installAppBtn.textContent = 'APP INSTALLED';
+    });
+  }
+
+  function manualAppAnswer(question) {
+    const text = String(question || '').toLowerCase();
+    if (['fuel', 'petrol', 'diesel', 'wiring', 'wire', 'safety pin', 'battle mode', 'smoke generator', 'refill', 'open the shell'].some(word => text.includes(word))) return 'I can help with the HYDRA website, not physical hardware setup or operation.';
+    if (['install', 'shortcut', 'home screen', 'add to device'].some(word => text.includes(word))) return 'Use ADD TO DEVICE above. If no prompt appears, use your browser menu to install the app or add it to your home screen.';
+    if (['analyze', 'analyse', 'scan', 'vision', 'image'].some(word => text.includes(word))) return 'Open Health Head, select an image, save a Pollinations vision key, then choose ANALYZE. The image is sent to Pollinations.';
+    if (['third', 'c-hed', 'gatekeeper'].some(word => text.includes(word))) return 'C-HED is in the Third Head tab. Ask HYDRA AI to bring you the third head to open it directly.';
+    if (['second', 'health', 'r-hed'].some(word => text.includes(word))) return 'R-HED is the second head in the Health Head tab.';
+    return 'I can answer questions about installing and using the HYDRA app, its tabs, and image analysis.';
   }
 
   function flashEnemyField() {
@@ -6633,6 +6727,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   function handleScanImageSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
+    event.target.value = '';
     scanImageData = null;
     el.scanPreview.classList.remove('active');
     clearBattlebotScanResults();
@@ -6709,6 +6804,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       el.scanStatus.style.color = '#ffb700';
       el.scanStatusText.textContent = 'Set a Pollinations vision key';
       addStrategyLog('Battlebot scan needs a Pollinations vision key');
+      el.scanVisionKeyDialog.showModal();
+      el.scanVisionKeyInput.focus();
       return;
     }
 
