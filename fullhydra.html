@@ -5318,8 +5318,6 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     }
   }
 
-  function routeMessage(text, options) {
-
   function requestedHeadTarget(text) {
     const normalized = String(text || '').toLowerCase().replace(/[^\w\s-]/g, ' ').replace(/\s+/g, ' ').trim();
     const summonIntent = /\b(?:bring|summon|show|take me to|open|switch to|find|talk|speak|ask|where)\b/.test(normalized)
@@ -5371,6 +5369,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     }
   }
 
+  function routeMessage(text, options) {
     const headTarget = requestedHeadTarget(text);
     if (headTarget) return summonHead(headTarget, text);
 
