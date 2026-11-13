@@ -2242,23 +2242,36 @@ async function generateImage(prompt, typingEl) {
   const cleanPrompt = prompt.replace(/^(please\s+)?(generate|create|make|draw)\s+(an?\s+)?(image|picture|photo|drawing|artwork)\s*(of\s+|showing\s+|called\s+)*/i, '').trim() || prompt;
   addMsg('user', prompt);
   history.push({ role: 'user', content: prompt });
+  const imageUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(cleanPrompt) + '?width=1024&height=1024&nologo=true&enhance=true&seed=' + Date.now();
+  const image = new Image();
+  image.alt = cleanPrompt;
+  try {
+    await new Promise((resolve, reject) => {
+      image.addEventListener('load', resolve, { once: true });
+      image.addEventListener('error', () => reject(new Error('The image service could not generate this image. Please try again.')), { once: true });
+      image.src = imageUrl;
+    });
+  } catch (error) {
+    typingEl.remove();
+    addMsg('error', 'Image generation failed: ' + error.message);
+    history.push({ role: 'assistant', content: 'Image generation failed: ' + error.message });
+    saveHistory();
+    return;
+  }
   typingEl.remove();
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now() % 100000}`;
   const body = addMsg('hydra', 'I created this image:');
   const card = document.createElement('div');
   card.className = 'artifact-card';
-  const image = document.createElement('img');
-  image.src = imageUrl;
-  image.alt = cleanPrompt;
   card.appendChild(image);
   const download = document.createElement('a');
   download.href = imageUrl;
   download.target = '_blank';
+  download.rel = 'noopener noreferrer';
   download.download = 'hydra-image.jpg';
   download.textContent = 'Open or download image';
   card.appendChild(download);
   body.parentElement.appendChild(card);
-  history.push({ role: 'assistant', content: `Generated image for: ${cleanPrompt}`, image: imageUrl });
+  history.push({ role: 'assistant', content: 'Generated image for: ' + cleanPrompt, image: imageUrl });
   saveHistory();
 }
 
