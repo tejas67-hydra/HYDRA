@@ -1963,7 +1963,26 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   border-radius: 8px;
   background: #000;
 }
-.scan-results {
+#scanVisionKeyDialog {
+  max-width: min(440px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  color: var(--steel);
+  background: var(--panel);
+}
+#scanVisionKeyDialog::backdrop { background: rgba(0, 0, 0, 0.72); }
+#scanVisionKeyDialog > div { display: grid; gap: 12px; }
+#scanVisionKeyDialog input {
+  width: 100%;
+  padding: 10px;
+  color: var(--lilac);
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#scanVisionKeyDialog .scan-key-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
@@ -2964,7 +2983,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           <div class="scan-upload">
             <input type="file" id="scanImageInput" accept="image/*" capture="environment" />
             <label for="scanImageInput" class="scan-upload-btn">UPLOAD BATTLEBOT IMAGE</label>
+            <button type="button" class="rig-btn" id="scanVisionKeyBtn">VISION KEY</button>
             <button type="button" class="rig-btn" id="analyzeScanBtn">ANALYZE</button>
+            <button type="button" class="rig-btn" id="scanSpeakBtn" disabled>SPEAK STATUS</button>
           </div>
           <div class="scan-preview" id="scanPreview">
             <img id="scanImage" alt="Battlebot scan" />
@@ -2991,7 +3012,19 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
               <span class="scan-value" id="scanStatusText">--</span>
             </div>
           </div>
-          <p class="small-note">Upload a photo of the battlebot. AI will read temperature, battery, health, and damage from the image.</p>
+          <p class="small-note">Real image analysis needs a Pollinations API key with vision access. <a href="https://enter.pollinations.ai/keys" target="_blank" rel="noopener noreferrer">Create a key</a>; it stays in this browser. Temperature and battery are reported only when visible in the image.</p>
+          <dialog id="scanVisionKeyDialog">
+            <div>
+              <h3>Pollinations Vision Key</h3>
+              <p>Paste a key with image-model access. It is stored only in this browser and shared with HYDRA AI.</p>
+              <input id="scanVisionKeyInput" type="password" autocomplete="off" placeholder="sk_..." />
+              <div class="scan-key-actions">
+                <button type="button" class="rig-btn" id="scanVisionKeyCancel">CANCEL</button>
+                <button type="button" class="rig-btn" id="scanVisionKeyRemove">REMOVE KEY</button>
+                <button type="button" class="rig-btn" id="scanVisionKeySave">SAVE KEY</button>
+              </div>
+            </div>
+          </dialog>
         </section>
 
         <section class="card" aria-label="Autopilot control">
@@ -3301,6 +3334,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   // inside this file; the local relay on :4174 is tried when direct fetch fails.
   const ELE_VOICE_ID = 'SOYHLrjzK2X1ezoPC6cr';
   const ELE_KEY_STORAGE = 'hydra_elevenlabs_api_key';
+  const VISION_KEY_STORAGE = 'hydra_vision_api_key';
   const ELE_VOICE_STORAGE = 'hydra_elevenlabs_voice_id';;
 
   // Core damage sim state: 700 HP, fixed chart, one hit per part.
@@ -3425,6 +3459,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     videoStartBtn: $('videoStartBtn'),
     videoStopBtn: $('videoStopBtn'),
     scanImageInput: $('scanImageInput'),
+    scanVisionKeyBtn: $('scanVisionKeyBtn'),
+    scanVisionKeyDialog: $('scanVisionKeyDialog'),
+    scanVisionKeyInput: $('scanVisionKeyInput'),
+    scanVisionKeyCancel: $('scanVisionKeyCancel'),
+    scanVisionKeyRemove: $('scanVisionKeyRemove'),
+    scanVisionKeySave: $('scanVisionKeySave'),
     analyzeScanBtn: $('analyzeScanBtn'),
     scanPreview: $('scanPreview'),
     scanImage: $('scanImage'),
@@ -3656,7 +3696,53 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     el.videoStartBtn.addEventListener('click', startVideoFeed);
     el.videoStopBtn.addEventListener('click', stopVideoFeed);
     el.scanImageInput.addEventListener('change', handleScanImageSelect);
+    el.scanVisionKeyBtn.addEventListener('click', () => {
+      el.scanVisionKeyInput.value = '';
+      el.scanVisionKeyDialog.showModal();
+      el.scanVisionKeyInput.focus();
+    });
+    el.scanVisionKeyCancel.addEventListener('click', () => el.scanVisionKeyDialog.close());
+    el.scanVisionKeySave.addEventListener('click', () => {
+      const key = el.scanVisionKeyInput.value.trim();
+      if (!key.startsWith('sk_')) {
+        el.scanStatus.textContent = 'INVALID VISION KEY';
+        el.scanStatus.style.color = '#ff3366';
+        return;
+      }
+      try {
+        localStorage.setItem(VISION_KEY_STORAGE, key);
+        el.scanVisionKeyBtn.textContent = 'VISION KEY: ON';
+        el.scanStatus.textContent = 'VISION KEY READY';
+        el.scanStatus.style.color = '#00d26a';
+        el.scanVisionKeyDialog.close();
+      } catch (error) {
+        el.scanStatus.textContent = 'KEY STORAGE FAILED';
+        el.scanStatus.style.color = '#ff3366';
+        addStrategyLog('Vision key could not be saved in this browser: ' + error.message);
+      }
+    });
+    el.scanVisionKeyRemove.addEventListener('click', () => {
+      try {
+        localStorage.removeItem(VISION_KEY_STORAGE);
+        el.scanVisionKeyBtn.textContent = 'VISION KEY';
+        el.scanStatus.textContent = 'VISION KEY REMOVED';
+        el.scanStatus.style.color = '#ffb700';
+        el.scanVisionKeyDialog.close();
+      } catch (error) {
+        el.scanStatus.textContent = 'KEY REMOVAL FAILED';
+        el.scanStatus.style.color = '#ff3366';
+        addStrategyLog('Vision key could not be removed in this browser: ' + error.message);
+      }
+    });
+    try {
+      if (localStorage.getItem(VISION_KEY_STORAGE)) el.scanVisionKeyBtn.textContent = 'VISION KEY: ON';
+    } catch (error) {
+      addStrategyLog('Vision key storage is unavailable in this browser: ' + error.message);
+    }
     el.analyzeScanBtn.addEventListener('click', analyzeBattlebotImage);
+    el.scanSpeakBtn.addEventListener('click', () => {
+      if (scanSpeechSummary) speak(scanSpeechSummary, { head: 1 });
+    });
     el.clearStrategyBtn.addEventListener('click', () => { el.strategyLog.innerHTML = ''; });
     el.wssConnectBtn.addEventListener('click', connectWebSocket);
     el.wssDisconnectBtn.addEventListener('click', disconnectWebSocket);
@@ -6446,9 +6532,26 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   // Battlebot image scan
   let scanImageData = null;
+  let scanSpeechSummary = '';
+
+  function clearBattlebotScanResults() {
+    scanSpeechSummary = '';
+    el.scanSpeakBtn.disabled = true;
+    el.scanTemp.textContent = '--';
+    el.scanBattery.textContent = '--';
+    el.scanHealth.textContent = '--';
+    el.scanDamage.textContent = '--';
+    el.scanStatusText.textContent = '--';
+  }
+
   function handleScanImageSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
+    scanImageData = null;
+    el.scanPreview.classList.remove('active');
+    clearBattlebotScanResults();
+    el.scanStatus.textContent = 'LOADING IMAGE...';
+    el.scanStatus.style.color = '#ffb700';
     if (!file.type.startsWith('image/')) {
       el.scanStatus.textContent = 'INVALID IMAGE';
       el.scanStatus.style.color = '#ff3366';
@@ -6463,12 +6566,26 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(source.width * scale));
         canvas.height = Math.max(1, Math.round(source.height * scale));
-        canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
-        scanImageData = canvas.toDataURL('image/jpeg', 0.82);
-        el.scanImage.src = scanImageData;
-        el.scanPreview.classList.add('active');
-        el.scanStatus.textContent = 'READY';
-        el.scanStatus.style.color = '#8a8aa0';
+        const context = canvas.getContext('2d');
+        if (!context) {
+          scanImageData = null;
+          el.scanStatus.textContent = 'IMAGE PROCESSING FAILED';
+          el.scanStatus.style.color = '#ff3366';
+          return;
+        }
+        try {
+          context.drawImage(source, 0, 0, canvas.width, canvas.height);
+          scanImageData = canvas.toDataURL('image/jpeg', 0.82);
+          el.scanImage.src = scanImageData;
+          el.scanPreview.classList.add('active');
+          el.scanStatus.textContent = 'READY';
+          el.scanStatus.style.color = '#8a8aa0';
+        } catch (error) {
+          scanImageData = null;
+          el.scanStatus.textContent = 'IMAGE PROCESSING FAILED';
+          el.scanStatus.style.color = '#ff3366';
+          addStrategyLog('Battlebot image could not be processed: ' + error.message);
+        }
       };
       source.onerror = () => {
         scanImageData = null;
@@ -6476,6 +6593,11 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         el.scanStatus.style.color = '#ff3366';
       };
       source.src = e.target.result;
+    };
+    reader.onerror = () => {
+      scanImageData = null;
+      el.scanStatus.textContent = 'IMAGE READ FAILED';
+      el.scanStatus.style.color = '#ff3366';
     };
     reader.readAsDataURL(file);
   }
@@ -6486,92 +6608,108 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       el.scanStatus.style.color = '#ffb700';
       return;
     }
+    clearBattlebotScanResults();
+    let apiKey;
+    try {
+      apiKey = (localStorage.getItem(VISION_KEY_STORAGE) || '').trim();
+    } catch (error) {
+      el.scanStatus.textContent = 'KEY STORAGE UNAVAILABLE';
+      el.scanStatus.style.color = '#ff3366';
+      addStrategyLog('Battlebot scan cannot read the vision key: ' + error.message);
+      return;
+    }
+    if (!apiKey) {
+      el.scanStatus.textContent = 'VISION KEY REQUIRED';
+      el.scanStatus.style.color = '#ffb700';
+      el.scanStatusText.textContent = 'Set a Pollinations vision key';
+      addStrategyLog('Battlebot scan needs a Pollinations vision key');
+      return;
+    }
+
     el.scanStatus.textContent = 'ANALYZING...';
     el.scanStatus.style.color = '#ffb700';
-    el.scanTemp.textContent = '--';
-    el.scanBattery.textContent = '--';
-    el.scanHealth.textContent = '--';
-    el.scanDamage.textContent = '--';
-    el.scanStatusText.textContent = '--';
+    el.analyzeScanBtn.disabled = true;
 
-    const prompt = 'Analyze this battlebot image and extract: 1) Temperature reading (in °C), 2) Battery level (percentage), 3) Health status (percentage or condition), 4) Visible damage, 5) Overall operational status. Return ONLY a JSON object with keys: temp, battery, health, damage, status. No other text.';
-
+    const prompt = 'Analyze this battlebot image. Return only a JSON object with string keys temp, battery, health, damage, status. Report temperature and battery only if readable labels or telemetry are visible; otherwise use "Unknown". Describe only visible damage. Do not invent numeric readings. Give a concise operational status such as "Operational", "Needs inspection", or "Repair advised".';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
     try {
-      const response = await fetch('https://text.pollinations.ai/openai', {
+      const response = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
         body: JSON.stringify({
-          model: 'openai',
+          model: 'openai/gpt-5.4-nano',
           messages: [{
             role: 'user',
             content: [
               { type: 'text', text: prompt },
               { type: 'image_url', image_url: { url: scanImageData } }
             ]
-          }]
-        })
+          }],
+          max_tokens: 300
+        }),
+        signal: controller.signal
       });
 
-      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const errorData = await response.json();
+          detail = errorData.error && errorData.error.message ? ': ' + errorData.error.message : '';
+        } catch { /* The response may not be JSON. */ }
+        throw new Error('Vision API returned HTTP ' + response.status + detail);
+      }
       const data = await response.json();
-      const aiResponse = data.choices?.[0]?.message?.content
-        || (typeof data === 'string' ? data : '');
-      if (!aiResponse) throw new Error('AI returned an empty response');
-
-      // Try to parse JSON from response
-      let results;
-      try {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          results = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No JSON found');
-        }
-      } catch {
-        // Fallback: extract values from text
-        results = {
-          temp: (aiResponse.match(/(\d+(?:\.\d+)?)\s*°?C/i)?.[1] || 'Unknown') + (aiResponse.match(/\d+(?:\.\d+)?\s*°C/i) ? '°C' : ''),
-          battery: aiResponse.match(/(\d+(?:\.\d+)?)%/i)?.[1] + '%' || 'Unknown',
-          health: aiResponse.match(/(\d+(?:\.\d+)?)%/i)?.[1] + '%' || 'Unknown',
-          damage: aiResponse.match(/damage[:\s]+(\w+)/i)?.[1] || 'Unknown',
-          status: aiResponse.match(/status[:\s]+(\w+)/i)?.[1] || 'Unknown'
-        };
+      const aiResponse = data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content
+        : '';
+      const jsonMatch = typeof aiResponse === 'string' ? aiResponse.match(/\{[\s\S]*\}/) : null;
+      if (!jsonMatch) throw new Error('Vision model returned no valid JSON results');
+      const results = JSON.parse(jsonMatch[0]);
+      if (!results || typeof results !== 'object' || Array.isArray(results)) {
+        throw new Error('Vision model returned an invalid result');
       }
 
-      el.scanTemp.textContent = results.temp || '--';
-      el.scanBattery.textContent = results.battery || '--';
-      el.scanHealth.textContent = results.health || '--';
-      el.scanDamage.textContent = results.damage || '--';
-      el.scanStatusText.textContent = results.status || '--';
+      const values = {
+        temp: String(results.temp || 'Unknown'),
+        battery: String(results.battery || 'Unknown'),
+        health: String(results.health || 'Unknown'),
+        damage: String(results.damage || 'Unknown'),
+        status: String(results.status || 'Unknown')
+      };
+      el.scanTemp.textContent = values.temp;
+      el.scanBattery.textContent = values.battery;
+      el.scanHealth.textContent = values.health;
+      el.scanDamage.textContent = values.damage;
+      el.scanStatusText.textContent = values.status;
+      scanSpeechSummary = 'Battle status: ' + values.status + '. Visible damage: ' + values.damage + '. Health: ' + values.health + '. Battery: ' + values.battery + '.';
+      el.scanSpeakBtn.disabled = false;
       el.scanStatus.textContent = 'COMPLETE';
       el.scanStatus.style.color = '#00d26a';
       addStrategyLog('Battlebot scan analyzed');
-    } catch (err) {
-      const image = el.scanImage;
-      const canvas = document.createElement('canvas');
-      canvas.width = 48;
-      canvas.height = 48;
-      const context = canvas.getContext('2d', { willReadFrequently: true });
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-      let bright = 0;
-      let dark = 0;
-      for (let index = 0; index < pixels.length; index += 16) {
-        const light = pixels[index] + pixels[index + 1] + pixels[index + 2];
-        if (light > 420) bright += 1;
-        if (light < 150) dark += 1;
+      try {
+        await speak(scanSpeechSummary, { head: 1 });
+      } catch (speechError) {
+        el.scanStatus.textContent = 'COMPLETE · SPEECH UNAVAILABLE';
+        el.scanStatus.style.color = '#ffb700';
+        addStrategyLog('Battle status audio could not be played: ' + speechError.message);
       }
-      const damage = Math.max(0, Math.min(100, Math.round((dark / (bright + dark || 1)) * 100)));
-      el.scanTemp.textContent = (18 + Math.round(bright / 80)).toString() + '°C';
-      el.scanBattery.textContent = (Math.max(35, 92 - damage)).toString() + '%';
-      el.scanHealth.textContent = (Math.max(10, 100 - damage)).toString() + '%';
-      el.scanDamage.textContent = damage > 18 ? 'Visible surface damage detected' : 'No major damage detected';
-      el.scanStatusText.textContent = damage > 40 ? 'REPAIR ADVISED' : 'LOCAL DIAGNOSTIC READY';
-      el.scanStatus.textContent = 'LOCAL MODE';
-      el.scanStatus.style.color = '#ffb700';
-      addStrategyLog('Cloud vision unavailable; local image diagnostic completed');
+    } catch (err) {
+      const message = err && err.name === 'AbortError'
+        ? 'Vision request timed out. Please try again.'
+        : err && err.message ? err.message : 'Vision request failed.';
+      el.scanStatus.textContent = 'ANALYSIS FAILED';
+      el.scanStatus.style.color = '#ff3366';
+      el.scanStatusText.textContent = message;
+      addStrategyLog('Battlebot scan failed: ' + message);
+    } finally {
+      clearTimeout(timer);
+      el.analyzeScanBtn.disabled = false;
     }
-  } 
+  }
 
   // Autopilot toggle
   function initAutopilot() {
@@ -7334,7 +7472,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     if (name === 'Memory') return '<h3>Conversation Memory</h3><textarea id="memoryEditor" style="width:100%;height:230px"></textarea><p><button class="rig-btn" data-action="save-memory">SAVE MEMORY</button><button class="rig-btn" data-action="clear-memory">CLEAR MEMORY</button></p><span class="live-note" id="memoryStatus">Stored only in this browser.</span>';
     if (name === 'Personality') return '<label>Personality<select id="personalitySelect"><option>Battle Commander</option><option>Friendly Companion</option><option>Calm Advisor</option><option>Technical Engineer</option><option>Creative Mentor</option></select></label><p><button class="rig-btn" data-action="personality">ACTIVATE</button></p><div class="notice" id="personalityStatus">Current personality: Battle Commander</div>';
     if (name === 'Video' || name === 'PDF') return '<input type="file" accept="' + (name === 'PDF' ? '.pdf,application/pdf' : 'video/*') + '" id="mediaInput"><div id="mediaOutput" style="margin-top:12px"></div>';
-    if (name === 'Image Generator') return '<form class="browser-bar"><input id="imagePrompt" value="Futuristic HYDRA battlefield mascot" aria-label="Image prompt"><button class="rig-btn">GENERATE</button></form><img id="generatedImage" src="battlefield.png" style="width:100%;max-height:340px;object-fit:cover">';
+    if (name === 'Image Generator') return '<form class="browser-bar"><input id="imagePrompt" value="Futuristic HYDRA battlefield mascot" aria-label="Image prompt"><button class="rig-btn">GENERATE</button></form><div class="notice" id="imageGeneratorStatus" role="status">Enter a prompt to generate an image.</div><img id="generatedImage" src="battlefield.png" alt="HYDRA image generation preview" style="width:100%;max-height:340px;object-fit:cover">';
     if (name === 'Video Generator') return '<form class="browser-bar"><input id="videoPrompt" value="HYDRA robotic battle animation" aria-label="Video prompt"><button class="rig-btn">CREATE STORYBOARD</button></form><div id="videoPreview" style="height:280px;background:url(battlefield.png) center/cover;animation:hydraFloat 4s ease-in-out infinite"></div><div class="notice" id="videoGeneratorStatus">Generate a downloadable AI production storyboard.</div><button class="rig-btn" data-action="download-storyboard" disabled>DOWNLOAD STORYBOARD</button>';
     if (name === 'Website Builder' || name === 'Game Builder' || name === 'App Builder') return '<h3>' + name + '</h3><input id="builderPrompt" value="Create a neon HYDRA dashboard" style="width:100%;margin-bottom:10px"><div class="studio-canvas" id="studioCanvas"><div style="left:12%;top:18%">HEADER</div><div style="left:12%;top:48%">CONTENT</div></div><p><button class="rig-btn" data-action="ai-builder">AI BUILD PROJECT</button><button class="rig-btn" data-action="export-builder">EXPORT</button></p><pre class="live-note" id="builderPlan"></pre>';
     if (name === 'Cloud') return '<div class="notice">Cloud workspace ready. Sign in with a provider to synchronize files and conversations.</div><div class="browser-bar"><button class="rig-btn" data-action="cloud-sync">SYNC NOW</button><button class="rig-btn" data-action="cloud-export">EXPORT BACKUP</button></div><div id="cloudStatus" class="live-note">Local backup available.</div>';
@@ -8027,13 +8165,30 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     });
     if (name === 'Image Generator') {
       const form = win.querySelector('form');
+      const button = form.querySelector('button');
+      const status = win.querySelector('#imageGeneratorStatus');
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const prompt = win.querySelector('#imagePrompt').value.trim();
+        if (!prompt) {
+          status.textContent = 'Enter a prompt before generating an image.';
+          return;
+        }
         const image = win.querySelector('#generatedImage');
+        button.disabled = true;
+        status.textContent = 'Generating image…';
         image.style.opacity = '.45';
-        image.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent('Cinematic HYDRA sci-fi operating system art: ' + prompt) + '?width=1024&height=576&nologo=true&enhance=true';
-        image.onload = () => { image.style.opacity = '1'; };
+        image.onload = () => {
+          image.style.opacity = '1';
+          status.textContent = 'Image generated successfully.';
+          button.disabled = false;
+        };
+        image.onerror = () => {
+          image.style.opacity = '1';
+          status.textContent = 'Image generation failed. Check your connection and try again.';
+          button.disabled = false;
+        };
+        image.src = 'https://image.pollinations.ai/prompt/' + encodeURIComponent('Cinematic HYDRA sci-fi operating system art: ' + prompt) + '?width=1024&height=576&nologo=true&enhance=true&seed=' + Date.now();
       });
     }
     if (name === 'Video Generator') {
