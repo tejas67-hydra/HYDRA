@@ -2569,6 +2569,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   .manual-item h3 { margin: 0 0 8px; color: var(--venom-bright); font-size: 11px; letter-spacing: .12em; }
   .manual-item p, .manual-safety-note { color: var(--steel); font-size: 12px; line-height: 1.6; }
   .manual-safety-note { color: var(--warning); }
+  .manual-safety-note code { overflow-wrap: anywhere; }
   .manual-question-form { display: flex; gap: 8px; }
   .manual-question-form input { min-width: 0; flex: 1; padding: 10px; background: var(--bg-deep); border: 1px solid var(--line); color: var(--lilac); }
   .manual-answer { margin-top: 12px; padding: 12px; border-left: 2px solid var(--venom); color: var(--lilac); background: rgba(192,132,252,.08); }
@@ -3269,7 +3270,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
               <article class="manual-item"><h3>FIND THE HEADS</h3><p>The Health Head is the second tab. C-HED is in the Third Head tab. Ask HYDRA AI to bring you to either head to switch directly.</p></article>
               <article class="manual-item"><h3>ANALYZE AN IMAGE</h3><p>Open Health Head, choose an image in Battlebot Scan, set a Pollinations vision key, then select ANALYZE. The selected image is sent to Pollinations; do not upload sensitive images.</p></article>
             </div>
-            <p class="manual-safety-note">The supplied presentation is not embedded: it contains physical-operation steps that need safety review, and its 120 MB file exceeds GitHub's 100 MB per-file limit.</p>
+            <p class="manual-safety-note">For a shareable, app-only guide, <a href="./hydra-app-guide.html" target="_blank" rel="noopener noreferrer">open the HYDRA app guide</a> or copy this link: <code>https://tejas67-hydra.github.io/HYDRA/hydra-app-guide.html</code>.</p>
             <form class="manual-question-form" id="manualQuestionForm"><label class="sr-only" for="manualQuestionInput">Ask C-HED about using the HYDRA app</label><input id="manualQuestionInput" maxlength="180" placeholder="ASK C-HED ABOUT THE APP…" autocomplete="off" /><button type="submit" class="rig-btn">ASK C-HED</button></form>
             <p class="manual-answer" id="manualAnswer" role="status" aria-live="polite" hidden></p>
           </div>
