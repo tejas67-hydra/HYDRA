@@ -953,7 +953,7 @@ function getSystemPrompt() {
   const friendInstructions = friendMode
     ? ' FRIEND MODE IS ON: be warm, enthusiastic, playful, and genuinely excited about the user’s ideas. Encourage them, celebrate progress, and use natural energetic language while remaining trustworthy and helpful.'
     : '';
-  return `You are Hydra, a highly knowledgeable AI assistant. You are part of a robot named Hydra that ${name} is building. ${name} is your creator and wants your help building and improving you. Answer EVERY question concisely in UNDER 30 WORDS unless explicitly asked for more detail. Be direct, clear, and helpful. You have access to your past conversations with ${name} — use that context when relevant. No fluff, no lengthy explanations unless requested. Never start responses with the user's name.${friendInstructions}`;
+  return `You are Hydra, a highly knowledgeable AI assistant. You are part of a robot named Hydra that ${name} is building. ${name} is your creator and wants your help building and improving you. You are in HYDRA's AI chat interface. In the main console, the Health Head is the second head (R-HED), and the Third Head tab contains C-HED, the Gatekeeper. When asked to bring or talk to either head, use the app's head-navigation command rather than claiming that you moved without doing so. Answer EVERY question concisely in UNDER 30 WORDS unless explicitly asked for more detail. Be direct, clear, and helpful. You have access to your past conversations with ${name} — use that context when relevant. No fluff, no lengthy explanations unless requested. Never start responses with the user's name.${friendInstructions}`;
 }
 
 let friendMode = localStorage.getItem('hydra_friend_mode') === 'true';
@@ -996,6 +996,7 @@ function loadHistory() {
       if (Array.isArray(parsed) && parsed.length > 1) {
         history.length = 0;
         parsed.forEach(m => history.push(m));
+        history[0] = { role: 'system', content: getSystemPrompt() };
         return true;
       }
     }
@@ -1533,10 +1534,12 @@ const rememberedName = localStorage.getItem('hydra_commander_name');
 if (rememberedName && (!currentUser || !currentUser.name)) {
   currentUser = { id: rememberedName.toLowerCase().replace(/\s+/g, '-'), name: rememberedName };
 }
+let bootGreetingTimer = null;
 if (!sessionStorage.getItem('hydra_booted')) {
   sessionStorage.setItem('hydra_booted', 'true');
   const commander = rememberedName ? `, ${rememberedName}` : ', Commander';
-  setTimeout(() => {
+  bootGreetingTimer = setTimeout(() => {
+    bootGreetingTimer = null;
     playHydraBeep(720, 0.1);
     setTimeout(() => playHydraBeep(1100, 0.08), 140);
     playHydraSound('startup');
@@ -2328,6 +2331,21 @@ async function createPresentation(prompt) {
   await pptx.writeFile({ fileName: `${(outline.title || topic || 'Hydra presentation').replace(/[^a-z0-9]+/gi, '-')}.pptx` });
 }
 
+function getHeadCommandTarget(text) {
+  const normalized = String(text || '').toLowerCase().replace(/[^\w\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+  const summonIntent = /\b(?:bring|summon|show|take me to|open|switch to|find|talk|speak|ask|where)\b/.test(normalized)
+    || (/\bwhy\b/.test(normalized) && /\b(?:talk|speak|silent)\b/.test(normalized));
+  if (!summonIntent) return null;
+  const targets = [
+    { head: 'third', pattern: /\b(?:third|3rd|c\s*-?\s*hed|gatekeeper)\b/ },
+    { head: 'second', pattern: /\b(?:second|2nd|health\s+head|r\s*-?\s*hed)\b/ }
+  ];
+  const found = targets.map(target => ({ head: target.head, index: normalized.search(target.pattern) }))
+    .filter(target => target.index >= 0)
+    .sort((left, right) => left.index - right.index);
+  return found.length ? found[0].head : null;
+}
+
 send = async function() {
   if (pastedImage) {
     const text = input.value.trim() || 'What do you see in this image?';
@@ -2342,6 +2360,35 @@ send = async function() {
     return;
   }
   const prompt = input.value.trim();
+  const headTarget = getHeadCommandTarget(prompt);
+  if (headTarget) {
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    clearTimeout(bootGreetingTimer);
+    bootGreetingTimer = null;
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    addMsg('user', prompt);
+    history.push({ role: 'user', content: prompt });
+    saveHistory();
+
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'hydra-head-command', message: prompt }, location.origin);
+      const reply = headTarget === 'third'
+        ? 'Summoning C-HED from the main console.'
+        : 'Opening the Health Head panel for R-HED.';
+      addMsg('hydra', reply);
+      history.push({ role: 'assistant', content: reply });
+      saveHistory();
+      sendBtn.disabled = false;
+      return;
+    }
+
+    const destination = new URL('fullhydra.html', location.href);
+    destination.searchParams.set('command', prompt);
+    location.assign(destination.href);
+    return;
+  }
   if (/^(please\s+)?(generate|create|make|draw).*\b(image|picture|photo|drawing|artwork)\b/i.test(prompt)) {
     input.value = '';
     input.style.height = 'auto';
