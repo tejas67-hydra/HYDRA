@@ -1704,9 +1704,10 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 .msg--hed .msg-role { color: var(--hed); }
 .msg--hed .msg-text { color: var(--lilac); }
 .msg--hed-0 { --hed: var(--mint); }
-.msg--hed-1 { --hed: var(--venom); }
+.msg--hed-1 { --hed: #ffe45e; }
+.msg--hed-1 .msg-text { color: #ffe45e; font-weight: 700; }
 .msg--shush { --hed: var(--danger); }
-.msg--shush .msg-text { color: #ffc2cc; font-weight: 800; }
+.msg--shush .msg-text { color: #ff4658; font-weight: 900; }
 .msg--hed.is-pending .msg-text { color: var(--dim); }
 
 .msg--answer {
@@ -1788,7 +1789,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 .third-line {
   margin: 0;
   max-width: 20ch;
-  color: #ffd9df;
+  color: #ff4658;
   font-family: var(--display);
   font-size: clamp(1.55rem, 4.2vw, 2.7rem);
   font-weight: 900;
@@ -1903,7 +1904,20 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 .damage-line.is-hit { color: var(--lilac); }
 .damage-line.is-miss { color: #6f568d; }
 .damage-line.is-dead { color: var(--danger); font-weight: 700; }
-.damage-line.is-system { color: var(--venom); }
+.damage-line.is-system { color: #ffe45e; }
+.health-head-reply {
+  margin: 0 18px;
+  padding: 10px 12px;
+  border-left: 3px solid #ffe45e;
+  background: rgba(255, 228, 94, 0.08);
+  color: #ffe45e;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+}
+
 
 /* Video feed */
 .video-container {
@@ -2751,6 +2765,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           <p>HYDRA rolled out from the smoking wreckage of the canyon on its six heavy wheels, powered by the immortal, roaring rumble of the V8 Voodoo engine hidden deep within its purple steel ribs. It no longer needed a driver. It <em>was</em> the machine.</p>
           <button type="button" class="rig-btn" id="backstoryStopBtn">⏹ STOP AUDIO</button>
           <button type="button" class="rig-btn" id="backstoryCloseBtn">CLOSE ARCHIVE</button>
+          <p class="small-note" id="backstoryAudioStatus" role="status" aria-live="polite">ORIGINAL HYDRA AUDIO ONLY</p>
         </div>
       </dialog>
 
@@ -2930,6 +2945,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
             <span>HEALTH HEAD // CORE DAMAGE SIM</span>
             <span class="signal" id="damageSignal">700 / 700 HP</span>
           </header>
+          <p class="health-head-reply" id="healthHeadReply" role="status" aria-live="polite" hidden></p>
 
           <div class="damage-body">
             <div class="damage-top">
@@ -3069,7 +3085,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
         <div class="third-stage">
           <div class="third-sigil" aria-hidden="true"><span class="third-eye"></span></div>
           <p class="third-kicker">C-HED // THIRD HEAD // AUDIENCE DENIED</p>
-          <p class="third-line">"You are not worthy to talk to me."</p>
+          <p class="third-line" id="thirdLine">"You are not worthy to talk to me."</p>
           <p class="third-note">It does not take questions. It does not take names. It only tells you what you already are.</p>
           <form class="third-form" id="thirdForm">
             <label for="thirdInput" class="sr-only">Try to address the third head</label>
@@ -3239,7 +3255,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   <span class="sr-only" id="liveRegion" aria-live="polite"></span>
 
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
-  <audio id="backstoryAudio" preload="auto" src="hydra-origin.webm?v=20261107-1020"></audio>
+  <audio id="backstoryAudio" preload="auto" src="hydra-origin.mp3?v=20261113-1908"></audio>
 
   <script>
 (() => {
@@ -3450,8 +3466,10 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     damageStrikeBtn: $('damageStrikeBtn'),
     damageResetBtn: $('damageResetBtn'),
     damageLog: $('damageLog'),
+    healthHeadReply: $('healthHeadReply'),
     thirdForm: $('thirdForm'),
     thirdInput: $('thirdInput'),
+    thirdLine: $('thirdLine'),
     liveRegion: $('liveRegion'),
     // New features
     liveVideo: $('liveVideo'),
@@ -3543,6 +3561,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     shushAudio: null,
     eleAudio: null,
     thirdAudio: null,
+    bootGreetingTimer: null,
     revealToken: 0,
     revealTimer: null,
     cave: null,
@@ -3583,6 +3602,14 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     updateQueueUi();
     updateStopUi();
     checkUplink();
+    const params = new URLSearchParams(location.search);
+    const requestedCommand = params.get('command');
+    if (requestedCommand && requestedHeadTarget(requestedCommand)) {
+      params.delete('command');
+      const query = params.toString();
+      history.replaceState(null, '', location.pathname + (query ? '?' + query : '') + location.hash);
+      summonHead(requestedHeadTarget(requestedCommand), requestedCommand);
+    }
   }
 
   function hydraTone(type) {
@@ -3612,7 +3639,10 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       hydraTone('startup');
       setTimeout(() => hydraTone('servo'), 180);
       setTimeout(() => hydraTone('radar'), 420);
-      setTimeout(() => speak(`HYDRA systems online. Core power: 100%. Combat protocols initialized. Mission ready. Hydra online. Intelligence awakened. Awaiting your command, ${name}.`), 700);
+      state.bootGreetingTimer = setTimeout(() => {
+        state.bootGreetingTimer = null;
+        speak(`HYDRA systems online. Core power: 100%. Combat protocols initialized. Mission ready. Hydra online. Intelligence awakened. Awaiting your command, ${name}.`);
+      }, 700);
     }
   }
 
@@ -3753,83 +3783,83 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     });
     el.mascotPlayBtn.addEventListener('click', playMascotSong);
     el.mascotStopBtn.addEventListener('click', stopMascotSong);
+    window.addEventListener('message', (event) => {
+      if (event.origin !== location.origin) return;
+      const frame = $('hydra-ai-frame');
+      if (!frame || event.source !== frame.contentWindow) return;
+      const data = event.data;
+      if (!data || data.type !== 'hydra-head-command' || typeof data.message !== 'string') return;
+      const head = requestedHeadTarget(data.message);
+      if (head) summonHead(head, data.message);
+    });
     const backstoryDialog = $('backstoryDialog');
     const backstoryAudio = $('backstoryAudio');
+    const backstoryAudioStatus = $('backstoryAudioStatus');
+    let backstoryPlaybackToken = 0;
     $('backstoryBtn')?.addEventListener('click', () => {
       if (typeof backstoryDialog?.showModal === 'function') backstoryDialog.showModal();
-      if (backstoryAudio) {
-        const hosted = location.hostname.endsWith('github.io');
-        const sources = hosted
-          ? ['https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.webm?v=20261107-1020',
-             'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.mp3?v=20261107-1020',
-             'https://raw.githubusercontent.com/tejas67-hydra/HYDRA/master/hydra-origin.wav?v=20261107-1020']
-          : ['hydra-origin.webm?v=20261107-1020', 'hydra-origin.mp3?v=20261107-1020', 'hydra-origin.wav?v=20261107-1020'];
-        let index = 0;
-        const attempt = () => {
-          backstoryAudio.onerror = () => {
-            index += 1;
-            if (index < sources.length) attempt();
-            else {
-              // Don't use mascotStatus for narration errors - it's for the song
-              if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
-                narration.rate = 0.88;
-                speechSynthesis.resume();
-                speechSynthesis.speak(narration);
-              }
-            }
-          };
-          backstoryAudio.src = sources[index];
-          backstoryAudio.currentTime = 0;
-          backstoryAudio.load();
-          const playAttempt = backstoryAudio.play();
-          if (!playAttempt) {
-            index += 1;
-            if (index < sources.length) attempt();
-            else {
-              // Don't use mascotStatus for narration errors - it's for the song
-              if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
-                narration.rate = 0.88;
-                speechSynthesis.resume();
-                speechSynthesis.speak(narration);
-              }
-            }
-            return;
+      const playbackToken = ++backstoryPlaybackToken;
+      clearTimeout(state.bootGreetingTimer);
+      state.bootGreetingTimer = null;
+      cancelSpeech();
+      if (!backstoryAudio) return;
+      backstoryAudio.pause();
+      backstoryAudio.currentTime = 0;
+
+      const sources = ['hydra-origin.mp3?v=20261113-1908', 'hydra-origin.wav?v=20261113-1908'];
+      let index = 0;
+      const attempt = () => {
+        const sourceIndex = index;
+        let failed = false;
+        const onFailure = () => {
+          backstoryAudio.removeEventListener('error', onFailure);
+          if (failed || sourceIndex !== index || playbackToken !== backstoryPlaybackToken) return;
+          failed = true;
+          index += 1;
+          if (index < sources.length) {
+            attempt();
+          } else if (backstoryAudioStatus) {
+            backstoryAudioStatus.textContent = 'ORIGINAL AUDIO COULD NOT BE PLAYED. CHECK YOUR CONNECTION AND TRY AGAIN.';
           }
-          playAttempt.catch(() => {
-            index += 1;
-            if (index < sources.length) attempt();
-            else {
-              // Don't use mascotStatus for narration errors - it's for the song
-              if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                const narration = new SpeechSynthesisUtterance(backstoryDialog.textContent.replace(/\s+/g, ' ').trim());
-                narration.rate = 0.88;
-                speechSynthesis.resume();
-                speechSynthesis.speak(narration);
-              }
-            }
-          });
         };
-        attempt();
-      }
+
+        backstoryAudio.addEventListener('error', onFailure);
+        backstoryAudio.src = sources[sourceIndex];
+        backstoryAudio.currentTime = 0;
+        backstoryAudio.load();
+        const playAttempt = backstoryAudio.play();
+        if (playAttempt) {
+          playAttempt.then(() => {
+            if (sourceIndex === index && playbackToken === backstoryPlaybackToken && backstoryAudioStatus) {
+              backstoryAudioStatus.textContent = 'PLAYING THE ORIGINAL HYDRA AUDIO';
+            }
+          }).catch(onFailure);
+        }
+      };
+
+      if (backstoryAudioStatus) backstoryAudioStatus.textContent = 'LOADING THE ORIGINAL HYDRA AUDIO…';
+      attempt();
     });
     const closeBackstory = () => {
+      backstoryPlaybackToken += 1;
       backstoryAudio?.pause();
       backstoryDialog?.close();
     };
     $('backstoryStopBtn')?.addEventListener('click', () => {
+      backstoryPlaybackToken += 1;
       if (backstoryAudio) {
         backstoryAudio.pause();
         backstoryAudio.currentTime = 0;
       }
-      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      if (backstoryAudioStatus) backstoryAudioStatus.textContent = 'ORIGINAL AUDIO STOPPED';
     });
     $('backstoryCloseBtn')?.addEventListener('click', closeBackstory);
-    backstoryDialog?.addEventListener('close', () => backstoryAudio?.pause());
+    backstoryDialog?.addEventListener('close', () => {
+      backstoryAudio?.pause();
+      if (backstoryAudioStatus && backstoryAudio && !backstoryAudio.ended) {
+        backstoryAudioStatus.textContent = 'ORIGINAL AUDIO PAUSED';
+      }
+    });
     // Companionship events
     el.btConnectBtn.addEventListener('click', connectBluetooth);
     el.btStopBtn.addEventListener('click', disconnectBluetooth);
@@ -4287,6 +4317,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   function cleanupOnExit() {
     clearTimeout(state.live.restartTimer);
     clearTimeout(state.revealTimer);
+    clearTimeout(state.bootGreetingTimer);
     if (state.live.recognition) {
       try { state.live.recognition.abort(); } catch { /* already stopped */ }
     }
@@ -5288,6 +5319,61 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   }
 
   function routeMessage(text, options) {
+
+  function requestedHeadTarget(text) {
+    const normalized = String(text || '').toLowerCase().replace(/[^\w\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const summonIntent = /\b(?:bring|summon|show|take me to|open|switch to|find|talk|speak|ask|where)\b/.test(normalized)
+      || (/\bwhy\b/.test(normalized) && /\b(?:talk|speak|silent)\b/.test(normalized));
+    if (!summonIntent) return null;
+
+    const targets = [
+      { head: 'third', pattern: /\b(?:third|3rd|c\s*-?\s*hed|gatekeeper)\b/ },
+      { head: 'second', pattern: /\b(?:second|2nd|health\s+head|r\s*-?\s*hed)\b/ }
+    ];
+    const found = targets.map((target) => ({ head: target.head, index: normalized.search(target.pattern) }))
+      .filter((target) => target.index >= 0)
+      .sort((left, right) => left.index - right.index);
+    return found.length ? found[0].head : null;
+  }
+
+  async function summonHead(head, message) {
+    if (state.busy) return;
+    const turn = beginTurn(CHAT_TIMEOUT_MS);
+    clearTimeout(state.bootGreetingTimer);
+    state.bootGreetingTimer = null;
+    const request = String(message || '').trim();
+    addMessage('user', request);
+    remember('user', request);
+    setLiveTranscript(request);
+
+    try {
+      if (head === 'third') {
+        activateTab('third', true);
+        el.thirdLine.textContent = '"' + THIRD_TEXT + '"';
+        setLiveTranscript('C-HED // ' + THIRD_TEXT);
+        remember('assistant', THIRD_TEXT);
+        revealOutput(THIRD_TEXT);
+        await thirdHeadSpeak();
+        return;
+      }
+
+      const reply = 'I am here on the Health Head panel. C-HED is in the Third Head tab.';
+      el.healthHeadReply.textContent = 'R-HED // SECOND HEAD: ' + reply;
+      el.healthHeadReply.hidden = false;
+      activateTab('health', true);
+      setLiveTranscript(reply);
+      el.liveRegion.textContent = reply;
+      remember('assistant', reply);
+      revealOutput(reply);
+      await speak(reply, { kind: 'chat', head: 1 });
+    } finally {
+      endTurn(turn);
+    }
+  }
+
+    const headTarget = requestedHeadTarget(text);
+    if (headTarget) return summonHead(headTarget, text);
+
     // Retort chips are answers, never commands: "curse my keyboard" must not feed the forge.
     const match = (options && options.source) === 'chip'
       ? null
