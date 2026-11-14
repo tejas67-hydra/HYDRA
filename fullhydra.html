@@ -4475,6 +4475,7 @@ button:not(:disabled):active {
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
   <audio id="backstoryAudio" preload="auto" src="hydra-origin.mp3?v=20261113-1908"></audio>
   <audio id="bootAudio" preload="auto" src="./hydra-boot-voice.mp3"></audio>
+  <audio id="hydraWakeAudio" preload="auto" src="./hydra-wake.mp3"></audio>
 
   <script>
 (() => {
@@ -4549,10 +4550,11 @@ button:not(:disabled):active {
   }
 
   const bootAudio = document.getElementById('bootAudio');
+  const hydraWakeAudio = document.getElementById('hydraWakeAudio');
   let bootAudioStarted = false;
 
-  function playBootAudio(restart = false) {
-    if ((!restart && bootAudioStarted) || !bootAudio) return;
+  function playBootAudio() {
+    if (bootAudioStarted || !bootAudio) return;
     bootAudioStarted = true;
     bootAudio.currentTime = 0;
     const playback = bootAudio.play();
@@ -4561,6 +4563,11 @@ button:not(:disabled):active {
         bootAudioStarted = false;
       });
     }
+  }
+
+  function retryBootAudio(event) {
+    if (event.target instanceof Element && event.target.closest('#wakewordBtn')) return;
+    playBootAudio();
   }
 
   function updateDeviceStatus() {
@@ -4652,7 +4659,9 @@ button:not(:disabled):active {
 
   // ========== HEY HYDRA BUTTON ==========
   function playHydraWakeResponse() {
-    playBootAudio(true);
+    if (!hydraWakeAudio) return;
+    hydraWakeAudio.currentTime = 0;
+    hydraWakeAudio.play().catch(error => console.error('Wake audio failed to play:', error));
     document.body.classList.add('is-speaking');
     setTimeout(() => {
       document.body.classList.remove('is-speaking');
@@ -4663,8 +4672,8 @@ button:not(:disabled):active {
   document.addEventListener('DOMContentLoaded', () => {
     runHydraBootSequence();
     playBootAudio();
-    document.addEventListener('pointerdown', playBootAudio, { once: true });
-    document.addEventListener('keydown', playBootAudio, { once: true });
+    document.addEventListener('pointerdown', retryBootAudio, { once: true });
+    document.addEventListener('keydown', retryBootAudio, { once: true });
 
     updateDeviceStatus();
     setInterval(updateDeviceStatus, 1000);
@@ -4677,7 +4686,7 @@ button:not(:disabled):active {
     document.addEventListener('click', (event) => {
       const button = event.target.closest('button');
       if (!button || button.disabled) return;
-      playBootAudio();
+      if (button.id !== 'wakewordBtn') playBootAudio();
       createRipple({
         currentTarget: button,
         clientX: event.clientX,

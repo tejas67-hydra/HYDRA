@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'hydra-shell-v3';
+const CACHE_NAME = 'hydra-shell-v4';
 const SHELL_FILES = [
   './index.html',
   './fullhydra.html',
@@ -8,7 +8,8 @@ const SHELL_FILES = [
   './manifest.webmanifest',
   './hydra-icon-192.png',
   './hydra-icon-512.png',
-  './hydra-boot-voice.mp3'
+  './hydra-boot-voice.mp3',
+  './hydra-wake.mp3'
 ];
 
 self.addEventListener('install', (event) => {
@@ -34,7 +35,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   if (request.mode !== 'navigate') {
-    if (new URL(request.url).pathname.endsWith('/hydra-boot-voice.mp3')) {
+    const path = new URL(request.url).pathname;
+    if (path.endsWith('/hydra-boot-voice.mp3') || path.endsWith('/hydra-wake.mp3')) {
       event.respondWith(
         caches.match(request).then((cached) => cached || fetch(request))
       );
