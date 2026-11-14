@@ -3024,6 +3024,34 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   box-shadow: 0 0 20px rgba(192, 132, 252, 0.5);
 }
 
+/* ========== WAKE WORD BUTTON ========== */
+.wakeword-btn {
+  position: fixed;
+  top: 60px;
+  right: 140px;
+  z-index: 10001;
+  padding: 8px 16px;
+  background: rgba(192, 132, 252, 0.2);
+  border: 1px solid var(--venom);
+  border-radius: 8px;
+  color: var(--lilac);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wakeword-btn:hover {
+  background: rgba(192, 132, 252, 0.4);
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.5);
+}
+
+.wakeword-btn.active {
+  background: rgba(124, 247, 200, 0.3);
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
 /* ========== MOBILE OPTIMIZATIONS ========== */
 @media (max-width: 768px) {
   .device-statusbar {
@@ -3042,6 +3070,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   .fullscreen-btn {
     top: auto;
     bottom: 80px;
+  }
+
+  .wakeword-btn {
+    top: auto;
+    bottom: 80px;
+    right: 120px;
   }
 }
 
@@ -3145,6 +3179,9 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   <!-- ========== FULLSCREEN BUTTON ========== -->
   <button class="fullscreen-btn" id="fullscreenBtn">⛶ FULLSCREEN</button>
+
+  <!-- ========== WAKE WORD BUTTON ========== -->
+  <button class="wakeword-btn" id="wakewordBtn">🎤 HEY HYDRA</button>
 
   <div class="scanlines" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
@@ -3859,6 +3896,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
   <audio id="backstoryAudio" preload="auto" src="hydra-origin.mp3?v=20261113-1908"></audio>
+  <audio id="hydraWakeAudio" preload="auto" src="hydra-wake.mp3"></audio>
 
   <script>
 (() => {
@@ -4037,8 +4075,92 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     button.appendChild(circle);
   }
 
+  // ========== VOICE WAKE WORD DETECTION ==========
+  let recognition = null;
+  let isListeningForWakeWord = false;
+
+  function initWakeWordDetection() {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const last = event.results.length - 1;
+        const command = event.results[last][0].transcript.trim().toLowerCase();
+
+        console.log('Voice command detected:', command);
+
+        // Check for wake word
+        if (command.includes('hey hydra') || command.includes('hydra')) {
+          playHydraWakeResponse();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.log('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          console.log('Microphone access denied');
+        } else if (event.error === 'no-speech') {
+          // Restart recognition
+          if (isListeningForWakeWord) {
+            recognition.start();
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        // Restart if we're still supposed to be listening
+        if (isListeningForWakeWord) {
+          recognition.start();
+        }
+      };
+    } else {
+      console.log('Speech recognition not supported in this browser');
+    }
+  }
+
+  function startWakeWordListening() {
+    if (recognition && !isListeningForWakeWord) {
+      isListeningForWakeWord = true;
+      try {
+        recognition.start();
+        console.log('Wake word detection started');
+      } catch (e) {
+        console.log('Recognition already started');
+      }
+    }
+  }
+
+  function stopWakeWordListening() {
+    if (recognition && isListeningForWakeWord) {
+      isListeningForWakeWord = false;
+      recognition.stop();
+      console.log('Wake word detection stopped');
+    }
+  }
+
+  function playHydraWakeResponse() {
+    const wakeAudio = document.getElementById('hydraWakeAudio');
+    if (wakeAudio) {
+      wakeAudio.currentTime = 0;
+      wakeAudio.play().catch(e => console.log('Audio play error:', e));
+
+      // Visual feedback
+      document.body.classList.add('is-speaking');
+      setTimeout(() => {
+        document.body.classList.remove('is-speaking');
+      }, 2000);
+    }
+  }
+
   // Initialize app
   document.addEventListener('DOMContentLoaded', () => {
+    // Initialize wake word detection
+    initWakeWordDetection();
+
     // Start splash screen
     setTimeout(() => {
       // After splash, show loading screen
@@ -4071,10 +4193,27 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
       // Fullscreen button
       fullscreenBtn.addEventListener('click', toggleFullscreen);
 
+      // Wake word toggle button
+      const wakewordBtn = document.getElementById('wakewordBtn');
+      wakewordBtn.addEventListener('click', () => {
+        if (isListeningForWakeWord) {
+          stopWakeWordListening();
+          wakewordBtn.classList.remove('active');
+          wakewordBtn.textContent = '🎤 HEY HYDRA';
+        } else {
+          startWakeWordListening();
+          wakewordBtn.classList.add('active');
+          wakewordBtn.textContent = '🎤 LISTENING...';
+        }
+      });
+
       // Startup prompt enter button
       startupEnterBtn.addEventListener('click', () => {
         startupPrompt.classList.remove('active');
-        // Play startup sound effect here if desired
+        // Start wake word detection after app loads
+        setTimeout(() => {
+          startWakeWordListening();
+        }, 1000);
       });
 
       // Add ripple effect to buttons
