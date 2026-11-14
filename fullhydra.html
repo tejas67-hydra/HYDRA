@@ -2631,7 +2631,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #07030f;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%),
+              linear-gradient(180deg, #07030f 0%, #04020a 100%);
   overflow: hidden;
 }
 
@@ -2641,8 +2642,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
 .loading-container {
   position: relative;
-  width: 400px;
-  height: 400px;
+  width: 500px;
+  height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2650,8 +2651,40 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 }
 
 @keyframes cameraZoom {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%, 100% { transform: scale(1) rotateY(0deg); }
+  25% { transform: scale(1.03) rotateY(2deg); }
+  50% { transform: scale(1.06) rotateY(0deg); }
+  75% { transform: scale(1.03) rotateY(-2deg); }
+}
+
+/* Background particles */
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--venom);
+  border-radius: 50%;
+  animation: particleFloat 4s ease-in-out infinite;
+  opacity: 0;
+}
+
+.bg-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+.bg-particle:nth-child(2) { left: 90%; top: 30%; animation-delay: 0.5s; }
+.bg-particle:nth-child(3) { left: 20%; top: 80%; animation-delay: 1s; }
+.bg-particle:nth-child(4) { left: 80%; top: 70%; animation-delay: 1.5s; }
+.bg-particle:nth-child(5) { left: 50%; top: 10%; animation-delay: 2s; }
+.bg-particle:nth-child(6) { left: 30%; top: 50%; animation-delay: 2.5s; }
+
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+  50% { transform: translateY(-30px) scale(1.5); opacity: 0.8; }
 }
 
 .hydra-loading-svg {
@@ -2664,13 +2697,15 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 .hydra-outline {
   fill: none;
   stroke: var(--venom);
-  stroke-width: 2;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 2000;
-  stroke-dashoffset: 2000;
-  animation: drawOutline 3s ease forwards;
-  filter: drop-shadow(0 0 10px var(--venom)) drop-shadow(0 0 20px var(--magenta));
+  stroke-dasharray: 3000;
+  stroke-dashoffset: 3000;
+  animation: drawOutline 2.5s ease forwards;
+  filter: drop-shadow(0 0 15px var(--venom))
+          drop-shadow(0 0 30px var(--magenta))
+          drop-shadow(0 0 45px rgba(255, 61, 242, 0.5));
 }
 
 @keyframes drawOutline {
@@ -2678,22 +2713,24 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 }
 
 .hydra-fill {
-  fill: rgba(192, 132, 252, 0.1);
+  fill: rgba(192, 132, 252, 0.15);
   opacity: 0;
-  animation: fadeInRobot 2s ease 2.5s forwards;
+  animation: fadeInRobot 1.5s ease 2s forwards;
 }
 
 @keyframes fadeInRobot {
-  to { opacity: 1; }
+  0% { opacity: 0; filter: brightness(0.5); }
+  100% { opacity: 1; filter: brightness(1); }
 }
 
+/* Enhanced electricity */
 .electricity {
   position: absolute;
   inset: 0;
   z-index: 3;
   pointer-events: none;
   opacity: 0;
-  animation: electricityPulse 3s ease 3s forwards;
+  animation: electricityPulse 2s ease 2.5s forwards;
 }
 
 .electricity::before,
@@ -2702,14 +2739,29 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   position: absolute;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, transparent 40%, var(--venom) 45%, var(--magenta) 50%, var(--venom) 55%, transparent 60%);
-  opacity: 0.6;
-  animation: electricityFlow 0.5s linear infinite;
+  background: linear-gradient(45deg,
+    transparent 30%,
+    var(--venom) 35%,
+    var(--magenta) 40%,
+    #fff 45%,
+    var(--magenta) 50%,
+    var(--venom) 55%,
+    transparent 60%);
+  opacity: 0.8;
+  animation: electricityFlow 0.3s linear infinite;
+  filter: blur(2px);
 }
 
 .electricity::after {
-  animation-delay: 0.25s;
-  background: linear-gradient(-45deg, transparent 40%, var(--venom) 45%, var(--magenta) 50%, var(--venom) 55%, transparent 60%);
+  animation-delay: 0.15s;
+  background: linear-gradient(-45deg,
+    transparent 30%,
+    var(--venom) 35%,
+    var(--magenta) 40%,
+    #fff 45%,
+    var(--magenta) 50%,
+    var(--venom) 55%,
+    transparent 60%);
 }
 
 @keyframes electricityPulse {
@@ -2717,48 +2769,92 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 }
 
 @keyframes electricityFlow {
-  0% { transform: translateX(-100%) translateY(-100%); }
-  100% { transform: translateX(100%) translateY(100%); }
+  0% { transform: translateX(-150%) translateY(-150%); }
+  100% { transform: translateX(150%) translateY(150%); }
 }
 
+/* Multiple electricity bolts */
+.electricity-bolt {
+  position: absolute;
+  width: 2px;
+  height: 100px;
+  background: linear-gradient(to bottom, var(--venom), var(--magenta), transparent);
+  z-index: 4;
+  opacity: 0;
+  filter: blur(1px);
+  animation: boltStrike 0.5s ease-out infinite;
+}
+
+.electricity-bolt:nth-child(1) { left: 30%; top: 20%; animation-delay: 2.5s; transform: rotate(45deg); }
+.electricity-bolt:nth-child(2) { left: 70%; top: 30%; animation-delay: 2.7s; transform: rotate(-30deg); }
+.electricity-bolt:nth-child(3) { left: 50%; top: 50%; animation-delay: 2.9s; transform: rotate(60deg); }
+.electricity-bolt:nth-child(4) { left: 25%; top: 60%; animation-delay: 3.1s; transform: rotate(-45deg); }
+.electricity-bolt:nth-child(5) { left: 75%; top: 70%; animation-delay: 3.3s; transform: rotate(30deg); }
+
+@keyframes boltStrike {
+  0% { opacity: 0; height: 0; }
+  50% { opacity: 1; height: 100px; }
+  100% { opacity: 0; height: 100px; }
+}
+
+/* Enhanced eye glow */
 .eye-glow {
   fill: var(--magenta);
   opacity: 0;
-  filter: drop-shadow(0 0 15px var(--magenta)) drop-shadow(0 0 30px var(--venom));
-  animation: eyeLightUp 2s ease 3.5s forwards;
+  filter: drop-shadow(0 0 20px var(--magenta))
+          drop-shadow(0 0 40px var(--venom))
+          drop-shadow(0 0 60px rgba(255, 61, 242, 0.8));
+  animation: eyeLightUp 1.5s ease 3s forwards;
 }
 
 @keyframes eyeLightUp {
-  0% { opacity: 0; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
+/* Pulsing core */
+.core-pulse {
+  animation: corePulseEnhanced 1s ease-in-out infinite;
+  animation-delay: 3.5s;
+}
+
+@keyframes corePulseEnhanced {
+  0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 20px var(--venom)); }
+  50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 40px var(--magenta)) drop-shadow(0 0 60px var(--venom)); }
+}
+
+/* Enhanced smoke */
 .smoke-effect {
   position: absolute;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 150px;
+  width: 400px;
+  height: 200px;
   z-index: 1;
   opacity: 0;
-  animation: smokeAppear 2s ease 4s forwards;
+  animation: smokeAppear 1.5s ease 3.5s forwards;
 }
 
 .smoke-particle {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  background: radial-gradient(circle, rgba(192, 132, 252, 0.3) 0%, transparent 70%);
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.4) 0%, rgba(139, 92, 246, 0.2) 50%, transparent 70%);
   border-radius: 50%;
-  animation: smokeRise 3s ease-out infinite;
+  animation: smokeRise 4s ease-out infinite;
+  filter: blur(5px);
 }
 
-.smoke-particle:nth-child(1) { left: 20%; animation-delay: 0s; }
-.smoke-particle:nth-child(2) { left: 40%; animation-delay: 0.5s; }
-.smoke-particle:nth-child(3) { left: 60%; animation-delay: 1s; }
-.smoke-particle:nth-child(4) { left: 80%; animation-delay: 1.5s; }
+.smoke-particle:nth-child(1) { left: 10%; animation-delay: 0s; width: 25px; height: 25px; }
+.smoke-particle:nth-child(2) { left: 30%; animation-delay: 0.3s; width: 35px; height: 35px; }
+.smoke-particle:nth-child(3) { left: 50%; animation-delay: 0.6s; width: 20px; height: 20px; }
+.smoke-particle:nth-child(4) { left: 70%; animation-delay: 0.9s; width: 40px; height: 40px; }
+.smoke-particle:nth-child(5) { left: 90%; animation-delay: 1.2s; width: 28px; height: 28px; }
+.smoke-particle:nth-child(6) { left: 20%; animation-delay: 1.5s; width: 32px; height: 32px; }
+.smoke-particle:nth-child(7) { left: 60%; animation-delay: 1.8s; width: 22px; height: 22px; }
+.smoke-particle:nth-child(8) { left: 80%; animation-delay: 2.1s; width: 38px; height: 38px; }
 
 @keyframes smokeAppear {
   to { opacity: 1; }
@@ -2766,38 +2862,60 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
 @keyframes smokeRise {
   0% {
-    transform: translateY(0) scale(1);
-    opacity: 0.6;
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0.8;
   }
   100% {
-    transform: translateY(-100px) scale(2);
+    transform: translateY(-150px) scale(3) rotate(180deg);
     opacity: 0;
   }
+}
+
+/* Ring effects */
+.ring-effect {
+  position: absolute;
+  border: 2px solid var(--venom);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ringExpand 2s ease-out infinite;
+  filter: drop-shadow(0 0 10px var(--venom));
+}
+
+.ring-effect:nth-child(1) { animation-delay: 3s; }
+.ring-effect:nth-child(2) { animation-delay: 3.5s; }
+.ring-effect:nth-child(3) { animation-delay: 4s; }
+
+@keyframes ringExpand {
+  0% { width: 100px; height: 100px; opacity: 0.8; }
+  100% { width: 400px; height: 400px; opacity: 0; }
 }
 
 .loading-text {
   color: var(--lilac);
   font-family: var(--display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
   margin-bottom: 10px;
-  margin-top: 30px;
+  margin-top: 40px;
   opacity: 0;
-  animation: textFadeIn 1s ease 4.5s forwards;
+  animation: textFadeIn 1s ease 4s forwards;
+  text-shadow: 0 0 20px var(--venom), 0 0 40px var(--magenta);
 }
 
 @keyframes textFadeIn {
-  to { opacity: 1; }
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .loading-subtext {
-  color: var(--dim);
-  font-size: 11px;
-  letter-spacing: 0.15em;
+  color: var(--venom);
+  font-size: 12px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   opacity: 0;
-  animation: textFadeIn 1s ease 4.7s forwards;
+  animation: textFadeIn 1s ease 4.2s forwards;
+  text-shadow: 0 0 10px var(--venom);
 }
 
 /* ========== WELCOME ANIMATION ========== */
@@ -3236,19 +3354,45 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   <!-- ========== LOADING SCREEN ========== -->
   <div id="loadingScreen">
     <div class="loading-container">
+      <!-- Background particles -->
+      <div class="bg-particles">
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+      </div>
+
+      <!-- Ring effects -->
+      <div class="ring-effect"></div>
+      <div class="ring-effect"></div>
+      <div class="ring-effect"></div>
+
       <!-- Smoke effect behind HYDRA -->
       <div class="smoke-effect">
         <div class="smoke-particle"></div>
         <div class="smoke-particle"></div>
         <div class="smoke-particle"></div>
         <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
       </div>
+
+      <!-- Electricity bolts -->
+      <div class="electricity-bolt"></div>
+      <div class="electricity-bolt"></div>
+      <div class="electricity-bolt"></div>
+      <div class="electricity-bolt"></div>
+      <div class="electricity-bolt"></div>
 
       <!-- HYDRA SVG Animation -->
       <svg class="hydra-loading-svg" viewBox="0 0 360 318">
         <defs>
           <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
@@ -3266,7 +3410,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           <ellipse cx="180" cy="284" rx="112" ry="20" fill="#0b0516" stroke="#392257" stroke-width="1" />
           <ellipse cx="180" cy="281" rx="82" ry="13" fill="none" stroke="#6b3ea2" stroke-width="1" stroke-dasharray="3 9" opacity="0.7" />
           <path d="M116 276 180 252 244 276 180 300Z" fill="#120923" stroke="#4d2d78" stroke-width="1.5" />
-          <path d="M146 272 180 258 214 272 180 286Z" fill="url(#loadingCoreGrad)" filter="url(#softGlow)" />
+          <path d="M146 272 180 258 214 272 180 286Z" fill="url(#loadingCoreGrad)" filter="url(#softGlow)" class="core-pulse" />
           <circle cx="180" cy="272" r="7" fill="#ffd8ff" opacity="0.8" />
 
           <!-- Necks -->
@@ -4326,13 +4470,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           msgIndex++;
         } else {
           clearInterval(loadingInterval);
-          // Wait for full animation to complete (5 seconds total)
+          // Wait for full animation to complete (6 seconds total for epic effect)
           setTimeout(() => {
             loadingScreen.classList.remove('active');
             runBootSequence();
-          }, 2000);
+          }, 2500);
         }
-      }, 1500);
+      }, 2000);
 
       // Update device status periodically
       updateDeviceStatus();
