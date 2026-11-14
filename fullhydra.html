@@ -2632,35 +2632,147 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   align-items: center;
   justify-content: center;
   background: #07030f;
+  overflow: hidden;
 }
 
 .loading-screen.active {
   display: flex;
 }
 
-.loading-progress {
-  width: 120px;
-  height: 120px;
+.loading-container {
   position: relative;
-  margin-bottom: 30px;
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cameraZoom 4s ease-in-out infinite;
 }
 
-.loading-progress::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 4px solid rgba(192, 132, 252, 0.2);
-  border-radius: 50%;
+@keyframes cameraZoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-.loading-progress::after {
-  content: '';
+.hydra-loading-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.hydra-outline {
+  fill: none;
+  stroke: var(--venom);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawOutline 3s ease forwards;
+  filter: drop-shadow(0 0 10px var(--venom)) drop-shadow(0 0 20px var(--magenta));
+}
+
+@keyframes drawOutline {
+  to { stroke-dashoffset: 0; }
+}
+
+.hydra-fill {
+  fill: rgba(192, 132, 252, 0.1);
+  opacity: 0;
+  animation: fadeInRobot 2s ease 2.5s forwards;
+}
+
+@keyframes fadeInRobot {
+  to { opacity: 1; }
+}
+
+.electricity {
   position: absolute;
   inset: 0;
-  border: 4px solid transparent;
-  border-top-color: var(--venom);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  animation: electricityPulse 3s ease 3s forwards;
+}
+
+.electricity::before,
+.electricity::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent 40%, var(--venom) 45%, var(--magenta) 50%, var(--venom) 55%, transparent 60%);
+  opacity: 0.6;
+  animation: electricityFlow 0.5s linear infinite;
+}
+
+.electricity::after {
+  animation-delay: 0.25s;
+  background: linear-gradient(-45deg, transparent 40%, var(--venom) 45%, var(--magenta) 50%, var(--venom) 55%, transparent 60%);
+}
+
+@keyframes electricityPulse {
+  to { opacity: 1; }
+}
+
+@keyframes electricityFlow {
+  0% { transform: translateX(-100%) translateY(-100%); }
+  100% { transform: translateX(100%) translateY(100%); }
+}
+
+.eye-glow {
+  fill: var(--magenta);
+  opacity: 0;
+  filter: drop-shadow(0 0 15px var(--magenta)) drop-shadow(0 0 30px var(--venom));
+  animation: eyeLightUp 2s ease 3.5s forwards;
+}
+
+@keyframes eyeLightUp {
+  0% { opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.smoke-effect {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 150px;
+  z-index: 1;
+  opacity: 0;
+  animation: smokeAppear 2s ease 4s forwards;
+}
+
+.smoke-particle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.3) 0%, transparent 70%);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: smokeRise 3s ease-out infinite;
+}
+
+.smoke-particle:nth-child(1) { left: 20%; animation-delay: 0s; }
+.smoke-particle:nth-child(2) { left: 40%; animation-delay: 0.5s; }
+.smoke-particle:nth-child(3) { left: 60%; animation-delay: 1s; }
+.smoke-particle:nth-child(4) { left: 80%; animation-delay: 1.5s; }
+
+@keyframes smokeAppear {
+  to { opacity: 1; }
+}
+
+@keyframes smokeRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100px) scale(2);
+    opacity: 0;
+  }
 }
 
 .loading-text {
@@ -2670,6 +2782,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   font-weight: 700;
   letter-spacing: 0.1em;
   margin-bottom: 10px;
+  margin-top: 30px;
+  opacity: 0;
+  animation: textFadeIn 1s ease 4.5s forwards;
+}
+
+@keyframes textFadeIn {
+  to { opacity: 1; }
 }
 
 .loading-subtext {
@@ -2677,6 +2796,8 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  opacity: 0;
+  animation: textFadeIn 1s ease 4.7s forwards;
 }
 
 /* ========== WELCOME ANIMATION ========== */
@@ -3114,7 +3235,103 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   <!-- ========== LOADING SCREEN ========== -->
   <div id="loadingScreen">
-    <div class="loading-progress"></div>
+    <div class="loading-container">
+      <!-- Smoke effect behind HYDRA -->
+      <div class="smoke-effect">
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+        <div class="smoke-particle"></div>
+      </div>
+
+      <!-- HYDRA SVG Animation -->
+      <svg class="hydra-loading-svg" viewBox="0 0 360 318">
+        <defs>
+          <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <radialGradient id="loadingCoreGrad" cx="50%" cy="42%" r="62%">
+            <stop offset="0" stop-color="#ff8df8" />
+            <stop offset="0.45" stop-color="#b05cff" />
+            <stop offset="1" stop-color="#2a0f4d" />
+          </radialGradient>
+        </defs>
+
+        <!-- Full robot with fade-in -->
+        <g class="hydra-fill">
+          <ellipse cx="180" cy="284" rx="112" ry="20" fill="#0b0516" stroke="#392257" stroke-width="1" />
+          <ellipse cx="180" cy="281" rx="82" ry="13" fill="none" stroke="#6b3ea2" stroke-width="1" stroke-dasharray="3 9" opacity="0.7" />
+          <path d="M116 276 180 252 244 276 180 300Z" fill="#120923" stroke="#4d2d78" stroke-width="1.5" />
+          <path d="M146 272 180 258 214 272 180 286Z" fill="url(#loadingCoreGrad)" filter="url(#softGlow)" />
+          <circle cx="180" cy="272" r="7" fill="#ffd8ff" opacity="0.8" />
+
+          <!-- Necks -->
+          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" fill="none" stroke="#08040f" stroke-width="36" stroke-linecap="round" />
+          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" fill="none" stroke="url(#neckGrad)" stroke-width="28" stroke-linecap="round" />
+          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" fill="none" stroke="#08040f" stroke-width="36" stroke-linecap="round" />
+          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" fill="none" stroke="url(#neckGrad)" stroke-width="28" stroke-linecap="round" />
+          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" fill="none" stroke="#08040f" stroke-width="40" stroke-linecap="round" />
+          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" fill="none" stroke="url(#neckGrad)" stroke-width="31" stroke-linecap="round" />
+
+          <!-- Heads -->
+          <g transform="translate(118 122) rotate(-16)">
+            <path d="M-32 8 -24 -25 -4 -34 22 -27 34 -8 29 11 12 26 -14 24Z" fill="url(#plateGrad)" stroke="#8d63c6" stroke-width="1.4" />
+            <path d="M-16 -1 12 -6" stroke="#ff5cf4" stroke-width="4" stroke-linecap="round" />
+          </g>
+          <g transform="translate(242 122) rotate(16)">
+            <path d="M-34 11 -29 -8 -22 -27 -4 -34 22 -27 32 8 12 26 -14 24Z" fill="url(#plateGrad)" stroke="#8d63c6" stroke-width="1.4" />
+            <path d="M-12 -5 16 -1" stroke="#ff5cf4" stroke-width="4" stroke-linecap="round" />
+          </g>
+          <g transform="translate(180 86)">
+            <path d="M-8 -54 0 -69 8 -54 14 -47 5 -41 -5 -41 -14 -47Z" fill="#6b3fa4" stroke="#a37be0" stroke-width="1" />
+            <path d="M-40 10 -34 -26 -12 -42 16 -39 36 -22 42 -2 30 22 8 34 -20 28Z" fill="url(#plateGrad)" stroke="#a37be0" stroke-width="1.6" />
+            <path d="M-20 -3 16 -9" stroke="#ff6cf6" stroke-width="5" stroke-linecap="round" />
+            <circle cx="0" cy="-50" r="2.6" fill="#ff5cf4" />
+          </g>
+        </g>
+
+        <!-- Neon outline that draws -->
+        <g class="hydra-outline" filter="url(#neonGlow)">
+          <!-- Main body outline -->
+          <ellipse cx="180" cy="284" rx="112" ry="20" />
+          <path d="M146 272 180 258 214 272 180 286Z" />
+
+          <!-- Left neck -->
+          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" />
+
+          <!-- Right neck -->
+          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" />
+
+          <!-- Center neck -->
+          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" />
+
+          <!-- Left head -->
+          <path d="M-32 8 -24 -25 -4 -34 22 -27 34 -8 29 11 12 26 -14 24Z" transform="translate(118 122) rotate(-16)" />
+
+          <!-- Right head -->
+          <path d="M-34 11 -29 -8 -22 -27 -4 -34 22 -27 32 8 12 26 -14 24Z" transform="translate(242 122) rotate(16)" />
+
+          <!-- Center head -->
+          <path d="M-8 -54 0 -69 8 -54 14 -47 5 -41 -5 -41 -14 -47Z" transform="translate(180 86)" />
+          <path d="M-40 10 -34 -26 -12 -42 16 -39 36 -22 42 -2 30 22 8 34 -20 28Z" transform="translate(180 86)" />
+        </g>
+
+        <!-- Eyes that glow -->
+        <g class="eye-glow">
+          <ellipse cx="104" cy="122" rx="8" ry="3" />
+          <ellipse cx="256" cy="122" rx="8" ry="3" />
+          <ellipse cx="180" cy="86" rx="10" ry="4" />
+        </g>
+      </svg>
+
+      <!-- Electricity overlay -->
+      <div class="electricity"></div>
+    </div>
+
     <p class="loading-text">HYDRA OS v3.0</p>
     <p class="loading-subtext" id="loadingSubtext">Checking AI...</p>
   </div>
@@ -4109,12 +4326,13 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
           msgIndex++;
         } else {
           clearInterval(loadingInterval);
+          // Wait for full animation to complete (5 seconds total)
           setTimeout(() => {
             loadingScreen.classList.remove('active');
             runBootSequence();
-          }, 500);
+          }, 2000);
         }
-      }, 800);
+      }, 1500);
 
       // Update device status periodically
       updateDeviceStatus();
