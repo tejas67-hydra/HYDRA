@@ -3,7 +3,7 @@
   "name": "HYDRA",
   "short_name": "HYDRA",
   "description": "HYDRA tri-core battle intelligence",
-  "start_url": "./fullhydra.html",
+  "start_url": "./fullhydra.html?v=20261114-2130",
   "scope": "./",
   "display": "standalone",
   "background_color": "#07030f",

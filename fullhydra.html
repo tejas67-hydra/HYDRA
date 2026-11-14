@@ -3329,250 +3329,400 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   .manual-answer { margin-top: 12px; padding: 12px; border-left: 2px solid var(--venom); color: var(--lilac); background: rgba(192,132,252,.08); }
   .manual-question-form .rig-btn { min-height: 38px; }
   @media (max-width: 480px) { body { grid-template-columns: minmax(0, 1fr); } .shell, .hero, .avatar-stage { min-width: 0; } .avatar-stage { min-height: 340px; padding-bottom: 52px; } .hydra-photo { width: min(220px, 72vw); height: min(220px, 72vw); } .avatar-labels { display: flex; bottom: 30px; gap: 5px; font-size: 6px; letter-spacing: .08em; } .avatar-caption { bottom: 8px; font-size: 6px; letter-spacing: .12em; } .manual-question-form { flex-wrap: wrap; } .manual-question-form .rig-btn { flex: 1 1 100%; } }
+
+/* HYDRA AI boot sequence and ambient system effects */
+.ambient-field {
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .24;
+  background:
+    radial-gradient(circle, rgba(192,132,252,.9) 0 1px, transparent 1.8px) 0 0 / 97px 83px,
+    radial-gradient(circle, rgba(76,190,255,.7) 0 1px, transparent 1.8px) 35px 44px / 131px 117px;
+  animation: ambientDrift 32s linear infinite;
+}
+
+.ambient-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0 92%, rgba(139,92,246,.13) 97%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0, transparent 68%);
+  mask-image: radial-gradient(ellipse at center, #000 0, transparent 68%);
+  animation: radarSweep 16s linear infinite;
+}
+
+@keyframes ambientDrift {
+  to { transform: translate3d(4%, -3%, 0); background-position: 97px 83px, 166px 161px; }
+}
+
+@keyframes radarSweep { to { transform: rotate(360deg); } }
+
+#hydraBoot {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #f1e5ff;
+  background: #04020a;
+  transition: opacity .48s ease, visibility .48s ease;
+}
+
+#hydraBoot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .34;
+  background:
+    linear-gradient(rgba(138,43,226,.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(138,43,226,.13) 1px, transparent 1px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, #000 0, transparent 78%);
+  animation: bootGrid 2.5s ease-in-out infinite alternate;
+}
+
+#hydraBoot::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: -12%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  opacity: .82;
+  background: linear-gradient(90deg, transparent, #8a2be2, #fff, #8a2be2, transparent);
+  box-shadow: 0 0 22px #8a2be2, 0 0 48px rgba(138,43,226,.7);
+  animation: bootScan 1.35s linear 1.05s 1 both;
+}
+
+#hydraBoot.is-complete {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.boot-core {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  width: min(92vw, 680px);
+  text-align: center;
+}
+
+.boot-core::before,
+.boot-core::after {
+  content: "";
+  position: fixed;
+  top: calc(50% + 18px);
+  left: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.boot-core::before {
+  width: min(76vw, 370px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(138,43,226,.62);
+  border-top: 2px solid #dbc0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(138,43,226,.45), inset 0 0 18px rgba(138,43,226,.2);
+  animation: bootRing .7s ease 3s forwards, bootRingSpin 7s linear 3.7s infinite, bootNeonBlink 1.1s steps(2, end) 4s infinite;
+}
+
+.boot-core::after {
+  width: min(86vw, 420px);
+  height: min(68vw, 340px);
+  background:
+    radial-gradient(ellipse at 22% 64%, rgba(138,43,226,.35), transparent 42%),
+    radial-gradient(ellipse at 78% 43%, rgba(76,190,255,.16), transparent 45%),
+    radial-gradient(ellipse at 50% 80%, rgba(192,132,252,.26), transparent 48%);
+  filter: blur(20px);
+  animation: bootSmoke .8s ease 3.2s forwards, bootSmokePulse 2.2s ease-in-out 4s infinite;
+}
+
+.boot-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 18px 8px #8a2be2, 0 0 48px 18px rgba(138,43,226,.66);
+  transform: translate(-50%, -50%);
+  animation: bootDot 1s ease-out both;
+}
+
+.boot-title {
+  position: fixed;
+  top: clamp(60px, 13vh, 130px);
+  left: 0;
+  width: 100%;
+  margin: 0;
+  color: #f5eaff;
+  font: 900 clamp(42px, 12vw, 78px)/1 var(--display);
+  letter-spacing: .22em;
+  text-indent: .22em;
+  opacity: 0;
+  text-shadow: 0 0 14px #8a2be2, 0 0 42px rgba(138,43,226,.85);
+  animation: bootTitle .8s ease-out .48s forwards, bootGlow 2s ease-in-out 1.3s infinite;
+}
+
+.boot-caption {
+  position: fixed;
+  top: max(120px, calc(13vh + 60px));
+  left: 0;
+  width: 100%;
+  margin: 10px 0 18px;
+  color: #c084fc;
+  font-size: 10px;
+  letter-spacing: .3em;
+  animation: bootCaptionFade .4s ease 3s forwards;
+}
+
+.boot-scan-list {
+  display: grid;
+  gap: 5px;
+  width: min(100%, 340px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  animation: bootFadeAway .4s ease 3s forwards;
+}
+
+.boot-scan-list li {
+  color: #c3b3dc;
+  font-size: clamp(9px, 2.5vw, 11px);
+  letter-spacing: .1em;
+  opacity: 0;
+  animation: bootLine .3s ease forwards;
+}
+
+.boot-scan-list li::first-letter { color: #7cf7c8; }
+.boot-scan-list li:nth-child(1) { animation-delay: 1.2s; }
+.boot-scan-list li:nth-child(2) { animation-delay: 1.34s; }
+.boot-scan-list li:nth-child(3) { animation-delay: 1.48s; }
+.boot-scan-list li:nth-child(4) { animation-delay: 1.62s; }
+.boot-scan-list li:nth-child(5) { animation-delay: 1.76s; }
+.boot-scan-list li:nth-child(6) { animation-delay: 1.9s; }
+
+.boot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: min(100%, 440px);
+  margin-top: 15px;
+  animation: bootFadeAway .4s ease 3s forwards;
+}
+
+.boot-grid span {
+  padding: 5px 8px;
+  border: 1px solid rgba(138,43,226,.48);
+  background: rgba(15,8,28,.76);
+  color: #b9a2d4;
+  font-size: 8px;
+  letter-spacing: .12em;
+  opacity: 0;
+  animation: bootPanel .4s ease 2.35s forwards, bootPanelPulse 1.2s ease-in-out 2.8s infinite, bootFadeAway .4s ease 3s forwards;
+}
+
+.boot-orb {
+  position: fixed;
+  z-index: 1;
+  top: calc(50% + 18px);
+  left: 50%;
+  width: min(70vw, 340px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(192,132,252,.86);
+  border-radius: 50%;
+  background: #07030f;
+  box-shadow: 0 0 18px rgba(138,43,226,.62), inset 0 0 32px rgba(138,43,226,.25);
+  transform: translate(-50%, -50%) scale(.68);
+  opacity: 0;
+  animation: bootRobot 1.4s ease 3s forwards, bootOrbPulse 1.5s steps(2, end) 4.4s infinite;
+}
+
+.boot-mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 16px rgba(192,132,252,.9));
+}
+
+.boot-orb::before,
+.boot-orb::after {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  z-index: 1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.boot-orb::before {
+  background:
+    radial-gradient(ellipse at 18% 78%, rgba(138,43,226,.72) 0, transparent 34%),
+    radial-gradient(ellipse at 78% 60%, rgba(76,190,255,.42) 0, transparent 36%),
+    radial-gradient(ellipse at 42% 34%, rgba(192,132,252,.46) 0, transparent 38%);
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: bootOrbSmoke 3.4s ease-in-out infinite alternate;
+}
+
+.boot-orb::after {
+  inset: 0;
+  border: 2px solid rgba(219,192,255,.62);
+  box-shadow: inset 0 0 24px rgba(138,43,226,.48), 0 0 16px rgba(138,43,226,.55);
+  animation: bootNeonBlink .9s steps(2, end) infinite;
+}
+
+.boot-status {
+  position: fixed;
+  top: calc(50% + 18px + min(35vw, 170px) + 12px);
+  width: 100%;
+  color: #c084fc;
+  font-size: 10px;
+  letter-spacing: .24em;
+  opacity: 0;
+  animation: bootLine .3s ease 5.05s forwards;
+}
+
+.boot-status strong {
+  display: block;
+  margin-top: 5px;
+  color: #7cf7c8;
+  font: 900 clamp(23px, 7vw, 36px)/1 var(--display);
+  letter-spacing: .3em;
+  text-shadow: 0 0 14px rgba(124,247,200,.55);
+  animation: bootGlitch 1.2s steps(2, end) 5.25s infinite;
+}
+
+.boot-footer {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  color: #8a74a7;
+  font-size: 9px;
+  letter-spacing: .2em;
+}
+
+@keyframes bootDot {
+  0% { opacity: 1; transform: translate(-50%,-50%) scale(.4); }
+  55% { opacity: 1; transform: translate(-50%,-50%) scale(24); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(34); }
+}
+@keyframes bootTitle { to { opacity: 1; } }
+@keyframes bootGlow { 50% { filter: brightness(1.35); } }
+@keyframes bootGrid { to { opacity: .62; background-position: 17px 17px, -17px -17px; } }
+@keyframes bootScan { to { top: 112%; } }
+@keyframes bootLine { to { opacity: 1; } }
+@keyframes bootPanel { to { opacity: .92; } }
+@keyframes bootPanelPulse { 50% { border-color: #8a2be2; box-shadow: 0 0 12px rgba(138,43,226,.4); } }
+@keyframes bootFadeAway { to { opacity: 0; visibility: hidden; } }
+@keyframes bootCaptionFade { to { opacity: 0; } }
+@keyframes bootRing { to { opacity: .9; } }
+@keyframes bootRingSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes bootNeonBlink {
+  0%, 100% { opacity: .78; filter: brightness(1); }
+  50% { opacity: 1; filter: brightness(1.7); }
+}
+@keyframes bootSmoke { to { opacity: 1; } }
+@keyframes bootSmokePulse { 50% { opacity: .5; transform: translate(-50%, -55%) scale(1.12); } }
+@keyframes bootOrbSmoke {
+  0% { transform: translate(-8%, 4%) scale(.94) rotate(-8deg); opacity: .42; }
+  100% { transform: translate(8%, -5%) scale(1.1) rotate(9deg); opacity: .9; }
+}
+@keyframes bootOrbPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(138,43,226,.62), inset 0 0 32px rgba(138,43,226,.25); }
+  50% { box-shadow: 0 0 38px rgba(138,43,226,.95), 0 0 74px rgba(192,132,252,.52), inset 0 0 42px rgba(138,43,226,.5); }
+}
+@keyframes bootRobot {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.68); }
+  65% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes bootGlitch { 50% { transform: translateX(1px); text-shadow: -2px 0 #4cbeff, 2px 0 #ff3df2; } }
+
+button:not(:disabled) {
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+
+button:not(:disabled):hover {
+  filter: brightness(1.18);
+  box-shadow: 0 0 16px rgba(138,43,226,.28);
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px) scale(.98);
+  filter: brightness(1.3);
+}
+
+.tab-panel:not([hidden]) {
+  animation: moduleEnter .36s ease both;
+}
+
+@keyframes moduleEnter {
+  from { opacity: .35; transform: translateY(8px); filter: hue-rotate(35deg); }
+  to { opacity: 1; transform: translateY(0); filter: hue-rotate(0); }
+}
+
+@media (max-width: 480px) {
+  .boot-core { width: 90vw; }
+  .boot-status { top: calc(50% + 40vw + 30px); }
+  .boot-caption { top: max(120px, calc(13vh + 60px)); margin-bottom: 12px; }
+  .boot-grid { gap: 4px; margin-top: 11px; }
+  .boot-grid span { padding: 4px 6px; font-size: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-field, .ambient-field::after { animation-duration: 120s; }
+  #hydraBoot::before, #hydraBoot::after, .boot-dot, .boot-title, .boot-scan-list li,
+  .boot-grid span, .boot-orb, .boot-orb::before, .boot-orb::after, .boot-status,
+  .boot-status strong, .boot-core::before,
+  .boot-core::after, .tab-panel:not([hidden]) {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  #hydraBoot { transition-duration: .01ms; }
+}
   </style>
 </head>
 <body>
-  <!-- ========== SPLASH SCREEN ========== -->
-  <div id="splashScreen">
-    <svg class="splash-logo" viewBox="0 0 360 318">
-      <defs>
-        <radialGradient id="splashCoreGrad" cx="50%" cy="42%" r="62%">
-          <stop offset="0" stop-color="#ff8df8" />
-          <stop offset="0.45" stop-color="#b05cff" />
-          <stop offset="1" stop-color="#2a0f4d" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="180" cy="284" rx="112" ry="20" fill="#0b0516" stroke="#392257" stroke-width="1" />
-      <path d="M146 272 180 258 214 272 180 286Z" fill="url(#splashCoreGrad)" filter="url(#softGlow)" />
-      <circle cx="180" cy="272" r="7" fill="#ffd8ff" opacity="0.8" />
-    </svg>
-    <h1 class="splash-title">HYDRA</h1>
-    <div class="splash-loader"></div>
-    <p class="splash-message">Initializing...</p>
-  </div>
-
-  <!-- ========== LOADING SCREEN ========== -->
-  <div id="loadingScreen">
-    <div class="loading-container">
-      <!-- Background particles -->
-      <div class="bg-particles">
-        <div class="bg-particle"></div>
-        <div class="bg-particle"></div>
-        <div class="bg-particle"></div>
-        <div class="bg-particle"></div>
-        <div class="bg-particle"></div>
-        <div class="bg-particle"></div>
+  <div class="ambient-field" aria-hidden="true"></div>
+  <section id="hydraBoot" role="status" aria-label="HYDRA AI initializing">
+    <div class="boot-core">
+      <span class="boot-dot" aria-hidden="true"></span>
+      <h1 class="boot-title">HYDRA</h1>
+      <p class="boot-caption">INITIALIZING // TRI-CORE INTELLIGENCE</p>
+      <ul class="boot-scan-list" aria-label="System scan">
+        <li>✓ POWER CORE ONLINE</li>
+        <li>✓ AI PROCESSOR ONLINE</li>
+        <li>✓ SENSORS ACTIVE</li>
+        <li>✓ VOICE SYSTEM READY</li>
+        <li>✓ NAVIGATION READY</li>
+        <li>✓ TACTICAL DATABASE LOADED</li>
+      </ul>
+      <div class="boot-grid" aria-label="System modules">
+        <span>BATTERY</span><span>CPU</span><span>TEMPERATURE</span><span>GPS</span>
+        <span>WEAPONS</span><span>AUDIO</span><span>CAMERA</span>
       </div>
-
-      <!-- Ring effects -->
-      <div class="ring-effect"></div>
-      <div class="ring-effect"></div>
-      <div class="ring-effect"></div>
-
-      <!-- Smoke effect behind HYDRA -->
-      <div class="smoke-effect">
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
-        <div class="smoke-particle"></div>
+      <div class="boot-orb" aria-hidden="true">
+        <img class="boot-mascot" src="./hydra-icon-192.png" alt="" />
       </div>
-
-      <!-- Electricity bolts -->
-      <div class="electricity-bolt"></div>
-      <div class="electricity-bolt"></div>
-      <div class="electricity-bolt"></div>
-      <div class="electricity-bolt"></div>
-      <div class="electricity-bolt"></div>
-
-      <!-- HYDRA SVG Animation -->
-      <svg class="hydra-loading-svg" viewBox="0 0 360 318">
-        <defs>
-          <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-          <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          <linearGradient id="neckGrad" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#1a0f2e" />
-            <stop offset="0.55" stop-color="#3b2360" />
-            <stop offset="1" stop-color="#6d3fa5" />
-          </linearGradient>
-          <linearGradient id="plateGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#4a2c72" />
-            <stop offset="0.52" stop-color="#221238" />
-            <stop offset="1" stop-color="#0d0618" />
-          </linearGradient>
-          <linearGradient id="jawGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#c7a4f5" />
-            <stop offset="1" stop-color="#5b338a" />
-          </linearGradient>
-          <radialGradient id="loadingCoreGrad" cx="50%" cy="42%" r="62%">
-            <stop offset="0" stop-color="#ff8df8" />
-            <stop offset="0.45" stop-color="#b05cff" />
-            <stop offset="1" stop-color="#2a0f4d" />
-          </radialGradient>
-        </defs>
-
-        <!-- Full robot with fade-in -->
-        <g class="hydra-fill">
-          <!-- Base platform -->
-          <ellipse cx="180" cy="284" rx="112" ry="20" fill="#0b0516" stroke="#392257" stroke-width="1" />
-          <ellipse cx="180" cy="281" rx="82" ry="13" fill="none" stroke="#6b3ea2" stroke-width="1" stroke-dasharray="3 9" opacity="0.7" />
-          <path d="M116 276 180 252 244 276 180 300Z" fill="#120923" stroke="#4d2d78" stroke-width="1.5" />
-
-          <!-- Core gem with pulse -->
-          <path d="M146 272 180 258 214 272 180 286Z" fill="url(#loadingCoreGrad)" filter="url(#softGlow)" class="core-pulse" />
-          <circle cx="180" cy="272" r="7" fill="#ffd8ff" opacity="0.8" />
-
-          <!-- Left neck -->
-          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" fill="none" stroke="#08040f" stroke-width="36" stroke-linecap="round" />
-          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" fill="none" stroke="url(#neckGrad)" stroke-width="28" stroke-linecap="round" />
-          <path d="M160 263 C135 245 110 228 103 200 C96 175 104 153 119 138" fill="none" stroke="#b892ef" stroke-width="1.3" stroke-linecap="round" opacity="0.4" />
-          <circle cx="111" cy="214" r="2.2" fill="#ff3df2" opacity="0.8" />
-          <circle cx="103" cy="185" r="1.8" fill="#c084fc" opacity="0.75" />
-
-          <!-- Right neck -->
-          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" fill="none" stroke="#08040f" stroke-width="36" stroke-linecap="round" />
-          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" fill="none" stroke="url(#neckGrad)" stroke-width="28" stroke-linecap="round" />
-          <path d="M200 263 C225 245 250 228 257 200 C264 175 256 153 241 138" fill="none" stroke="#b892ef" stroke-width="1.3" stroke-linecap="round" opacity="0.4" />
-          <circle cx="249" cy="214" r="2.2" fill="#ff3df2" opacity="0.8" />
-          <circle cx="257" cy="185" r="1.8" fill="#c084fc" opacity="0.75" />
-
-          <!-- Center neck -->
-          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" fill="none" stroke="#08040f" stroke-width="40" stroke-linecap="round" />
-          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" fill="none" stroke="url(#neckGrad)" stroke-width="31" stroke-linecap="round" />
-          <path d="M177 264 C170 236 169 201 174 166 C178 139 181 119 181 102" fill="none" stroke="#c9a7f7" stroke-width="1.4" stroke-linecap="round" opacity="0.44" />
-          <circle cx="172" cy="206" r="2.4" fill="#ff3df2" opacity="0.9" />
-          <circle cx="176" cy="164" r="2" fill="#c084fc" opacity="0.8" />
-          <circle cx="178" cy="129" r="1.8" fill="#ff9df8" opacity="0.7" />
-
-          <!-- Left head -->
-          <g transform="translate(118 122) rotate(-16)">
-            <path d="M-32 8 -24 -25 -4 -34 22 -27 34 -8 29 11 12 26 -14 24Z" fill="url(#plateGrad)" stroke="#8d63c6" stroke-width="1.4" />
-            <path d="M-22 -22 -10 -30 3 -18 -9 -9Z" fill="#57348a" />
-            <path d="M18 -27 27 -18 16 -12 10 -22Z" fill="#57348a" />
-            <path d="M-23 -2 20 -9 23 1 -19 8Z" fill="#0a0412" stroke="#7b4fb3" stroke-width="1" />
-            <path d="M-16 -1 12 -6" stroke="#ff5cf4" stroke-width="4" stroke-linecap="round" />
-            <path d="M-22 13 23 8 18 22 -15 24Z" fill="#12081f" stroke="#4d2c76" stroke-width="1" />
-            <path d="M-18 15 -10 22 -4 15 2 23 8 15 14 21 18 13" fill="none" stroke="url(#jawGrad)" stroke-width="2.6" stroke-linecap="round" />
-            <path d="M-28 7 -34 11 -27 15" fill="#2a1545" />
-            <path d="M30 2 36 6 31 12" fill="#2a1545" />
-          </g>
-
-          <!-- Right head -->
-          <g transform="translate(242 122) rotate(16)">
-            <path d="M-34 11 -29 -8 -22 -27 -4 -34 22 -27 32 8 12 26 -14 24Z" fill="url(#plateGrad)" stroke="#8d63c6" stroke-width="1.4" />
-            <path d="M-3 -18 10 -30 22 -22 9 -9Z" fill="#57348a" />
-            <path d="M-27 -18 -18 -27 -10 -22 -16 -12Z" fill="#57348a" />
-            <path d="M-20 -2 23 -9 19 8 -23 1Z" fill="#0a0412" stroke="#7b4fb3" stroke-width="1" />
-            <path d="M-12 -5 16 -1" stroke="#ff5cf4" stroke-width="4" stroke-linecap="round" />
-            <path d="M-22 13 23 8 18 22 -15 24Z" fill="#12081f" stroke="#4d2c76" stroke-width="1" />
-            <path d="M-18 15 -10 22 -4 15 2 23 8 15 14 21 18 13" fill="none" stroke="url(#jawGrad)" stroke-width="2.6" stroke-linecap="round" />
-            <path d="M28 7 34 11 27 15" fill="#2a1545" />
-            <path d="M-30 2 -36 6 -31 12" fill="#2a1545" />
-          </g>
-
-          <!-- Center head -->
-          <g transform="translate(180 86)">
-            <path d="M-8 -54 0 -69 8 -54 14 -47 5 -41 -5 -41 -14 -47Z" fill="#6b3fa4" stroke="#a37be0" stroke-width="1" />
-            <path d="M-40 10 -34 -26 -12 -42 16 -39 36 -22 42 -2 30 22 8 34 -20 28Z" fill="url(#plateGrad)" stroke="#a37be0" stroke-width="1.6" />
-            <path d="M-28 -22 -12 -34 4 -26 -10 -12Z" fill="#6b3fa4" />
-            <path d="M16 -34 30 -24 18 -15 8 -26Z" fill="#6b3fa4" />
-            <path d="M-30 -4 26 -13 29 1 -27 10Z" fill="#080310" stroke="#9366cc" stroke-width="1.2" />
-            <path d="M-20 -3 16 -9" stroke="#ff6cf6" stroke-width="5" stroke-linecap="round" />
-            <path d="M-28 17 29 10 22 27 -20 31Z" fill="#12081f" stroke="#5a3489" stroke-width="1.2" />
-            <path d="M-23 20 -14 29 -7 20 0 30 7 20 14 28 22 17" fill="none" stroke="url(#jawGrad)" stroke-width="3" stroke-linecap="round" />
-            <path d="M-35 8 -42 13 -34 18" fill="#30194f" />
-            <path d="M37 3 44 8 37 15" fill="#30194f" />
-            <circle cx="0" cy="-50" r="2.6" fill="#ff5cf4" />
-            <path d="M-37 -14 -45 -22M40 -17 47 -25" stroke="#5e378e" stroke-width="2" stroke-linecap="round" />
-          </g>
-        </g>
-
-        <!-- Neon outline that draws -->
-        <g class="hydra-outline" filter="url(#neonGlow)">
-          <!-- Main body outline -->
-          <ellipse cx="180" cy="284" rx="112" ry="20" />
-          <path d="M146 272 180 258 214 272 180 286Z" />
-
-          <!-- Left neck -->
-          <path d="M163 270 C137 253 105 235 96 202 C88 173 98 146 118 129" />
-
-          <!-- Right neck -->
-          <path d="M197 270 C223 253 255 235 264 202 C272 173 262 146 242 129" />
-
-          <!-- Center neck -->
-          <path d="M180 272 C168 238 166 196 172 158 C176 133 180 113 180 96" />
-
-          <!-- Left head -->
-          <path d="M-32 8 -24 -25 -4 -34 22 -27 34 -8 29 11 12 26 -14 24Z" transform="translate(118 122) rotate(-16)" />
-
-          <!-- Right head -->
-          <path d="M-34 11 -29 -8 -22 -27 -4 -34 22 -27 32 8 12 26 -14 24Z" transform="translate(242 122) rotate(16)" />
-
-          <!-- Center head -->
-          <path d="M-8 -54 0 -69 8 -54 14 -47 5 -41 -5 -41 -14 -47Z" transform="translate(180 86)" />
-          <path d="M-40 10 -34 -26 -12 -42 16 -39 36 -22 42 -2 30 22 8 34 -20 28Z" transform="translate(180 86)" />
-        </g>
-
-        <!-- Eyes that glow -->
-        <g class="eye-glow">
-          <ellipse cx="104" cy="122" rx="8" ry="3" />
-          <ellipse cx="256" cy="122" rx="8" ry="3" />
-          <ellipse cx="180" cy="86" rx="10" ry="4" />
-        </g>
-      </svg>
-
-      <!-- Electricity overlay -->
-      <div class="electricity"></div>
+      <div class="boot-status" aria-live="polite">MISSION STATUS<strong>READY</strong></div>
+      <p class="boot-footer">POWERING ON // HYDRA OS v3.0</p>
     </div>
-
-    <p class="loading-text">HYDRA OS v3.0</p>
-    <p class="loading-subtext" id="loadingSubtext">Checking AI...</p>
-  </div>
-
-  <!-- ========== WELCOME SCREEN ========== -->
-  <div id="welcomeScreen">
-    <h1 class="welcome-title">HYDRA</h1>
-    <p class="welcome-subtitle">Advanced Combat Intelligence</p>
-    <div class="welcome-animation">
-      <svg class="hydra-bot-animation" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(192, 132, 252, 0.3)" stroke-width="2" />
-        <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255, 61, 242, 0.4)" stroke-width="2" />
-        <circle cx="100" cy="100" r="40" fill="none" stroke="rgba(192, 132, 252, 0.5)" stroke-width="2" />
-        <circle cx="100" cy="100" r="20" fill="var(--venom)" filter="url(#softGlow)" />
-      </svg>
-    </div>
-    <ul class="welcome-checklist">
-      <li style="animation-delay: 0.2s">AI Engine</li>
-      <li style="animation-delay: 0.4s">Voice System</li>
-      <li style="animation-delay: 0.6s">Sensors</li>
-      <li style="animation-delay: 0.8s">Navigation</li>
-    </ul>
-    <p class="welcome-launch">Launching...</p>
-  </div>
-
-  <!-- ========== BOOT MESSAGES ========== -->
-  <div id="bootMessages">
-    <p class="boot-line">HYDRA OS v3.0</p>
-  </div>
-
-  <!-- ========== STARTUP PROMPT ========== -->
-  <div id="startupPrompt">
-    <h2 class="startup-message">Welcome Commander</h2>
-    <p class="startup-submessage">HYDRA is ready for deployment.</p>
-    <button class="startup-enter" id="startupEnterBtn">[ENTER]</button>
-  </div>
+  </section>
 
   <!-- ========== DEVICE STATUS BAR ========== -->
   <div class="device-statusbar" id="deviceStatusbar">
@@ -4318,6 +4468,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
   <audio id="backstoryAudio" preload="auto" src="hydra-origin.mp3?v=20261113-1908"></audio>
   <audio id="hydraWakeAudio" preload="auto" src="hydra-wake.mp3"></audio>
+  <audio id="bootAudio" preload="auto" src="./hydra-boot-voice.mp3"></audio>
 
   <script>
 (() => {
@@ -4379,56 +4530,31 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   const CURSE_REROLLS = 2;
 
   // ========== APP INITIALIZATION ==========
-  const splashScreen = document.getElementById('splashScreen');
-  const loadingScreen = document.getElementById('loadingScreen');
-  const welcomeScreen = document.getElementById('welcomeScreen');
-  const startupPrompt = document.getElementById('startupPrompt');
-  const bootMessages = document.getElementById('bootMessages');
+  const hydraBoot = document.getElementById('hydraBoot');
   const deviceStatusbar = document.getElementById('deviceStatusbar');
   const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const startupEnterBtn = document.getElementById('startupEnterBtn');
+  let clickAudioContext = null;
 
-  // Boot sequence
-  const bootSequence = [
-    'HYDRA OS v3.0',
-    'Checking AI...',
-    'Loading Neural Core...',
-    'Connecting Modules...',
-    'System Ready.'
-  ];
-
-  function runBootSequence() {
-    bootMessages.classList.add('active');
-    let delay = 0;
-
-    bootSequence.forEach((message, index) => {
-      setTimeout(() => {
-        const line = document.createElement('p');
-        line.className = 'boot-line' + (index === bootSequence.length - 1 ? ' success' : '');
-        line.textContent = message;
-        bootMessages.appendChild(line);
-
-        if (index === bootSequence.length - 1) {
-          setTimeout(() => {
-            bootMessages.classList.remove('active');
-            showWelcomeScreen();
-          }, 500);
-        }
-      }, delay);
-      delay += 400;
-    });
+  function runHydraBootSequence() {
+    window.setTimeout(() => {
+      hydraBoot.classList.add('is-complete');
+      hydraBoot.setAttribute('aria-hidden', 'true');
+    }, 6500);
   }
 
-  function showWelcomeScreen() {
-    welcomeScreen.classList.add('active');
-    setTimeout(() => {
-      welcomeScreen.classList.remove('active');
-      showStartupPrompt();
-    }, 4000);
-  }
+  const bootAudio = document.getElementById('bootAudio');
+  let bootAudioStarted = false;
 
-  function showStartupPrompt() {
-    startupPrompt.classList.add('active');
+  function playBootAudio() {
+    if (bootAudioStarted || !bootAudio) return;
+    bootAudioStarted = true;
+    bootAudio.currentTime = 0;
+    const playback = bootAudio.play();
+    if (playback) {
+      playback.catch(() => {
+        bootAudioStarted = false;
+      });
+    }
   }
 
   function updateDeviceStatus() {
@@ -4479,13 +4605,15 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   function createRipple(event) {
     const button = event.currentTarget;
+    if (getComputedStyle(button).position === 'static') button.style.position = 'relative';
     const circle = document.createElement('span');
     const diameter = Math.max(button.clientWidth, button.clientHeight);
     const radius = diameter / 2;
+    const bounds = button.getBoundingClientRect();
 
     circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
-    circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+    circle.style.left = `${event.clientX - bounds.left - radius}px`;
+    circle.style.top = `${event.clientY - bounds.top - radius}px`;
     circle.classList.add('ripple');
 
     const ripple = button.getElementsByClassName('ripple')[0];
@@ -4494,6 +4622,26 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
     }
 
     button.appendChild(circle);
+  }
+
+  function playClickSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    clickAudioContext = clickAudioContext || new AudioContext();
+    clickAudioContext.resume().then(() => {
+      const oscillator = clickAudioContext.createOscillator();
+      const gain = clickAudioContext.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(740, clickAudioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(420, clickAudioContext.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.055, clickAudioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, clickAudioContext.currentTime + 0.09);
+      oscillator.connect(gain);
+      gain.connect(clickAudioContext.destination);
+      oscillator.start();
+      oscillator.stop(clickAudioContext.currentTime + 0.09);
+    }).catch(() => {});
   }
 
   // ========== HEY HYDRA BUTTON ==========
@@ -4513,59 +4661,33 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 
   // Initialize app
   document.addEventListener('DOMContentLoaded', () => {
-    // Start splash screen
-    setTimeout(() => {
-      // After splash, show loading screen
-      loadingScreen.classList.add('active');
+    runHydraBootSequence();
+    playBootAudio();
+    document.addEventListener('pointerdown', playBootAudio, { once: true });
+    document.addEventListener('keydown', playBootAudio, { once: true });
 
-      const loadingMessages = [
-        'Initializing HYDRA AI...',
-        'Loading Systems...',
-        'Connecting Modules...'
-      ];
+    updateDeviceStatus();
+    setInterval(updateDeviceStatus, 1000);
 
-      let msgIndex = 0;
-      const loadingInterval = setInterval(() => {
-        if (msgIndex < loadingMessages.length) {
-          document.getElementById('loadingSubtext').textContent = loadingMessages[msgIndex];
-          msgIndex++;
-        } else {
-          clearInterval(loadingInterval);
-          // Wait for full animation to complete (6 seconds total for epic effect)
-          setTimeout(() => {
-            loadingScreen.classList.remove('active');
-            runBootSequence();
-          }, 2500);
-        }
-      }, 2000);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-      // Update device status periodically
-      updateDeviceStatus();
-      setInterval(updateDeviceStatus, 1000);
+    const wakewordBtn = document.getElementById('wakewordBtn');
+    wakewordBtn.addEventListener('click', playHydraWakeResponse);
 
-      // Fullscreen button
-      fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-      // HEY HYDRA button - plays audio on click
-      const wakewordBtn = document.getElementById('wakewordBtn');
-      wakewordBtn.addEventListener('click', playHydraWakeResponse);
-
-      // Startup prompt enter button
-      startupEnterBtn.addEventListener('click', () => {
-        startupPrompt.classList.remove('active');
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button || button.disabled) return;
+      playBootAudio();
+      createRipple({
+        currentTarget: button,
+        clientX: event.clientX,
+        clientY: event.clientY
       });
+      playClickSound();
+    });
 
-      // Add ripple effect to buttons
-      const buttons = document.querySelectorAll('button');
-      buttons.forEach(button => {
-        button.addEventListener('click', createRipple);
-      });
-
-      // Monitor online/offline status
-      window.addEventListener('online', updateDeviceStatus);
-      window.addEventListener('offline', updateDeviceStatus);
-
-    }, 2500); // Splash screen duration
+    window.addEventListener('online', updateDeviceStatus);
+    window.addEventListener('offline', updateDeviceStatus);
   });
 
   const GRUDGE_TIERS = [
