@@ -3558,6 +3558,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   object-fit: contain;
   border-radius: 50%;
   filter: drop-shadow(0 0 16px rgba(192,132,252,.9));
+  animation: bootLogoGlitch 3.6s steps(1, end) 3.8s infinite;
 }
 
 .boot-orb::before,
@@ -3646,6 +3647,12 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   0%, 100% { box-shadow: 0 0 18px rgba(138,43,226,.62), inset 0 0 32px rgba(138,43,226,.25); }
   50% { box-shadow: 0 0 38px rgba(138,43,226,.95), 0 0 74px rgba(192,132,252,.52), inset 0 0 42px rgba(138,43,226,.5); }
 }
+@keyframes bootLogoGlitch {
+  0%, 90%, 94%, 100% { transform: translateX(0); filter: drop-shadow(0 0 16px rgba(192,132,252,.9)); clip-path: inset(0); }
+  91% { transform: translateX(-4px) skewX(-3deg); filter: hue-rotate(24deg) drop-shadow(0 0 20px #8a2be2); clip-path: inset(12% 0 58%); }
+  92% { transform: translateX(4px) skewX(2deg); filter: hue-rotate(-30deg) drop-shadow(0 0 20px #4cbeff); clip-path: inset(48% 0 24%); }
+  93% { transform: translateX(-2px); filter: drop-shadow(0 0 18px #ff3df2); clip-path: inset(0); }
+}
 @keyframes bootRobot {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.68); }
   65% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
@@ -3687,7 +3694,7 @@ button:not(:disabled):active {
 @media (prefers-reduced-motion: reduce) {
   .ambient-field, .ambient-field::after { animation-duration: 120s; }
   #hydraBoot::before, #hydraBoot::after, .boot-dot, .boot-title, .boot-scan-list li,
-  .boot-grid span, .boot-orb, .boot-orb::before, .boot-orb::after, .boot-status,
+  .boot-grid span, .boot-orb, .boot-orb::before, .boot-orb::after, .boot-mascot, .boot-status,
   .boot-status strong, .boot-core::before,
   .boot-core::after, .tab-panel:not([hidden]) {
     animation-duration: .01ms !important;
@@ -4467,7 +4474,6 @@ button:not(:disabled):active {
 
   <audio id="mascotAudio" loop preload="auto" src="mascot-song.wav"></audio>
   <audio id="backstoryAudio" preload="auto" src="hydra-origin.mp3?v=20261113-1908"></audio>
-  <audio id="hydraWakeAudio" preload="auto" src="hydra-wake.mp3"></audio>
   <audio id="bootAudio" preload="auto" src="./hydra-boot-voice.mp3"></audio>
 
   <script>
@@ -4545,8 +4551,8 @@ button:not(:disabled):active {
   const bootAudio = document.getElementById('bootAudio');
   let bootAudioStarted = false;
 
-  function playBootAudio() {
-    if (bootAudioStarted || !bootAudio) return;
+  function playBootAudio(restart = false) {
+    if ((!restart && bootAudioStarted) || !bootAudio) return;
     bootAudioStarted = true;
     bootAudio.currentTime = 0;
     const playback = bootAudio.play();
@@ -4646,17 +4652,11 @@ button:not(:disabled):active {
 
   // ========== HEY HYDRA BUTTON ==========
   function playHydraWakeResponse() {
-    const wakeAudio = document.getElementById('hydraWakeAudio');
-    if (wakeAudio) {
-      wakeAudio.currentTime = 0;
-      wakeAudio.play().catch(e => console.log('Audio play error:', e));
-
-      // Visual feedback
-      document.body.classList.add('is-speaking');
-      setTimeout(() => {
-        document.body.classList.remove('is-speaking');
-      }, 2000);
-    }
+    playBootAudio(true);
+    document.body.classList.add('is-speaking');
+    setTimeout(() => {
+      document.body.classList.remove('is-speaking');
+    }, 2000);
   }
 
   // Initialize app
