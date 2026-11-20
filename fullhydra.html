@@ -3924,9 +3924,6 @@ button:not(:disabled):active {
   <div class="shell">
     <header class="statusbar">
       <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9
-        <button type="button" class="rig-btn main-profile-export" id="mainProfileExport">⬇ PROFILE .XLS</button>
-        <button type="button" class="rig-btn auth-btn" id="setPasswordBtn">🔐 SET PASSWORD</button>
-        <button type="button" class="rig-btn auth-btn danger" id="logoutBtn">🚪 LOGOUT</button>
       </span>
       <span class="statusbar-right">
         <i class="led" id="uplinkLed"></i>
@@ -3947,6 +3944,7 @@ button:not(:disabled):active {
         <button type="button" class="tab-btn" id="tab-companionship" data-tab="companionship" role="tab" aria-selected="false" aria-controls="panel-companionship" tabindex="-1">COMPANIONSHIP<small>SMARTWATCH</small></button>
         <button type="button" class="tab-btn" id="tab-os" data-tab="os" role="tab" aria-selected="false" aria-controls="panel-os" tabindex="-1">HYDRA OS<small>DESKTOP</small></button>
         <button type="button" class="tab-btn" id="tab-manual" data-tab="manual" role="tab" aria-selected="false" aria-controls="panel-manual" tabindex="-1">MANUAL<small>APP GUIDE</small></button>
+        <button type="button" class="tab-btn" id="tab-navigation" data-tab="navigation" role="tab" aria-selected="false" aria-controls="panel-navigation" tabindex="-1">NAVIGATION<small>DOWNLOADS & AUTH</small></button>
       </nav>
 
       <div class="tab-panel" id="panel-home" data-panel="home" role="tabpanel" aria-labelledby="tab-home">
@@ -4630,6 +4628,40 @@ button:not(:disabled):active {
 
     <p class="page-foot">TWO CURSE HEADS. ONE GATEKEEPER. ONE SHUT-UP. BUILT ON QODER SITES + CLOUD AGENTS.</p>
   </div>
+
+      <div class="tab-panel" id="panel-navigation" data-panel="navigation" role="tabpanel" aria-labelledby="tab-navigation" hidden>
+        <section class="card" aria-label="Navigation & Downloads">
+          <header class="card-head"><span>NAVIGATION // DOWNLOADS & AUTH</span><span class="signal">COMMANDER CONTROLS</span></header>
+          <div class="damage-body">
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">DOWNLOAD YOUR PROFILE</h3>
+            <p class="small-note" style="margin-bottom: 20px;">Download your HYDRA profile as an Excel spreadsheet file.</p>
+            
+            <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" style="font-size: 14px; padding: 12px 24px; margin-bottom: 30px;">⬇ PROFILE .XLS</button>
+
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">SECURITY SETTINGS</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px;">
+              <button type="button" class="rig-btn auth-btn" id="setPasswordBtn" style="font-size: 12px; padding: 10px 20px;">🔐 SET PASSWORD</button>
+              <button type="button" class="rig-btn auth-btn danger" id="logoutBtn" style="font-size: 12px; padding: 10px 20px;">🚪 LOGOUT</button>
+            </div>
+
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">QUICK ACTIONS</h3>
+            <div class="manual-grid">
+              <article class="manual-item">
+                <h3>Download Profile</h3>
+                <p>Click the button above to download your profile as an Excel (.xls) file containing your name, email, and avatar URL.</p>
+              </article>
+              <article class="manual-item">
+                <h3>Set Password</h3>
+                <p>Set a local password for HYDRA. Must be at least 4 characters. Stored in your browser's local storage.</p>
+              </article>
+              <article class="manual-item">
+                <h3>Logout</h3>
+                <p>Clear your profile and password from this device. You'll need to sign in again on next visit.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
 
   <span class="sr-only" id="liveRegion" aria-live="polite"></span>
 
