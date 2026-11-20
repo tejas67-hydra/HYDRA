@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'hydra-shell-v5';
+const CACHE_NAME = 'hydra-shell-v6';
 const SHELL_FILES = [
   './index.html',
   './fullhydra.html',

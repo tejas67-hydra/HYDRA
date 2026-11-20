@@ -2424,8 +2424,6 @@ const GOOGLE_CLIENT_ID = '125808148114-sdh28fkfkjc1v66i09r4vho7ibprbonc.apps.goo
 
 function initUser(user) {
   const profile = {
-    id: user.id,
-    provider: 'google',
     name: user.name,
     email: user.email,
     avatar: user.avatar || ''
@@ -2436,7 +2434,7 @@ function initUser(user) {
     loginStatus.textContent = 'Could not save your profile on this device: ' + error.message;
     return false;
   }
-  currentUser = profile;
+  currentUser = { ...profile, id: profile.email.toLowerCase(), provider: 'google' };
   loginOverlay.classList.add('hidden');
   userProfile.style.display = 'flex';
   exportProfileBtn.style.display = 'inline-flex';
@@ -2461,7 +2459,7 @@ function checkExistingUser() {
     const saved = localStorage.getItem('hydra_user');
     if (saved) {
       const user = JSON.parse(saved);
-      if (user.provider === 'google' && user.email && user.name) {
+      if (user.email && user.name) {
         return initUser(user);
       }
       localStorage.removeItem('hydra_user');
