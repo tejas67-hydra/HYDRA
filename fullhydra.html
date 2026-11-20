@@ -3718,7 +3718,7 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   font-size: 11px;
 }
 
-.main-profile-export { margin-left: auto; }
+.main-profile-export { margin-left: 12px; letter-spacing: .12em; }
 #mainProfileExport[hidden] { display: none; }
 
 button:not(:disabled) {
@@ -3836,12 +3836,13 @@ button:not(:disabled):active {
 
   <div class="shell">
     <header class="statusbar">
-      <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9</span>
+      <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9
+        <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" hidden>⬇ PROFILE .XLS</button>
+      </span>
       <span class="statusbar-right">
         <i class="led" id="uplinkLed"></i>
         <span id="uplinkText">AI UPLINK // CHECKING</span>
       </span>
-      <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" hidden>⬇ PROFILE .XLS</button>
       <button type="button" class="rig-btn" id="installAppBtn">ADD TO DEVICE</button>
     </header>
 
@@ -4367,7 +4368,7 @@ button:not(:disabled):active {
       </div>
 
       <div class="tab-panel" id="panel-hydra-ai" data-panel="hydra-ai" role="tabpanel" aria-labelledby="tab-hydra-ai" hidden>
-        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2040" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
+        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2110" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
       </div>
 
       <div class="tab-panel" id="panel-companionship" data-panel="companionship" role="tabpanel" aria-labelledby="tab-companionship" hidden>
