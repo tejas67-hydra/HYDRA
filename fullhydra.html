@@ -3660,6 +3660,67 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 }
 @keyframes bootGlitch { 50% { transform: translateX(1px); text-shadow: -2px 0 #4cbeff, 2px 0 #ff3df2; } }
 
+.main-google-login {
+  position: fixed;
+  inset: 0;
+  z-index: 10004;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4,2,10,.94);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .3s ease, visibility .3s ease;
+}
+
+.main-google-login.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.main-google-login-card {
+  width: min(440px, 100%);
+  padding: clamp(24px, 6vw, 42px);
+  border: 1px solid rgba(192,132,252,.5);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(20,12,36,.98), rgba(7,3,15,.98));
+  box-shadow: 0 0 44px rgba(138,43,226,.28), inset 0 0 30px rgba(138,43,226,.08);
+  text-align: center;
+}
+
+.main-google-login-card h2 {
+  margin: 0 0 10px;
+  color: var(--lilac);
+  font: 900 clamp(24px, 7vw, 34px)/1.1 var(--display);
+  letter-spacing: .08em;
+  text-shadow: 0 0 20px rgba(138,43,226,.7);
+}
+
+.main-google-login-card p {
+  margin: 0 0 22px;
+  color: var(--steel);
+  font: 12px/1.7 var(--mono);
+}
+
+#mainGoogleBtn {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+#mainGoogleStatus {
+  min-height: 18px;
+  margin: 14px 0 0;
+  color: var(--warning);
+  font-size: 11px;
+}
+
+.main-profile-export { margin-left: auto; }
+#mainProfileExport[hidden] { display: none; }
+
 button:not(:disabled) {
   transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
 }
@@ -3731,6 +3792,15 @@ button:not(:disabled):active {
     </div>
   </section>
 
+  <section id="mainGoogleLogin" class="main-google-login" role="dialog" aria-modal="true" aria-labelledby="mainGoogleTitle" aria-hidden="true">
+    <div class="main-google-login-card">
+      <h2 id="mainGoogleTitle">HYDRA AUTHENTICATION</h2>
+      <p>Sign in with Google to enter HYDRA. Only your name, email, and profile photo URL are saved on this device. Download your profile spreadsheet from the main dashboard whenever you choose.</p>
+      <div id="mainGoogleBtn"></div>
+      <p id="mainGoogleStatus" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
   <!-- ========== DEVICE STATUS BAR ========== -->
   <div class="device-statusbar" id="deviceStatusbar">
     <div class="status-left">
@@ -3771,6 +3841,7 @@ button:not(:disabled):active {
         <i class="led" id="uplinkLed"></i>
         <span id="uplinkText">AI UPLINK // CHECKING</span>
       </span>
+      <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" hidden>⬇ PROFILE .XLS</button>
       <button type="button" class="rig-btn" id="installAppBtn">ADD TO DEVICE</button>
     </header>
 
@@ -4296,7 +4367,7 @@ button:not(:disabled):active {
       </div>
 
       <div class="tab-panel" id="panel-hydra-ai" data-panel="hydra-ai" role="tabpanel" aria-labelledby="tab-hydra-ai" hidden>
-        <iframe id="hydra-ai-frame" src="hydra.html?v=vision-20261104-2203" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
+        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2005" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
       </div>
 
       <div class="tab-panel" id="panel-companionship" data-panel="companionship" role="tabpanel" aria-labelledby="tab-companionship" hidden>
@@ -4668,9 +4739,177 @@ button:not(:disabled):active {
     }, 2000);
   }
 
+  const GOOGLE_CLIENT_ID = '125808148114-sdh28fkfkjc1v66i09r4vho7ibprbonc.apps.googleusercontent.com';
+  const GOOGLE_PROFILE_KEY = 'hydra.google-profile.v1';
+  const mainGoogleLogin = document.getElementById('mainGoogleLogin');
+  const mainGoogleStatus = document.getElementById('mainGoogleStatus');
+  const mainProfileExport = document.getElementById('mainProfileExport');
+
+  function showMainGoogleLogin() {
+    if (!mainProfileExport.hidden) return;
+    mainGoogleLogin.classList.add('is-visible');
+    mainGoogleLogin.setAttribute('aria-hidden', 'false');
+  }
+
+  function setMainProfile(user, persist) {
+    const profile = {
+      name: typeof user.name === 'string' ? user.name : '',
+      email: typeof user.email === 'string' ? user.email : '',
+      avatar: typeof user.avatar === 'string' && user.avatar.startsWith('https://') ? user.avatar : ''
+    };
+    if (!profile.name || !profile.email) return false;
+
+    if (persist) {
+      try {
+        localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
+      } catch (error) {
+        mainGoogleStatus.textContent = 'Could not save your profile on this device: ' + error.message;
+        console.error('Could not save the HYDRA profile on this device:', error);
+        return false;
+      }
+    }
+
+    mainProfileExport.hidden = false;
+    mainGoogleLogin.classList.remove('is-visible');
+    mainGoogleLogin.setAttribute('aria-hidden', 'true');
+    const aiFrame = document.getElementById('hydra-ai-frame');
+    if (aiFrame && aiFrame.contentWindow) {
+      aiFrame.contentWindow.postMessage({ type: 'hydra-google-profile', profile }, location.origin);
+    }
+    return true;
+  }
+
+  function loadSavedMainProfile() {
+    try {
+      const saved = localStorage.getItem(GOOGLE_PROFILE_KEY);
+      if (!saved) return false;
+      const profile = JSON.parse(saved);
+      if (setMainProfile(profile, false)) return true;
+      localStorage.removeItem(GOOGLE_PROFILE_KEY);
+    } catch (error) {
+      mainGoogleStatus.textContent = 'Could not read the saved Google profile: ' + error.message;
+      console.error('Could not read the saved Google profile:', error);
+    }
+
+    try {
+      const previousProfile = JSON.parse(localStorage.getItem('hydra_user') || 'null');
+      if (previousProfile && previousProfile.name && previousProfile.email) {
+        return setMainProfile(previousProfile, true);
+      }
+    } catch (error) {
+      console.error('Could not migrate the saved Google profile:', error);
+    }
+    return false;
+  }
+
+  function handleMainGoogleCredential(response) {
+    try {
+      if (!response || typeof response.credential !== 'string') {
+        throw new Error('Google returned an invalid sign-in response.');
+      }
+      const encodedPayload = response.credential.split('.')[1];
+      if (!encodedPayload) throw new Error('Google returned an invalid sign-in response.');
+      const base64 = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+      const data = JSON.parse(new TextDecoder().decode(bytes));
+      const issuerIsGoogle = data.iss === 'https://accounts.google.com' || data.iss === 'accounts.google.com';
+      if (data.aud !== GOOGLE_CLIENT_ID || !issuerIsGoogle || data.exp * 1000 <= Date.now() ||
+          data.email_verified !== true || !data.email || !data.name) {
+        throw new Error('Google did not return the expected verified profile. Please try again.');
+      }
+      if (!setMainProfile({
+        name: data.name,
+        email: data.email,
+        avatar: typeof data.picture === 'string' ? data.picture : ''
+      }, true)) return;
+      mainGoogleStatus.textContent = '';
+    } catch (error) {
+      mainGoogleStatus.textContent = error.message || 'Google sign-in failed. Please try again.';
+      console.error('Google sign-in failed:', error);
+    }
+  }
+
+  function initializeMainGoogleButton() {
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      mainGoogleStatus.textContent = 'Google Sign-In could not load. Check your connection and try refreshing.';
+      return;
+    }
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleMainGoogleCredential,
+      auto_select: true
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById('mainGoogleBtn'),
+      { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }
+    );
+  }
+
+  function initializeMainAuthentication() {
+    if (loadSavedMainProfile()) return;
+
+    window.setTimeout(() => {
+      if (mainProfileExport.hidden) showMainGoogleLogin();
+    }, 6500);
+    const googleIdentityScript = document.createElement('script');
+    googleIdentityScript.src = 'https://accounts.google.com/gsi/client';
+    googleIdentityScript.async = true;
+    googleIdentityScript.defer = true;
+    googleIdentityScript.addEventListener('load', initializeMainGoogleButton, { once: true });
+    googleIdentityScript.addEventListener('error', () => {
+      mainGoogleStatus.textContent = 'Google Sign-In failed to load. Check your connection and try refreshing.';
+    }, { once: true });
+    document.head.appendChild(googleIdentityScript);
+  }
+
+  function exportMainProfile() {
+    let profile;
+    try {
+      profile = JSON.parse(localStorage.getItem(GOOGLE_PROFILE_KEY) || 'null');
+    } catch (error) {
+      console.error('Could not read the HYDRA profile for export:', error);
+      return;
+    }
+    if (!profile || !profile.name || !profile.email) return;
+
+    const escapeXml = value => String(value).replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;'
+    })[character]);
+    const rows = [
+      ['Field', 'Value'],
+      ['Name', profile.name],
+      ['Email', profile.email],
+      ['Profile photo URL', profile.avatar || '']
+    ];
+    const worksheetRows = rows.map(row =>
+      '<Row>' + row.map(value =>
+        '<Cell><Data ss:Type="String">' + escapeXml(value) + '</Data></Cell>'
+      ).join('') + '</Row>'
+    ).join('');
+    const workbook = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<?mso-application progid="Excel.Sheet"?>' +
+      '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+      'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+      '<Worksheet ss:Name="Google Profile"><Table>' + worksheetRows +
+      '</Table></Worksheet></Workbook>';
+    const blob = new Blob(['\ufeff', workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'hydra-google-profile.xls';
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  }
+
   // Initialize app
   document.addEventListener('DOMContentLoaded', () => {
     runHydraBootSequence();
+    initializeMainAuthentication();
+    mainProfileExport.addEventListener('click', exportMainProfile);
     playBootAudio();
     document.addEventListener('pointerdown', retryBootAudio, { once: true });
     document.addEventListener('keydown', retryBootAudio, { once: true });
@@ -4697,6 +4936,23 @@ button:not(:disabled):active {
 
     window.addEventListener('online', updateDeviceStatus);
     window.addEventListener('offline', updateDeviceStatus);
+  });
+
+  window.addEventListener('storage', event => {
+    if (event.key !== GOOGLE_PROFILE_KEY) return;
+    if (!event.newValue) {
+      mainProfileExport.hidden = true;
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        window.google.accounts.id.disableAutoSelect();
+      }
+      showMainGoogleLogin();
+      return;
+    }
+    try {
+      setMainProfile(JSON.parse(event.newValue), false);
+    } catch (error) {
+      console.error('Could not read the updated HYDRA profile:', error);
+    }
   });
 
   const GRUDGE_TIERS = [
@@ -7145,6 +7401,10 @@ button:not(:disabled):active {
   function getHydraOperatorName() {
     try {
       const profile = JSON.parse(localStorage.getItem('hydra_user') || '{}');
+      if (typeof profile.name === 'string' && profile.name.trim()) return profile.name.trim();
+    } catch {}
+    try {
+      const profile = JSON.parse(localStorage.getItem(GOOGLE_PROFILE_KEY) || '{}');
       if (typeof profile.name === 'string' && profile.name.trim()) return profile.name.trim();
     } catch {}
     return 'Tejaswinp';
