@@ -618,6 +618,13 @@
     margin-bottom: 24px;
     font-size: 14px;
   }
+  .login-status {
+    min-height: 20px;
+    margin-top: 14px;
+    color: #ff9aab;
+    font-size: 12px;
+    line-height: 1.5;
+  }
   .login-box .google-btn {
     background: white;
     color: #333;
@@ -640,18 +647,6 @@
     width: 20px;
     height: 20px;
   }
-  .login-box .manual-btn {
-    background: rgba(255,255,255,0.1);
-    color: #e8e8f0;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    margin-top: 12px;
-    width: 100%;
-  }
-  .login-box .manual-btn:hover { background: rgba(255,255,255,0.15); }
   .user-profile {
     display: flex;
     align-items: center;
@@ -760,12 +755,9 @@
   <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
       <h2>Welcome to Hydra</h2>
-      <p>Sign in to save your AI's memory and personalize your experience</p>
+      <p>Sign in with Google to continue. HYDRA saves your name, email, and profile photo URL on this device. Your profile is exported only when you choose to download it.</p>
       <div id="googleBtn"></div>
-      <div style="margin-top:20px;">
-        <input type="text" id="guestNameInput" placeholder="Enter your name" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none;margin-bottom:10px;font-family:inherit;" />
-        <button class="manual-btn" id="manualLogin">Continue</button>
-      </div>
+      <p class="login-status" id="loginStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -779,6 +771,7 @@
         <img id="userAvatar" />
         <span class="name" id="userName"></span>
       </div>
+      <button id="exportProfileBtn" class="memory-btn" type="button" title="Download your Google profile as an Excel-compatible .xls file" style="display:none;">⬇ Profile .xls</button>
       <button id="new-chat-btn" title="New chat" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#e8e8f0;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">+ New</button>
       <button id="saved-chats-btn" class="memory-btn" title="Open saved HYDRA chats">🗂 Saved</button>
       <button id="purge-chat-btn" class="memory-btn" title="Permanently delete all HYDRA chat history" style="border-color:#ff365f;color:#ff6b85;">🗑 Purge</button>
@@ -2425,16 +2418,31 @@ const loginOverlay = document.getElementById('loginOverlay');
 const userProfile = document.getElementById('userProfile');
 const userAvatar = document.getElementById('userAvatar');
 const userName = document.getElementById('userName');
-const manualLogin = document.getElementById('manualLogin');
-const guestNameInput = document.getElementById('guestNameInput');
+const exportProfileBtn = document.getElementById('exportProfileBtn');
+const loginStatus = document.getElementById('loginStatus');
+const GOOGLE_CLIENT_ID = '125808148114-sdh28fkfkjc1v66i09r4vho7ibprbonc.apps.googleusercontent.com';
 
 function initUser(user) {
-  currentUser = user;
-  localStorage.setItem('hydra_user', JSON.stringify(user));
+  const profile = {
+    id: user.id,
+    provider: 'google',
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || ''
+  };
+  try {
+    localStorage.setItem('hydra_user', JSON.stringify(profile));
+  } catch (error) {
+    loginStatus.textContent = 'Could not save your profile on this device: ' + error.message;
+    return false;
+  }
+  currentUser = profile;
   loginOverlay.classList.add('hidden');
   userProfile.style.display = 'flex';
-  userAvatar.src = user.avatar || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%237209b7" width="100" height="100"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">' + user.name.charAt(0).toUpperCase() + '</text></svg>';
-  userName.textContent = user.name;
+  exportProfileBtn.style.display = 'inline-flex';
+  userAvatar.src = profile.avatar || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%237209b7" width="100" height="100"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">' + profile.name.charAt(0).toUpperCase() + '</text></svg>';
+  userAvatar.alt = profile.name + ' Google profile';
+  userName.textContent = profile.name;
   history[0].content = getSystemPrompt();
   const hadHistory = loadHistory();
   if (hadHistory) {
@@ -2445,6 +2453,7 @@ function initUser(user) {
       else if (m.role === 'assistant') addMsg('hydra', m.content);
     });
   }
+  return true;
 }
 
 function checkExistingUser() {
@@ -2452,59 +2461,110 @@ function checkExistingUser() {
     const saved = localStorage.getItem('hydra_user');
     if (saved) {
       const user = JSON.parse(saved);
-      initUser(user);
-      return true;
+      if (user.provider === 'google' && user.email && user.name) {
+        return initUser(user);
+      }
+      localStorage.removeItem('hydra_user');
     }
-  } catch (e) {}
+  } catch (error) {
+    loginStatus.textContent = 'Could not read the saved profile: ' + error.message;
+  }
   return false;
 }
-
-manualLogin.addEventListener('click', () => {
-  const name = guestNameInput.value.trim() || 'Guest';
-  initUser({
-    id: 'guest_' + Date.now(),
-    name: name,
-    avatar: null
-  });
-});
-
-guestNameInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    manualLogin.click();
-  }
-});
 
 userProfile.addEventListener('click', () => {
   if (confirm('Sign out? This will clear your local session.')) {
     localStorage.removeItem('hydra_user');
+    if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
     location.reload();
   }
 });
 
-if (!checkExistingUser()) {
-  // Try Google Sign-In
-  window.addEventListener('load', () => {
-    if (window.google && google.accounts) {
-      google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-        callback: handleCredentialResponse
-      });
-      google.accounts.id.renderButton(
-        document.getElementById('googleBtn'),
-        { theme: 'filled_black', size: 'large', text: 'signin_with' }
-      );
-    }
+function initializeGoogleSignIn() {
+  if (!window.google?.accounts?.id) {
+    loginStatus.textContent = 'Google Sign-In could not load. Check your connection and try refreshing.';
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleCredentialResponse,
+    auto_select: true
   });
+  google.accounts.id.renderButton(
+    document.getElementById('googleBtn'),
+    { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }
+  );
+}
+
+if (!checkExistingUser()) {
+  const googleIdentityScript = document.createElement('script');
+  googleIdentityScript.src = 'https://accounts.google.com/gsi/client';
+  googleIdentityScript.async = true;
+  googleIdentityScript.defer = true;
+  googleIdentityScript.addEventListener('load', initializeGoogleSignIn, { once: true });
+  googleIdentityScript.addEventListener('error', () => {
+    loginStatus.textContent = 'Google Sign-In failed to load. Check your connection and try refreshing.';
+  }, { once: true });
+  document.head.appendChild(googleIdentityScript);
 }
 
 function handleCredentialResponse(response) {
-  const data = JSON.parse(atob(response.credential.split('.')[1]));
-  initUser({
-    id: data.sub,
-    name: data.name || data.email,
-    avatar: data.picture
-  });
+  try {
+    const encodedPayload = response.credential.split('.')[1];
+    if (!encodedPayload) throw new Error('Google returned an invalid sign-in response.');
+    const base64 = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    const issuerIsGoogle = data.iss === 'https://accounts.google.com' || data.iss === 'accounts.google.com';
+    if (data.aud !== GOOGLE_CLIENT_ID || !issuerIsGoogle || data.exp * 1000 <= Date.now() ||
+        data.email_verified !== true || !data.email || !data.name) {
+      throw new Error('Google did not return the expected verified profile. Please try again.');
+    }
+    initUser({
+      id: data.email.toLowerCase(),
+      name: data.name,
+      email: data.email,
+      avatar: typeof data.picture === 'string' ? data.picture : ''
+    });
+  } catch (error) {
+    loginStatus.textContent = error.message || 'Google sign-in failed. Please try again.';
+  }
 }
+
+function xmlEscape(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;'
+  })[character]);
+}
+
+exportProfileBtn.addEventListener('click', () => {
+  if (!currentUser) return;
+  const rows = [
+    ['Field', 'Value'],
+    ['Name', currentUser.name],
+    ['Email', currentUser.email],
+    ['Profile photo URL', currentUser.avatar || '']
+  ];
+  const worksheetRows = rows.map(row =>
+    '<Row>' + row.map(value =>
+      '<Cell><Data ss:Type="String">' + xmlEscape(value) + '</Data></Cell>'
+    ).join('') + '</Row>'
+  ).join('');
+  const workbook = '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<?mso-application progid="Excel.Sheet"?>' +
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+    'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+    '<Worksheet ss:Name="Google Profile"><Table>' + worksheetRows +
+    '</Table></Worksheet></Workbook>';
+  downloadBlob(
+    new Blob(['\ufeff', workbook], { type: 'application/vnd.ms-excel;charset=utf-8' }),
+    'hydra-google-profile.xls'
+  );
+});
 
 // Code Workspace
 const workspaceModal = document.getElementById('workspaceModal');
