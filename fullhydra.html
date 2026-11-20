@@ -3738,7 +3738,74 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   font-size: 11px;
 }
 
-.main-profile-export { margin-left: 12px; letter-spacing: .12em; }
+.main-profile-export {
+  margin-left: 12px;
+  letter-spacing: .12em;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--venom);
+  background: rgba(192, 132, 252, 0.2);
+  color: var(--lilac);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.5),
+              0 0 40px rgba(192, 132, 252, 0.3),
+              inset 0 0 20px rgba(192, 132, 252, 0.1);
+  animation: neonPulse 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.main-profile-export:hover {
+  background: rgba(192, 132, 252, 0.4);
+  box-shadow: 0 0 30px rgba(192, 132, 252, 0.8),
+              0 0 60px rgba(192, 132, 252, 0.5),
+              inset 0 0 30px rgba(192, 132, 252, 0.2);
+  transform: scale(1.05);
+}
+
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.5),
+                0 0 40px rgba(192, 132, 252, 0.3),
+                inset 0 0 20px rgba(192, 132, 252, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(192, 132, 252, 0.8),
+                0 0 60px rgba(192, 132, 252, 0.5),
+                inset 0 0 30px rgba(192, 132, 252, 0.2);
+  }
+}
+
+.auth-btn {
+  margin-left: 8px;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--venom);
+  background: rgba(192, 132, 252, 0.15);
+  color: var(--lilac);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+  background: rgba(192, 132, 252, 0.3);
+  box-shadow: 0 0 15px rgba(192, 132, 252, 0.5);
+  transform: translateY(-1px);
+}
+
+.auth-btn.danger {
+  border-color: var(--danger);
+  background: rgba(255, 92, 138, 0.15);
+  color: var(--danger);
+}
+
+.auth-btn.danger:hover {
+  background: rgba(255, 92, 138, 0.3);
+  box-shadow: 0 0 15px rgba(255, 92, 138, 0.5);
+}
+
 #mainProfileExport[hidden] { display: none; }
 
 button:not(:disabled) {
@@ -3858,6 +3925,8 @@ button:not(:disabled):active {
     <header class="statusbar">
       <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9
         <button type="button" class="rig-btn main-profile-export" id="mainProfileExport">⬇ PROFILE .XLS</button>
+        <button type="button" class="rig-btn auth-btn" id="setPasswordBtn">🔐 SET PASSWORD</button>
+        <button type="button" class="rig-btn auth-btn danger" id="logoutBtn">🚪 LOGOUT</button>
       </span>
       <span class="statusbar-right">
         <i class="led" id="uplinkLed"></i>
@@ -4956,6 +5025,40 @@ button:not(:disabled):active {
     runHydraBootSequence();
     initializeMainAuthentication();
     mainProfileExport.addEventListener('click', exportMainProfile);
+
+    // Set password button
+    const setPasswordBtn = document.getElementById('setPasswordBtn');
+    setPasswordBtn.addEventListener('click', () => {
+      const newPassword = prompt('Enter your HYDRA password:');
+      if (newPassword && newPassword.length >= 4) {
+        try {
+          localStorage.setItem('hydra.password', newPassword);
+          alert('Password set successfully!');
+        } catch (error) {
+          alert('Could not save password: ' + error.message);
+        }
+      } else if (newPassword) {
+        alert('Password must be at least 4 characters.');
+      }
+    });
+
+    // Logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to logout? This will clear your profile from this device.')) {
+        try {
+          localStorage.removeItem(GOOGLE_PROFILE_KEY);
+          localStorage.removeItem('hydra.password');
+          if (window.google && window.google.accounts && window.google.accounts.id) {
+            window.google.accounts.id.disableAutoSelect();
+          }
+          location.reload();
+        } catch (error) {
+          alert('Could not logout: ' + error.message);
+        }
+      }
+    });
+
     playBootAudio();
     document.addEventListener('pointerdown', retryBootAudio, { once: true });
     document.addEventListener('keydown', retryBootAudio, { once: true });
