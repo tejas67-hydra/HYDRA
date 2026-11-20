@@ -3857,7 +3857,7 @@ button:not(:disabled):active {
   <div class="shell">
     <header class="statusbar">
       <span class="statusbar-left">HYDRA DIVISION <span class="sep">/</span> OWNED BY TEJASWINP <span class="sep">/</span> SERPENTINE UNIT 3H-9
-        <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" hidden>⬇ PROFILE .XLS</button>
+        <button type="button" class="rig-btn main-profile-export" id="mainProfileExport">⬇ PROFILE .XLS</button>
       </span>
       <span class="statusbar-right">
         <i class="led" id="uplinkLed"></i>
@@ -4768,7 +4768,6 @@ button:not(:disabled):active {
   const mainProfileExport = document.getElementById('mainProfileExport');
 
   function showMainGoogleLogin() {
-    if (!mainProfileExport.hidden) return;
     mainGoogleLogin.classList.add('is-visible');
     mainGoogleLogin.setAttribute('aria-hidden', 'false');
   }
@@ -4791,7 +4790,6 @@ button:not(:disabled):active {
       }
     }
 
-    mainProfileExport.hidden = false;
     mainGoogleLogin.classList.remove('is-visible');
     mainGoogleLogin.setAttribute('aria-hidden', 'true');
     const aiFrame = document.getElementById('hydra-ai-frame');
@@ -4882,7 +4880,7 @@ button:not(:disabled):active {
     if (loadSavedMainProfile()) return;
 
     window.setTimeout(() => {
-      if (mainProfileExport.hidden) showMainGoogleLogin();
+      showMainGoogleLogin();
     }, 6500);
     const googleIdentityScript = document.createElement('script');
     googleIdentityScript.src = 'https://accounts.google.com/gsi/client';
@@ -4901,9 +4899,18 @@ button:not(:disabled):active {
       profile = JSON.parse(localStorage.getItem(GOOGLE_PROFILE_KEY) || 'null');
     } catch (error) {
       console.error('Could not read the HYDRA profile for export:', error);
-      return;
+      profile = null;
     }
-    if (!profile || !profile.name || !profile.email) return;
+
+    // If no Google profile, create a default profile
+    if (!profile || !profile.name || !profile.email) {
+      profile = {
+        name: 'HYDRA Commander',
+        email: 'commander@hydra.ai',
+        avatar: '',
+        note: 'Default profile - Sign in with Google for personalized profile'
+      };
+    }
 
     const escapeXml = value => String(value).replace(/[&<>"']/g, character => ({
       '&': '&amp;',
@@ -4916,8 +4923,12 @@ button:not(:disabled):active {
       ['Field', 'Value'],
       ['Name', profile.name],
       ['Email', profile.email],
-      ['Profile photo URL', profile.avatar || '']
+      ['Profile photo URL', profile.avatar || ''],
+      ['Export Date', new Date().toISOString()]
     ];
+    if (profile.note) {
+      rows.push(['Note', profile.note]);
+    }
     const worksheetRows = rows.map(row =>
       '<Row>' + row.map(value =>
         '<Cell><Data ss:Type="String">' + escapeXml(value) + '</Data></Cell>'
@@ -4927,13 +4938,13 @@ button:not(:disabled):active {
       '<?mso-application progid="Excel.Sheet"?>' +
       '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
       'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
-      '<Worksheet ss:Name="Google Profile"><Table>' + worksheetRows +
+      '<Worksheet ss:Name="HYDRA Profile"><Table>' + worksheetRows +
       '</Table></Worksheet></Workbook>';
     const blob = new Blob(['\ufeff', workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const downloadUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = 'hydra-google-profile.xls';
+    link.download = 'hydra-profile.xls';
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -4976,7 +4987,6 @@ button:not(:disabled):active {
   window.addEventListener('storage', event => {
     if (event.key !== GOOGLE_PROFILE_KEY) return;
     if (!event.newValue) {
-      mainProfileExport.hidden = true;
       if (window.google && window.google.accounts && window.google.accounts.id) {
         window.google.accounts.id.disableAutoSelect();
       }
