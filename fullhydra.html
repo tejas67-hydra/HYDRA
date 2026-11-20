@@ -5056,40 +5056,48 @@ button:not(:disabled):active {
   document.addEventListener('DOMContentLoaded', () => {
     runHydraBootSequence();
     initializeMainAuthentication();
-    mainProfileExport.addEventListener('click', exportMainProfile);
 
-    // Set password button
+    // Navigation tab buttons - move event listeners outside of tab initialization
+    const mainProfileExport = document.getElementById('mainProfileExport');
     const setPasswordBtn = document.getElementById('setPasswordBtn');
-    setPasswordBtn.addEventListener('click', () => {
-      const newPassword = prompt('Enter your HYDRA password:');
-      if (newPassword && newPassword.length >= 4) {
-        try {
-          localStorage.setItem('hydra.password', newPassword);
-          alert('Password set successfully!');
-        } catch (error) {
-          alert('Could not save password: ' + error.message);
-        }
-      } else if (newPassword) {
-        alert('Password must be at least 4 characters.');
-      }
-    });
-
-    // Logout button
     const logoutBtn = document.getElementById('logoutBtn');
-    logoutBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to logout? This will clear your profile from this device.')) {
-        try {
-          localStorage.removeItem(GOOGLE_PROFILE_KEY);
-          localStorage.removeItem('hydra.password');
-          if (window.google && window.google.accounts && window.google.accounts.id) {
-            window.google.accounts.id.disableAutoSelect();
+
+    if (mainProfileExport) {
+      mainProfileExport.addEventListener('click', exportMainProfile);
+    }
+
+    if (setPasswordBtn) {
+      setPasswordBtn.addEventListener('click', () => {
+        const newPassword = prompt('Enter your HYDRA password:');
+        if (newPassword && newPassword.length >= 4) {
+          try {
+            localStorage.setItem('hydra.password', newPassword);
+            alert('Password set successfully!');
+          } catch (error) {
+            alert('Could not save password: ' + error.message);
           }
-          location.reload();
-        } catch (error) {
-          alert('Could not logout: ' + error.message);
+        } else if (newPassword) {
+          alert('Password must be at least 4 characters.');
         }
-      }
-    });
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to logout? This will clear your profile from this device.')) {
+          try {
+            localStorage.removeItem(GOOGLE_PROFILE_KEY);
+            localStorage.removeItem('hydra.password');
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+              window.google.accounts.id.disableAutoSelect();
+            }
+            location.reload();
+          } catch (error) {
+            alert('Could not logout: ' + error.message);
+          }
+        }
+      });
+    }
 
     playBootAudio();
     document.addEventListener('pointerdown', retryBootAudio, { once: true });
