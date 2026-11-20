@@ -3711,6 +3711,26 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   min-height: 44px;
 }
 
+.main-hosted-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 22px;
+  border: 1px solid rgba(192,132,252,.65);
+  border-radius: 999px;
+  color: var(--lilac);
+  background: rgba(138,43,226,.18);
+  font: 700 11px/1 var(--mono);
+  letter-spacing: .12em;
+  text-decoration: none;
+}
+
+.main-hosted-link:hover {
+  background: rgba(138,43,226,.32);
+  box-shadow: 0 0 18px rgba(138,43,226,.4);
+}
+
 #mainGoogleStatus {
   min-height: 18px;
   margin: 14px 0 0;
@@ -4368,7 +4388,7 @@ button:not(:disabled):active {
       </div>
 
       <div class="tab-panel" id="panel-hydra-ai" data-panel="hydra-ai" role="tabpanel" aria-labelledby="tab-hydra-ai" hidden>
-        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2110" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
+        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2200" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
       </div>
 
       <div class="tab-panel" id="panel-companionship" data-panel="companionship" role="tabpanel" aria-labelledby="tab-companionship" hidden>
@@ -4744,6 +4764,7 @@ button:not(:disabled):active {
   const GOOGLE_PROFILE_KEY = 'hydra.google-profile.v1';
   const mainGoogleLogin = document.getElementById('mainGoogleLogin');
   const mainGoogleStatus = document.getElementById('mainGoogleStatus');
+  const mainGoogleBtn = document.getElementById('mainGoogleBtn');
   const mainProfileExport = document.getElementById('mainProfileExport');
 
   function showMainGoogleLogin() {
@@ -4841,12 +4862,23 @@ button:not(:disabled):active {
       auto_select: true
     });
     window.google.accounts.id.renderButton(
-      document.getElementById('mainGoogleBtn'),
+      mainGoogleBtn,
       { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }
     );
   }
 
   function initializeMainAuthentication() {
+    if (location.protocol === 'file:') {
+      mainGoogleStatus.textContent = 'Google blocks sign-in from local file URLs. Open the hosted HTTPS version to continue.';
+      const hostedLink = document.createElement('a');
+      hostedLink.className = 'main-hosted-link';
+      hostedLink.href = 'https://tejas67-hydra.github.io/HYDRA/';
+      hostedLink.textContent = 'OPEN HYDRA ONLINE';
+      mainGoogleBtn.appendChild(hostedLink);
+      window.setTimeout(showMainGoogleLogin, 6500);
+      return;
+    }
+
     if (loadSavedMainProfile()) return;
 
     window.setTimeout(() => {
