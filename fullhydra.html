@@ -4367,7 +4367,7 @@ button:not(:disabled):active {
       </div>
 
       <div class="tab-panel" id="panel-hydra-ai" data-panel="hydra-ai" role="tabpanel" aria-labelledby="tab-hydra-ai" hidden>
-        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2005" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
+        <iframe id="hydra-ai-frame" src="hydra.html?v=20261120-2040" style="width:100%;height:100%;border:none;min-height:80vh;" title="HYDRA AI Chat Interface"></iframe>
       </div>
 
       <div class="tab-panel" id="panel-companionship" data-panel="companionship" role="tabpanel" aria-labelledby="tab-companionship" hidden>
@@ -4901,7 +4901,9 @@ button:not(:disabled):active {
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = 'hydra-google-profile.xls';
+    document.body.appendChild(link);
     link.click();
+    link.remove();
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   }
 
