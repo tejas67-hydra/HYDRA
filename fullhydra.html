@@ -4075,6 +4075,152 @@ button:not(:disabled):active {
   }
   #hydraBoot { transition-duration: .01ms; }
 }
+
+/* Dashboard Styles */
+.dashboard-greeting {
+  text-align: center;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, rgba(192,132,252,.1), rgba(138,43,226,.05));
+  border-radius: 16px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(192,132,252,.3);
+}
+
+.dashboard-greeting h2 {
+  margin: 0 0 10px;
+  color: var(--lilac);
+  font: 900 28px/1.2 var(--display);
+  letter-spacing: .08em;
+  text-shadow: 0 0 20px rgba(138,43,226,.7);
+}
+
+.dashboard-greeting p {
+  margin: 0;
+  color: var(--steel);
+  font: 14px/1.6 var(--mono);
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  padding: 20px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.2);
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: rgba(192,132,252,.1);
+  border-color: rgba(192,132,252,.4);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  display: block;
+  color: var(--steel);
+  font: 11px/1.4 var(--mono);
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: block;
+  color: var(--lilac);
+  font: 700 20px/1.2 var(--display);
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.quick-action-btn {
+  padding: 16px 20px;
+  background: rgba(192,132,252,.08);
+  border: 1px solid rgba(192,132,252,.3);
+  border-radius: 12px;
+  color: var(--lilac);
+  font: 600 14px/1.4 var(--mono);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quick-action-btn:hover {
+  background: rgba(192,132,252,.15);
+  border-color: rgba(192,132,252,.5);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(192,132,252,.2);
+}
+
+.quick-action-icon {
+  font-size: 20px;
+}
+
+.quick-action-label {
+  flex: 1;
+  text-align: left;
+}
+
+.recommendations-list, .notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.recommendation-item, .notification-item {
+  padding: 16px 20px;
+  background: rgba(0,212,170,.05);
+  border: 1px solid rgba(0,212,170,.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.notification-item {
+  background: rgba(255,193,7,.05);
+  border-color: rgba(255,193,7,.2);
+}
+
+.recommendation-item:hover, .notification-item:hover {
+  background: rgba(0,212,170,.1);
+  border-color: rgba(0,212,170,.4);
+}
+
+.notification-item:hover {
+  background: rgba(255,193,7,.1);
+  border-color: rgba(255,193,7,.4);
+}
+
+.recommendation-icon, .notification-icon {
+  font-size: 24px;
+}
+
+.recommendation-text, .notification-text {
+  flex: 1;
+  color: var(--steel);
+  font: 13px/1.5 var(--mono);
+}
   </style>
 </head>
 <body>
@@ -4232,6 +4378,7 @@ button:not(:disabled):active {
         <button type="button" class="tab-btn" id="tab-companionship" data-tab="companionship" role="tab" aria-selected="false" aria-controls="panel-companionship" tabindex="-1">COMPANIONSHIP<small>SMARTWATCH</small></button>
         <button type="button" class="tab-btn" id="tab-os" data-tab="os" role="tab" aria-selected="false" aria-controls="panel-os" tabindex="-1">HYDRA OS<small>DESKTOP</small></button>
         <button type="button" class="tab-btn" id="tab-manual" data-tab="manual" role="tab" aria-selected="false" aria-controls="panel-manual" tabindex="-1">MANUAL<small>APP GUIDE</small></button>
+        <button type="button" class="tab-btn" id="tab-dashboard" data-tab="dashboard" role="tab" aria-selected="false" aria-controls="panel-dashboard" tabindex="-1">DASHBOARD<small>SMART HOME</small></button>
         <button type="button" class="tab-btn" id="tab-navigation" data-tab="navigation" role="tab" aria-selected="false" aria-controls="panel-navigation" tabindex="-1">NAVIGATION<small>DOWNLOADS & AUTH</small></button>
       </nav>
 
@@ -4415,6 +4562,91 @@ button:not(:disabled):active {
           <p class="small-note" id="backstoryAudioStatus" role="status" aria-live="polite">ORIGINAL HYDRA AUDIO ONLY</p>
         </div>
       </dialog>
+
+      <div class="tab-panel" id="panel-dashboard" data-panel="dashboard" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+        <section class="card" aria-label="Smart Dashboard">
+          <header class="card-head"><span>DASHBOARD // SMART HOME</span><span class="signal" id="dashboardSignal">PERSONALIZED</span></header>
+          <div class="damage-body">
+            <!-- Personalized Greeting -->
+            <div class="dashboard-greeting" id="dashboardGreeting">
+              <h2 id="greetingTitle">Welcome back!</h2>
+              <p id="greetingSubtitle">Loading your personalized experience...</p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="dashboard-stats">
+              <div class="stat-card">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">Today's Usage</span>
+                <span class="stat-value" id="todayUsage">--</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">📊</span>
+                <span class="stat-label">Lifetime Usage</span>
+                <span class="stat-value" id="lifetimeUsage">--</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">🔥</span>
+                <span class="stat-label">Login Streak</span>
+                <span class="stat-value" id="loginStreak">--</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">📅</span>
+                <span class="stat-label">Last Login</span>
+                <span class="stat-value" id="lastLoginDisplay">--</span>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">QUICK ACTIONS</h3>
+            <div class="quick-actions-grid" id="quickActionsGrid">
+              <button class="quick-action-btn" data-action="continue">
+                <span class="quick-action-icon">▶</span>
+                <span class="quick-action-label">Continue Last Session</span>
+              </button>
+              <button class="quick-action-btn" data-action="ai">
+                <span class="quick-action-icon">🤖</span>
+                <span class="quick-action-label">AI Assistant</span>
+              </button>
+              <button class="quick-action-btn" data-action="analytics">
+                <span class="quick-action-icon">📈</span>
+                <span class="quick-action-label">Analytics</span>
+              </button>
+              <button class="quick-action-btn" data-action="settings">
+                <span class="quick-action-icon">⚙️</span>
+                <span class="quick-action-label">Settings</span>
+              </button>
+            </div>
+
+            <!-- Recommendations -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">RECOMMENDATIONS</h3>
+            <div class="recommendations-list" id="recommendationsList">
+              <div class="recommendation-item">
+                <span class="recommendation-icon">💡</span>
+                <span class="recommendation-text">Loading recommendations...</span>
+              </div>
+            </div>
+
+            <!-- Smart Notifications -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">NOTIFICATIONS</h3>
+            <div class="notifications-list" id="notificationsList">
+              <div class="notification-item">
+                <span class="notification-icon">🔔</span>
+                <span class="notification-text">Loading notifications...</span>
+              </div>
+            </div>
+
+            <!-- Voice Toggle -->
+            <div class="voice-toggle-section" style="margin-top: 30px; padding: 20px; border: 1px solid rgba(192,132,252,.3); border-radius: 12px; background: rgba(192,132,252,.05);">
+              <h3 style="color: var(--venom-bright); font-size: 14px; margin: 0 0 15px 0; letter-spacing: 0.15em;">VOICE GREETINGS</h3>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="voiceEnabledToggle" style="width: 20px; height: 20px; accent-color: var(--venom);">
+                <span style="color: var(--steel); font-size: 13px;">Enable HYDRA voice greetings</span>
+              </label>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <div class="tab-panel" id="panel-curse" data-panel="curse" role="tabpanel" aria-labelledby="tab-curse" hidden>
       <section class="live-deck" id="liveDeck" aria-label="Live voice link">
@@ -5580,6 +5812,217 @@ button:not(:disabled):active {
     }
   }
 
+  // Dashboard personalization functions
+  async function loadDashboardData() {
+    try {
+      const response = await fetch(`${API_BASE}/profile/full`, {
+        credentials: 'include'
+      });
+      if (response.status === 401) return null;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      return null;
+    }
+  }
+
+  async function loadRecommendations() {
+    try {
+      const response = await fetch(`${API_BASE}/recommendations`, {
+        credentials: 'include'
+      });
+      if (response.status === 401) return null;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+      return null;
+    }
+  }
+
+  async function loadNotifications() {
+    try {
+      const response = await fetch(`${API_BASE}/notifications`, {
+        credentials: 'include'
+      });
+      if (response.status === 401) return null;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      return null;
+    }
+  }
+
+  function updateDashboard(profile) {
+    if (!profile) return;
+
+    const displayName = profile.preferred_display_name || profile.name;
+    const hour = new Date().getHours();
+    let greeting = 'Welcome back';
+
+    if (hour >= 5 && hour < 12) greeting = 'Good morning';
+    else if (hour >= 12 && hour < 18) greeting = 'Good afternoon';
+    else if (hour >= 18 && hour < 22) greeting = 'Good evening';
+    else greeting = 'Good night';
+
+    if (profile.role === 'Administrator') {
+      greeting += `, Administrator ${displayName}`;
+    } else {
+      greeting += `, ${displayName}`;
+    }
+
+    document.getElementById('greetingTitle').textContent = greeting + '!';
+    document.getElementById('greetingSubtitle').textContent = 'HYDRA is ready for your command.';
+
+    // Update stats
+    const todayUsage = profile.current_session_time || 0;
+    const todayHours = Math.floor(todayUsage / 3600);
+    const todayMinutes = Math.floor((todayUsage % 3600) / 60);
+    document.getElementById('todayUsage').textContent = todayHours > 0 ? `${todayHours}h ${todayMinutes}m` : `${todayMinutes}m`;
+
+    const lifetimeHours = Math.floor(profile.total_lifetime_usage / 3600);
+    document.getElementById('lifetimeUsage').textContent = `${lifetimeHours}h`;
+
+    document.getElementById('loginStreak').textContent = profile.login_streak || 0;
+
+    if (profile.last_login) {
+      const lastLogin = new Date(profile.last_login);
+      document.getElementById('lastLoginDisplay').textContent = lastLogin.toLocaleDateString();
+    }
+
+    // Update voice toggle
+    const voiceToggle = document.getElementById('voiceEnabledToggle');
+    if (voiceToggle) {
+      voiceToggle.checked = profile.voice_enabled === 1;
+      voiceToggle.addEventListener('change', () => {
+        updatePreferences({ voice_enabled: voiceToggle.checked });
+      });
+    }
+
+    // Speak greeting if enabled
+    if (profile.voice_enabled === 1) {
+      speakGreeting(displayName, hour);
+    }
+  }
+
+  function updateRecommendations(data) {
+    if (!data || !data.recommendations) return;
+
+    const list = document.getElementById('recommendationsList');
+    list.innerHTML = '';
+
+    data.recommendations.forEach(rec => {
+      const item = document.createElement('div');
+      item.className = 'recommendation-item';
+      item.innerHTML = `
+        <span class="recommendation-icon">${rec.type === 'greeting' ? '👋' : rec.type === 'continue' ? '▶' : '💡'}</span>
+        <span class="recommendation-text">${rec.message}</span>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function updateNotifications(notifications) {
+    if (!notifications) return;
+
+    const list = document.getElementById('notificationsList');
+    list.innerHTML = '';
+
+    if (notifications.length === 0) {
+      list.innerHTML = '<div class="notification-item"><span class="notification-icon">✓</span><span class="notification-text">No new notifications</span></div>';
+      return;
+    }
+
+    notifications.forEach(notif => {
+      const item = document.createElement('div');
+      item.className = 'notification-item';
+      item.innerHTML = `
+        <span class="notification-icon">${notif.icon || '🔔'}</span>
+        <span class="notification-text">${notif.message}</span>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function speakGreeting(name, hour) {
+    if (!('speechSynthesis' in window)) return;
+
+    let greeting = `Welcome back ${name}.`;
+    if (hour >= 5 && hour < 12) greeting = `Good morning ${name}. Have a productive session.`;
+    else if (hour >= 12 && hour < 18) greeting = `Good afternoon ${name}.`;
+    else if (hour >= 18 && hour < 22) greeting = `Good evening ${name}.`;
+    else greeting = `Good night ${name}.`;
+
+    const utterance = new SpeechSynthesisUtterance(greeting);
+    utterance.rate = 0.9;
+    utterance.pitch = 0.9;
+    speechSynthesis.speak(utterance);
+  }
+
+  async function updatePreferences(preferences) {
+    try {
+      await fetch(`${API_BASE}/preferences`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(preferences)
+      });
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+    }
+  }
+
+  async function logActivity(action, feature) {
+    try {
+      await fetch(`${API_BASE}/log-activity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action, feature })
+      });
+    } catch (error) {
+      console.error('Error logging activity:', error);
+    }
+  }
+
+  function initDashboard() {
+    // Load dashboard data
+    loadDashboardData().then(profile => {
+      updateDashboard(profile);
+    });
+
+    // Load recommendations
+    loadRecommendations().then(data => {
+      updateRecommendations(data);
+    });
+
+    // Load notifications
+    loadNotifications().then(notifications => {
+      updateNotifications(notifications);
+    });
+
+    // Quick action buttons
+    document.querySelectorAll('.quick-action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        logActivity('quick_action', action);
+
+        if (action === 'continue') {
+          const lastPage = localStorage.getItem('hydra.last_page');
+          if (lastPage) activateTab(lastPage);
+        } else if (action === 'ai') {
+          activateTab('hydra-ai');
+        } else if (action === 'analytics') {
+          activateTab('dashboard');
+        } else if (action === 'settings') {
+          activateTab('navigation');
+        }
+      });
+    });
+  }
+
   // Login form handling
   function initLoginForm() {
     const loginForm = document.getElementById('loginForm');
@@ -5743,6 +6186,10 @@ button:not(:disabled):active {
     if (user) {
       updateAuthUI();
       startSessionHeartbeat();
+      // Load dashboard data
+      loadDashboardData().then(profile => {
+        updateDashboard(profile);
+      });
     } else {
       // Show login modal after boot sequence
       setTimeout(() => {
@@ -5763,7 +6210,7 @@ button:not(:disabled):active {
     // Check auth state
     checkAuthState();
     runHydraBootSequence();
-    initializeMainAuthentication();
+    // initializeMainAuthentication(); // Disabled - using backend auth now
 
     // Navigation tab buttons - move event listeners outside of tab initialization
     const mainProfileExport = document.getElementById('mainProfileExport');
@@ -8455,6 +8902,19 @@ button:not(:disabled):active {
     });
     if (name === 'third' && !silent) thirdHeadSpeak();
     if (name === 'navigation') updateVisitorDisplay();
+    if (name === 'dashboard') initDashboard();
+
+    // Log activity and save last page
+    logActivity('tab_switch', name);
+    localStorage.setItem('hydra.last_page', name);
+
+    // Update last page on backend
+    fetch(`${API_BASE}/last-page`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ page: name })
+    }).catch(err => console.error('Error updating last page:', err));
   }
 
   function initThirdHead() {

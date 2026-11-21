@@ -87,7 +87,29 @@ function initializeDatabase() {
       theme TEXT DEFAULT 'dark',
       last_activity TEXT,
       export_count INTEGER DEFAULT 0,
-      notes TEXT
+      notes TEXT,
+      preferred_display_name TEXT,
+      language TEXT DEFAULT 'en',
+      favorite_feature TEXT,
+      last_page_visited TEXT,
+      last_command_used TEXT,
+      login_streak INTEGER DEFAULT 0,
+      streak_start_date TEXT,
+      last_streak_date TEXT,
+      voice_enabled INTEGER DEFAULT 0,
+      notification_settings TEXT,
+      ui_preferences TEXT,
+      quick_actions TEXT
+    )`);
+
+    // User activity log (for recommendations)
+    db.run(`CREATE TABLE IF NOT EXISTS user_activity (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      feature TEXT,
+      timestamp TEXT NOT NULL,
+      ip_address TEXT
     )`);
 
     // Admin verification logs
@@ -274,10 +296,35 @@ app.post('/api/login', async (req, res) => {
       const loginCount = user.login_count + 1;
       const firstLogin = user.first_login || lastLogin;
 
+      // Calculate login streak
+      let newStreak = user.login_streak || 0;
+      const lastLoginDate = user.last_login ? new Date(user.last_login) : null;
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (lastLoginDate) {
+        const lastLoginDay = lastLoginDate.toDateString();
+        const todayDay = today.toDateString();
+        const yesterdayDay = yesterday.toDateString();
+
+        if (lastLoginDay === todayDay) {
+          // Already logged in today, don't increment streak
+        } else if (lastLoginDay === yesterdayDay) {
+          // Logged in yesterday, increment streak
+          newStreak++;
+        } else {
+          // Streak broken, start fresh
+          newStreak = 1;
+        }
+      } else {
+        newStreak = 1;
+      }
+
       // Update user
-      db.run(`UPDATE users SET last_login = ?, login_count = ?, first_login = ?, last_activity = ?
+      db.run(`UPDATE users SET last_login = ?, login_count = ?, first_login = ?, last_activity = ?, login_streak = ?, streak_start_date = ?
               WHERE id = ?`,
-        [lastLogin, loginCount, firstLogin, lastLogin, user.id],
+        [lastLogin, loginCount, firstLogin, lastLogin, newStreak, newStreak === 1 ? lastLogin : user.streak_start_date, user.id],
         (err) => {
           if (err) {
             console.error('Error updating login info:', err);
@@ -553,6 +600,261 @@ app.post('/api/heartbeat', requireAuth, (req, res) => {
       res.json({ message: 'Session updated.' });
     }
   );
+});
+
+// Log user activity (for recommendations)
+app.post('/api/log-activity', requireAuth, (req, res) => {
+  const { action, feature } = req.body;
+
+  db.run(`INSERT INTO user_activity (user_id, action, feature, timestamp, ip_address)
+          VALUES (?, ?, ?, ?, ?)`,
+    [req.session.userId, action || 'visited', feature || 'unknown', getCurrentTimestamp(), req.ip],
+    (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to log activity.' });
+      }
+      res.json({ message: 'Activity logged.' });
+    }
+  );
+});
+
+// Update user preferences
+app.put('/api/preferences', requireAuth, (req, res) => {
+  const {
+    preferred_display_name,
+    language,
+    favorite_feature,
+    theme,
+    voice_enabled,
+    notification_settings,
+    ui_preferences,
+    quick_actions
+  } = req.body;
+
+  db.run(`UPDATE users SET
+          preferred_display_name = ?,
+          language = ?,
+          favorite_feature = ?,
+          theme = ?,
+          voice_enabled = ?,
+          notification_settings = ?,
+          ui_preferences = ?,
+          quick_actions = ?,
+          last_activity = ?
+          WHERE user_id = ?`,
+    [
+      preferred_display_name,
+      language,
+      favorite_feature,
+      theme,
+      voice_enabled ? 1 : 0,
+      notification_settings ? JSON.stringify(notification_settings) : null,
+      ui_preferences ? JSON.stringify(ui_preferences) : null,
+      quick_actions ? JSON.stringify(quick_actions) : null,
+      getCurrentTimestamp(),
+      req.session.userId
+    ],
+    (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to update preferences.' });
+      }
+      updateUserExcel();
+      res.json({ message: 'Preferences updated successfully.' });
+    }
+  );
+});
+
+// Get personalized recommendations
+app.get('/api/recommendations', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+
+  // Get user's favorite feature and recent activity
+  db.get('SELECT favorite_feature, language FROM users WHERE user_id = ?', [userId], (err, user) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error.' });
+    }
+
+    // Get recent activity
+    db.all(`SELECT feature, COUNT(*) as count FROM user_activity
+            WHERE user_id = ? AND timestamp > datetime('now', '-7 days')
+            GROUP BY feature ORDER BY count DESC LIMIT 5`,
+      [userId],
+      (err, activities) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error.' });
+        }
+
+        const recommendations = [];
+
+        // Add recommendations based on activity
+        if (activities && activities.length > 0) {
+          const topFeature = activities[0].feature;
+          recommendations.push({
+            type: 'continue',
+            message: `You often use ${topFeature}. Open it again?`,
+            action: topFeature
+          });
+
+          // Check for unused features
+          const usedFeatures = activities.map(a => a.feature);
+          const allFeatures = ['AI Chat', 'Dashboard', 'Analytics', 'Reports', 'Settings', 'Navigation'];
+          const unusedFeatures = allFeatures.filter(f => !usedFeatures.includes(f));
+
+          if (unusedFeatures.length > 0) {
+            recommendations.push({
+              type: 'discover',
+              message: `You haven't tried ${unusedFeatures[0]} yet.`,
+              action: unusedFeatures[0]
+            });
+          }
+        }
+
+        // Add time-based recommendation
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 12) {
+          recommendations.push({
+            type: 'greeting',
+            message: 'Good morning! Ready for a productive session?',
+            action: null
+          });
+        } else if (hour >= 12 && hour < 18) {
+          recommendations.push({
+            type: 'greeting',
+            message: 'Good afternoon! How can HYDRA help you today?',
+            action: null
+          });
+        } else {
+          recommendations.push({
+            type: 'greeting',
+            message: 'Good evening! Continuing your work?',
+            action: null
+          });
+        }
+
+        res.json({
+          recommendations,
+          favoriteFeature: user?.favorite_feature,
+          language: user?.language || 'en'
+        });
+      }
+    );
+  });
+});
+
+// Get user profile with full details
+app.get('/api/profile/full', requireAuth, (req, res) => {
+  db.get(`SELECT * FROM users WHERE user_id = ?`, [req.session.userId], (err, user) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error.' });
+    }
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Calculate account age
+    const accountCreated = new Date(user.account_created);
+    const accountAge = Math.floor((Date.now() - accountCreated) / (1000 * 60 * 60 * 24));
+
+    // Get recent activity
+    db.all(`SELECT action, feature, timestamp FROM user_activity
+            WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10`,
+      [user.user_id],
+      (err, activities) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error.' });
+        }
+
+        res.json({
+          ...user,
+          accountAge,
+          notification_settings: user.notification_settings ? JSON.parse(user.notification_settings) : {},
+          ui_preferences: user.ui_preferences ? JSON.parse(user.ui_preferences) : {},
+          quick_actions: user.quick_actions ? JSON.parse(user.quick_actions) : [],
+          recentActivity: activities || []
+        });
+      }
+    );
+  });
+});
+
+// Update last page visited
+app.post('/api/last-page', requireAuth, (req, res) => {
+  const { page } = req.body;
+
+  db.run(`UPDATE users SET last_page_visited = ?, last_activity = ? WHERE user_id = ?`,
+    [page, getCurrentTimestamp(), req.session.userId],
+    (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to update last page.' });
+      }
+      res.json({ message: 'Last page updated.' });
+    }
+  );
+});
+
+// Get smart notifications
+app.get('/api/notifications', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+
+  db.get('SELECT * FROM users WHERE user_id = ?', [userId], (err, user) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error.' });
+    }
+
+    const notifications = [];
+    const now = new Date();
+    const lastLogin = user.last_login ? new Date(user.last_login) : now;
+    const accountCreated = new Date(user.account_created);
+
+    // Check for break notification
+    const daysSinceLastLogin = Math.floor((now - lastLogin) / (1000 * 60 * 60 * 24));
+    if (daysSinceLastLogin >= 5) {
+      notifications.push({
+        type: 'welcome_back',
+        message: `Welcome back after ${daysSinceLastLogin} days!`,
+        icon: '👋'
+      });
+    }
+
+    // Account anniversary
+    const accountAge = Math.floor((now - accountCreated) / (1000 * 60 * 60 * 24));
+    if (accountAge > 0 && accountAge % 30 === 0) {
+      notifications.push({
+        type: 'anniversary',
+        message: `Your account is ${accountAge} days old!`,
+        icon: '🎉'
+      });
+    }
+
+    // Active session notification
+    if (user.current_session_time > 7200) { // 2 hours
+      notifications.push({
+        type: 'usage',
+        message: `You've been active for ${Math.floor(user.current_session_time / 3600)} hours today.`,
+        icon: '⏱️'
+      });
+    }
+
+    // High usage user
+    if (user.total_lifetime_usage > 36000) { // 10 hours
+      notifications.push({
+        type: 'achievement',
+        message: "You're one of our most active users!",
+        icon: '🏆'
+      });
+    }
+
+    // Login streak
+    if (user.login_streak >= 7) {
+      notifications.push({
+        type: 'streak',
+        message: `${user.login_streak} day login streak! Keep it up!`,
+        icon: '🔥'
+      });
+    }
+
+    res.json(notifications);
+  });
 });
 
 // Fallback for SPA
