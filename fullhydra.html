@@ -5807,7 +5807,23 @@ button:not(:disabled):active {
   function initPwa() {
     const installableOrigin = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if ('serviceWorker' in navigator && installableOrigin) {
-      navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+      navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+        // Check for updates every time the page loads
+        registration.update();
+
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available, reload to get updates
+              if (confirm('HYDRA has been updated. Reload to get the latest version?')) {
+                window.location.reload();
+              }
+            }
+          });
+        });
+      }).catch((error) => {
         el.installAppBtn.title = 'App install support could not start: ' + error.message;
         addStrategyLog('Service worker registration failed: ' + error.message);
       });
