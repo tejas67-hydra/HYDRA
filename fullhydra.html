@@ -4221,6 +4221,168 @@ button:not(:disabled):active {
   color: var(--steel);
   font: 13px/1.5 var(--mono);
 }
+
+/* Profile Styles */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(192,132,252,.1), rgba(138,43,226,.05));
+  border-radius: 16px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(192,132,252,.3);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(192,132,252,.2);
+  border: 2px solid rgba(192,132,252,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.profile-info h2 {
+  margin: 0 0 8px;
+  color: var(--lilac);
+  font: 700 24px/1.2 var(--display);
+}
+
+.profile-info p {
+  margin: 0 0 12px;
+  color: var(--steel);
+  font: 14px/1.4 var(--mono);
+}
+
+.profile-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(0,212,170,.2);
+  border: 1px solid rgba(0,212,170,.4);
+  border-radius: 12px;
+  color: #00d4aa;
+  font: 600 12px/1 var(--mono);
+  letter-spacing: .05em;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.profile-stat {
+  padding: 16px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.2);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.profile-stat-label {
+  display: block;
+  color: var(--steel);
+  font: 11px/1.4 var(--mono);
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+
+.profile-stat-value {
+  display: block;
+  color: var(--lilac);
+  font: 700 18px/1.2 var(--display);
+}
+
+.profile-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-item label {
+  color: var(--steel);
+  font: 12px/1.4 var(--mono);
+  letter-spacing: .05em;
+}
+
+.setting-input {
+  padding: 12px 16px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.3);
+  border-radius: 8px;
+  color: var(--lilac);
+  font: 14px/1.4 var(--mono);
+  transition: all 0.3s ease;
+}
+
+.setting-input:focus {
+  outline: none;
+  border-color: rgba(192,132,252,.6);
+  background: rgba(192,132,252,.1);
+}
+
+.device-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.device-info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.2);
+  border-radius: 8px;
+}
+
+.device-info-label {
+  color: var(--steel);
+  font: 12px/1.4 var(--mono);
+}
+
+.device-info-value {
+  color: var(--lilac);
+  font: 600 14px/1.4 var(--mono);
+}
+
+.recent-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-item {
+  padding: 12px 16px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.2);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-action {
+  color: var(--lilac);
+  font: 600 13px/1.4 var(--mono);
+}
+
+.activity-time {
+  color: var(--steel);
+  font: 11px/1.4 var(--mono);
+}
   </style>
 </head>
 <body>
@@ -4379,6 +4541,7 @@ button:not(:disabled):active {
         <button type="button" class="tab-btn" id="tab-os" data-tab="os" role="tab" aria-selected="false" aria-controls="panel-os" tabindex="-1">HYDRA OS<small>DESKTOP</small></button>
         <button type="button" class="tab-btn" id="tab-manual" data-tab="manual" role="tab" aria-selected="false" aria-controls="panel-manual" tabindex="-1">MANUAL<small>APP GUIDE</small></button>
         <button type="button" class="tab-btn" id="tab-dashboard" data-tab="dashboard" role="tab" aria-selected="false" aria-controls="panel-dashboard" tabindex="-1">DASHBOARD<small>SMART HOME</small></button>
+        <button type="button" class="tab-btn" id="tab-profile" data-tab="profile" role="tab" aria-selected="false" aria-controls="panel-profile" tabindex="-1">PROFILE<small>MY ACCOUNT</small></button>
         <button type="button" class="tab-btn" id="tab-navigation" data-tab="navigation" role="tab" aria-selected="false" aria-controls="panel-navigation" tabindex="-1">NAVIGATION<small>DOWNLOADS & AUTH</small></button>
       </nav>
 
@@ -4597,6 +4760,37 @@ button:not(:disabled):active {
               </div>
             </div>
 
+            <!-- Admin Stats (visible only to admins) -->
+            <div class="admin-stats" id="adminStats" style="display: none;">
+              <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">ADMINISTRATOR DASHBOARD</h3>
+              <div class="dashboard-stats">
+                <div class="stat-card">
+                  <span class="stat-icon">👥</span>
+                  <span class="stat-label">Total Users</span>
+                  <span class="stat-value" id="adminTotalUsers">--</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-icon">🟢</span>
+                  <span class="stat-label">Active Sessions</span>
+                  <span class="stat-value" id="adminActiveSessions">--</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-icon">📈</span>
+                  <span class="stat-label">Total Logins</span>
+                  <span class="stat-value" id="adminTotalLogins">--</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-icon">⏰</span>
+                  <span class="stat-label">System Usage</span>
+                  <span class="stat-value" id="adminSystemUsage">--</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="rig-btn" id="adminDownloadExcel">📊 DOWNLOAD USERS.XLS</button>
+                <button class="rig-btn" id="adminViewUsers">👥 VIEW USERS</button>
+              </div>
+            </div>
+
             <!-- Quick Actions -->
             <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">QUICK ACTIONS</h3>
             <div class="quick-actions-grid" id="quickActionsGrid">
@@ -4643,6 +4837,107 @@ button:not(:disabled):active {
                 <input type="checkbox" id="voiceEnabledToggle" style="width: 20px; height: 20px; accent-color: var(--venom);">
                 <span style="color: var(--steel); font-size: 13px;">Enable HYDRA voice greetings</span>
               </label>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="tab-panel" id="panel-profile" data-panel="profile" role="tabpanel" aria-labelledby="tab-profile" hidden>
+        <section class="card" aria-label="User Profile">
+          <header class="card-head"><span>PROFILE // MY ACCOUNT</span><span class="signal" id="profileSignal">PERSONAL</span></header>
+          <div class="damage-body">
+            <!-- Profile Header -->
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <span class="profile-avatar-icon">👤</span>
+              </div>
+              <div class="profile-info">
+                <h2 id="profileName">Loading...</h2>
+                <p id="profileEmail">Loading...</p>
+                <span class="profile-badge" id="profileRole">User</span>
+              </div>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+              <div class="profile-stat">
+                <span class="profile-stat-label">Account Age</span>
+                <span class="profile-stat-value" id="profileAccountAge">--</span>
+              </div>
+              <div class="profile-stat">
+                <span class="profile-stat-label">Login Count</span>
+                <span class="profile-stat-value" id="profileLoginCount">--</span>
+              </div>
+              <div class="profile-stat">
+                <span class="profile-stat-label">Total Hours</span>
+                <span class="profile-stat-value" id="profileTotalHours">--</span>
+              </div>
+              <div class="profile-stat">
+                <span class="profile-stat-label">Login Streak</span>
+                <span class="profile-stat-value" id="profileStreak">--</span>
+              </div>
+            </div>
+
+            <!-- Profile Settings -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">PROFILE SETTINGS</h3>
+            <div class="profile-settings">
+              <div class="setting-item">
+                <label for="settingDisplayName">Display Name</label>
+                <input type="text" id="settingDisplayName" class="setting-input" placeholder="Your preferred name" />
+              </div>
+              <div class="setting-item">
+                <label for="settingLanguage">Language</label>
+                <select id="settingLanguage" class="setting-input">
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="ja"></option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="settingTheme">Theme</label>
+                <select id="settingTheme" class="setting-input">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="settingFavoriteFeature">Favorite Feature</label>
+                <select id="settingFavoriteFeature" class="setting-input">
+                  <option value="">Select...</option>
+                  <option value="AI Chat">AI Chat</option>
+                  <option value="Dashboard">Dashboard</option>
+                  <option value="Analytics">Analytics</option>
+                  <option value="Navigation">Navigation</option>
+                  <option value="Companionship">Companionship</option>
+                </select>
+              </div>
+              <button type="button" class="rig-btn" id="saveProfileSettings" style="margin-top: 20px;">💾 SAVE SETTINGS</button>
+            </div>
+
+            <!-- Device Info -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">DEVICE INFORMATION</h3>
+            <div class="device-info">
+              <div class="device-info-item">
+                <span class="device-info-label">Browser</span>
+                <span class="device-info-value" id="deviceBrowser">--</span>
+              </div>
+              <div class="device-info-item">
+                <span class="device-info-label">Operating System</span>
+                <span class="device-info-value" id="deviceOS">--</span>
+              </div>
+              <div class="device-info-item">
+                <span class="device-info-label">Last Login</span>
+                <span class="device-info-value" id="deviceLastLogin">--</span>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 30px 0 20px 0; letter-spacing: 0.15em;">RECENT ACTIVITY</h3>
+            <div class="recent-activity" id="recentActivityList">
+              <p class="small-note">Loading recent activity...</p>
             </div>
           </div>
         </section>
@@ -5869,12 +6164,13 @@ button:not(:disabled):active {
 
     if (profile.role === 'Administrator') {
       greeting += `, Administrator ${displayName}`;
+      document.getElementById('greetingSubtitle').textContent = 'System status: ONLINE. User management available.';
     } else {
       greeting += `, ${displayName}`;
+      document.getElementById('greetingSubtitle').textContent = 'HYDRA is ready for your command.';
     }
 
     document.getElementById('greetingTitle').textContent = greeting + '!';
-    document.getElementById('greetingSubtitle').textContent = 'HYDRA is ready for your command.';
 
     // Update stats
     const todayUsage = profile.current_session_time || 0;
@@ -5991,6 +6287,12 @@ button:not(:disabled):active {
     // Load dashboard data
     loadDashboardData().then(profile => {
       updateDashboard(profile);
+
+      // Show admin stats if admin
+      if (profile && profile.role === 'Administrator' && profile.admin_verified) {
+        document.getElementById('adminStats').style.display = 'block';
+        loadAdminAnalytics();
+      }
     });
 
     // Load recommendations
@@ -6019,6 +6321,92 @@ button:not(:disabled):active {
         } else if (action === 'settings') {
           activateTab('navigation');
         }
+      });
+    });
+
+    // Admin buttons
+    document.getElementById('adminDownloadExcel')?.addEventListener('click', downloadAdminExcel);
+    document.getElementById('adminViewUsers')?.addEventListener('click', () => {
+      alert('User management coming soon!');
+    });
+  }
+
+  async function loadAdminAnalytics() {
+    try {
+      const response = await fetch(`${API_BASE}/analytics`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('adminTotalUsers').textContent = data.totalUsers || 0;
+        document.getElementById('adminActiveSessions').textContent = data.activeSessions || 0;
+        document.getElementById('adminTotalLogins').textContent = data.totalLogins || 0;
+        document.getElementById('adminSystemUsage').textContent = `${Math.floor(data.totalUsage / 3600)}h`;
+      }
+    } catch (error) {
+      console.error('Error loading admin analytics:', error);
+    }
+  }
+
+  function initProfile() {
+    loadDashboardData().then(profile => {
+      if (!profile) return;
+
+      // Update profile header
+      document.getElementById('profileName').textContent = profile.preferred_display_name || profile.name;
+      document.getElementById('profileEmail').textContent = profile.email;
+      document.getElementById('profileRole').textContent = profile.role;
+
+      // Update stats
+      document.getElementById('profileAccountAge').textContent = `${profile.accountAge || 0} days`;
+      document.getElementById('profileLoginCount').textContent = profile.login_count || 0;
+      document.getElementById('profileTotalHours').textContent = `${Math.floor(profile.total_lifetime_usage / 3600)}h`;
+      document.getElementById('profileStreak').textContent = profile.login_streak || 0;
+
+      // Update settings form
+      document.getElementById('settingDisplayName').value = profile.preferred_display_name || profile.name;
+      document.getElementById('settingLanguage').value = profile.language || 'en';
+      document.getElementById('settingTheme').value = profile.theme || 'dark';
+      document.getElementById('settingFavoriteFeature').value = profile.favorite_feature || '';
+
+      // Update device info
+      document.getElementById('deviceBrowser').textContent = profile.browser || 'Unknown';
+      document.getElementById('deviceOS').textContent = profile.operating_system || 'Unknown';
+      if (profile.last_login) {
+        document.getElementById('deviceLastLogin').textContent = new Date(profile.last_login).toLocaleString();
+      }
+
+      // Update recent activity
+      const activityList = document.getElementById('recentActivityList');
+      activityList.innerHTML = '';
+      if (profile.recentActivity && profile.recentActivity.length > 0) {
+        profile.recentActivity.forEach(activity => {
+          const item = document.createElement('div');
+          item.className = 'activity-item';
+          item.innerHTML = `
+            <span class="activity-action">${activity.action}</span>
+            <span class="activity-time">${new Date(activity.timestamp).toLocaleString()}</span>
+          `;
+          activityList.appendChild(item);
+        });
+      } else {
+        activityList.innerHTML = '<p class="small-note">No recent activity</p>';
+      }
+
+      // Save settings button
+      document.getElementById('saveProfileSettings').addEventListener('click', () => {
+        const preferences = {
+          preferred_display_name: document.getElementById('settingDisplayName').value,
+          language: document.getElementById('settingLanguage').value,
+          theme: document.getElementById('settingTheme').value,
+          favorite_feature: document.getElementById('settingFavoriteFeature').value
+        };
+        updatePreferences(preferences).then(() => {
+          alert('Settings saved successfully!');
+          loadDashboardData().then(updatedProfile => {
+            updateDashboard(updatedProfile);
+          });
+        });
       });
     });
   }
@@ -8903,6 +9291,7 @@ button:not(:disabled):active {
     if (name === 'third' && !silent) thirdHeadSpeak();
     if (name === 'navigation') updateVisitorDisplay();
     if (name === 'dashboard') initDashboard();
+    if (name === 'profile') initProfile();
 
     // Log activity and save last page
     logActivity('tab_switch', name);
