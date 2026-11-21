@@ -3682,27 +3682,200 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
 }
 
 .main-google-login-card {
-  width: min(440px, 100%);
-  padding: clamp(24px, 6vw, 42px);
-  border: 1px solid rgba(192,132,252,.5);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(20,12,36,.98), rgba(7,3,15,.98));
-  box-shadow: 0 0 44px rgba(138,43,226,.28), inset 0 0 30px rgba(138,43,226,.08);
+  width: min(420px, 100%);
+  padding: 40px 32px;
+  border: 1px solid rgba(192,132,252,.4);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(10,6,18,.98), rgba(4,2,10,.98));
+  box-shadow: 0 0 50px rgba(138,43,226,.35), inset 0 0 40px rgba(138,43,226,.1);
   text-align: center;
 }
 
-.main-google-login-card h2 {
-  margin: 0 0 10px;
-  color: var(--lilac);
-  font: 900 clamp(24px, 7vw, 34px)/1.1 var(--display);
-  letter-spacing: .08em;
-  text-shadow: 0 0 20px rgba(138,43,226,.7);
+.main-google-login-card .login-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(192,132,252,.6));
 }
 
-.main-google-login-card p {
-  margin: 0 0 22px;
-  color: var(--steel);
-  font: 12px/1.7 var(--mono);
+.main-google-login-card h2 {
+  margin: 0 0 8px;
+  color: #fff;
+  font: 700 28px/1.2 system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.main-google-login-card .login-subtitle {
+  margin: 0 0 32px;
+  color: rgba(255,255,255,.7);
+  font: 14px/1.5 system-ui, -apple-system, sans-serif;
+}
+
+.main-google-login-card .login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.main-google-login-card .login-input-group {
+  position: relative;
+}
+
+.main-google-login-card .login-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,.05);
+  color: #fff;
+  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  transition: all 0.2s ease;
+}
+
+.main-google-login-card .login-input::placeholder {
+  color: rgba(255,255,255,.4);
+}
+
+.main-google-login-card .login-input:focus {
+  outline: none;
+  border-color: rgba(192,132,252,.6);
+  background: rgba(255,255,255,.08);
+  box-shadow: 0 0 0 3px rgba(192,132,252,.15);
+}
+
+.main-google-login-card .login-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+}
+
+.main-google-login-card .login-password-toggle:hover {
+  color: rgba(255,255,255,.8);
+}
+
+.main-google-login-card .login-forgot {
+  margin-bottom: 24px;
+  color: rgba(255,255,255,.6);
+  font: 13px/1.4 system-ui, -apple-system, sans-serif;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.main-google-login-card .login-forgot:hover {
+  color: rgba(255,255,255,.9);
+}
+
+.main-google-login-card .login-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00d4aa 0%, #00a884 100%);
+  color: #000;
+  font: 600 15px/1.4 system-ui, -apple-system, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px rgba(0,212,170,.3);
+}
+
+.main-google-login-card .login-btn:hover {
+  background: linear-gradient(135deg, #00e4ba 0%, #00b894 100%);
+  box-shadow: 0 0 30px rgba(0,212,170,.5);
+  transform: translateY(-1px);
+}
+
+.main-google-login-card .login-btn:active {
+  transform: translateY(0);
+}
+
+.main-google-login-card .login-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: rgba(255,255,255,.3);
+  font: 12px/1 system-ui, -apple-system, sans-serif;
+}
+
+.main-google-login-card .login-divider::before,
+.main-google-login-card .login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,.15);
+}
+
+.main-google-login-card .login-create-account {
+  width: 100%;
+  padding: 14px 24px;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font: 600 15px/1.4 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.main-google-login-card .login-create-account:hover {
+  border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.05);
+}
+
+.main-google-login-card .login-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.main-google-login-card .login-footer a {
+  color: rgba(255,255,255,.5);
+  font: 12px/1 system-ui, -apple-system, sans-serif;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.main-google-login-card .login-footer a:hover {
+  color: rgba(255,255,255,.8);
+}
+
+.main-google-login-card .login-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.3);
+  color: rgba(255,255,255,.7);
+  font: 13px/1.4 system-ui, -apple-system, sans-serif;
+  display: none;
+}
+
+.main-google-login-card .login-status.is-visible {
+  display: block;
+}
+
+.main-google-login-card .login-status.success {
+  background: rgba(0,212,170,.15);
+  color: #00d4aa;
+  border: 1px solid rgba(0,212,170,.3);
+}
+
+.main-google-login-card .login-status.error {
+  background: rgba(255,68,68,.15);
+  color: #ff4444;
+  border: 1px solid rgba(255,68,68,.3);
 }
 
 #mainGoogleBtn {
@@ -3919,10 +4092,33 @@ button:not(:disabled):active {
 
   <section id="mainGoogleLogin" class="main-google-login" role="dialog" aria-modal="true" aria-labelledby="mainGoogleTitle" aria-hidden="true">
     <div class="main-google-login-card">
-      <h2 id="mainGoogleTitle">HYDRA AUTHENTICATION</h2>
-      <p>Sign in with Google to enter HYDRA. Only your name, email, and profile photo URL are saved on this device. Download your profile spreadsheet from the main dashboard whenever you choose.</p>
+      <img class="login-logo" src="./hydra-icon-192.png" alt="HYDRA Logo" />
+      <h2 id="mainGoogleTitle">Sign in to HYDRA</h2>
+      <p class="login-subtitle">Welcome back!</p>
+
+      <form class="login-form" id="loginForm">
+        <div class="login-input-group">
+          <input type="email" class="login-input" id="loginEmail" placeholder="Username or email" required autocomplete="email" />
+        </div>
+        <div class="login-input-group">
+          <input type="password" class="login-input" id="loginPassword" placeholder="Password" required autocomplete="current-password" />
+          <button type="button" class="login-password-toggle" id="togglePassword" aria-label="Toggle password visibility">👁️</button>
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <a href="#" class="login-forgot">Forgot your password? Recover your account</a>
+
+      <div class="login-divider">OR</div>
+
       <div id="mainGoogleBtn"></div>
-      <p id="mainGoogleStatus" role="status" aria-live="polite"></p>
+
+      <div id="mainGoogleStatus" class="login-status" role="status" aria-live="polite"></div>
+
+      <div class="login-footer">
+        <a href="#">Privacy</a>
+        <a href="#">Help</a>
+      </div>
     </div>
   </section>
 
@@ -4672,8 +4868,8 @@ button:not(:disabled):active {
           <header class="card-head"><span>NAVIGATION // DOWNLOADS & AUTH</span><span class="signal">COMMANDER CONTROLS</span></header>
           <div class="damage-body">
             <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">DOWNLOAD YOUR PROFILE</h3>
-            <p class="small-note" style="margin-bottom: 20px;">Download your HYDRA profile as an Excel spreadsheet file.</p>
-            
+            <p class="small-note" style="margin-bottom: 20px;">Download your HYDRA profile as an Excel spreadsheet file. Requires security code (0909).</p>
+
             <button type="button" class="rig-btn main-profile-export" id="mainProfileExport" style="font-size: 14px; padding: 12px 24px; margin-bottom: 30px;">⬇ PROFILE .XLS</button>
 
             <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">DEVICE INSTALLATION</h3>
@@ -4690,7 +4886,7 @@ button:not(:disabled):active {
             <div class="manual-grid">
               <article class="manual-item">
                 <h3>Download Profile</h3>
-                <p>Click the button above to download your profile as an Excel (.xls) file containing your name, email, and avatar URL.</p>
+                <p>Click the button above to download your profile as an Excel (.xls) file containing your name, email, and avatar URL. Requires security code 0909.</p>
               </article>
               <article class="manual-item">
                 <h3>Set Password</h3>
@@ -4699,6 +4895,22 @@ button:not(:disabled):active {
               <article class="manual-item">
                 <h3>Logout</h3>
                 <p>Clear your profile and password from this device. You'll need to sign in again on next visit.</p>
+              </article>
+            </div>
+
+            <h3 style="color: var(--venom-bright); font-size: 16px; margin: 0 0 20px 0; letter-spacing: 0.15em;">VISITOR INFO</h3>
+            <div class="manual-grid">
+              <article class="manual-item">
+                <h3>Your ID</h3>
+                <p id="visitorId">Loading...</p>
+              </article>
+              <article class="manual-item">
+                <h3>Total Visits</h3>
+                <p id="visitCount">Loading...</p>
+              </article>
+              <article class="manual-item">
+                <h3>Last Visit</h3>
+                <p id="lastVisit">Loading...</p>
               </article>
             </div>
           </div>
@@ -5101,8 +5313,118 @@ button:not(:disabled):active {
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
   }
 
+  // Password-protected profile export
+  function exportMainProfileWithPassword() {
+    const password = prompt('Enter security code to download profile:');
+    if (password === '0909') {
+      exportMainProfile();
+    } else if (password !== null) {
+      alert('Invalid security code. Access denied.');
+    }
+  }
+
+  // Visitor tracking/memory storage
+  function trackVisitor() {
+    try {
+      const visitorId = localStorage.getItem('hydra.visitor.id');
+      const now = new Date().toISOString();
+      const visits = parseInt(localStorage.getItem('hydra.visitor.count') || '0', 10) + 1;
+
+      if (!visitorId) {
+        // Generate unique visitor ID
+        const newId = 'HYDRA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        localStorage.setItem('hydra.visitor.id', newId);
+        localStorage.setItem('hydra.visitor.first_visit', now);
+      }
+
+      localStorage.setItem('hydra.visitor.count', visits.toString());
+      localStorage.setItem('hydra.visitor.last_visit', now);
+
+      // Store device info
+      const deviceInfo = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        viewport: `${window.innerWidth}x${window.innerHeight}`
+      };
+      localStorage.setItem('hydra.visitor.device', JSON.stringify(deviceInfo));
+
+      console.log('HYDRA Visitor:', {
+        id: localStorage.getItem('hydra.visitor.id'),
+        visits: visits,
+        firstVisit: localStorage.getItem('hydra.visitor.first_visit'),
+        lastVisit: now,
+        device: deviceInfo
+      });
+
+      // Update visitor info display in Navigation tab
+      updateVisitorDisplay();
+    } catch (error) {
+      console.error('Could not track visitor:', error);
+    }
+  }
+
+  function updateVisitorDisplay() {
+    const visitorIdEl = document.getElementById('visitorId');
+    const visitCountEl = document.getElementById('visitCount');
+    const lastVisitEl = document.getElementById('lastVisit');
+
+    if (visitorIdEl) {
+      visitorIdEl.textContent = localStorage.getItem('hydra.visitor.id') || 'Unknown';
+    }
+    if (visitCountEl) {
+      visitCountEl.textContent = localStorage.getItem('hydra.visitor.count') || '0';
+    }
+    if (lastVisitEl) {
+      const lastVisit = localStorage.getItem('hydra.visitor.last_visit');
+      if (lastVisit) {
+        const date = new Date(lastVisit);
+        lastVisitEl.textContent = date.toLocaleString();
+      } else {
+        lastVisitEl.textContent = 'First visit';
+      }
+    }
+  }
+
+  // Login form handling
+  function initLoginForm() {
+    const loginForm = document.getElementById('loginForm');
+    const togglePassword = document.getElementById('togglePassword');
+    const loginPassword = document.getElementById('loginPassword');
+
+    if (togglePassword && loginPassword) {
+      togglePassword.addEventListener('click', () => {
+        const type = loginPassword.type === 'password' ? 'text' : 'password';
+        loginPassword.type = type;
+        togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+      });
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const status = document.getElementById('mainGoogleStatus');
+
+        // Simple validation - in production, this would check against a server
+        if (email && password) {
+          status.textContent = 'Login feature coming soon. Use Google Sign-In below.';
+          status.className = 'login-status is-visible';
+          status.classList.add('error');
+        }
+      });
+    }
+  }
+
   // Initialize app
   document.addEventListener('DOMContentLoaded', () => {
+    // Track visitor on page load
+    trackVisitor();
+
+    // Initialize login form
+    initLoginForm();
     runHydraBootSequence();
     initializeMainAuthentication();
 
@@ -5112,7 +5434,7 @@ button:not(:disabled):active {
     const logoutBtn = document.getElementById('logoutBtn');
 
     if (mainProfileExport) {
-      mainProfileExport.addEventListener('click', exportMainProfile);
+      mainProfileExport.addEventListener('click', exportMainProfileWithPassword);
     }
 
     if (setPasswordBtn) {
@@ -7795,6 +8117,7 @@ button:not(:disabled):active {
       panel.hidden = panel.dataset.panel !== name;
     });
     if (name === 'third' && !silent) thirdHeadSpeak();
+    if (name === 'navigation') updateVisitorDisplay();
   }
 
   function initThirdHead() {
