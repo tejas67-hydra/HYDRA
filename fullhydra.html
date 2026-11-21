@@ -3878,6 +3878,20 @@ body.is-thinking .rings span:nth-child(2) { animation-duration: 5s; }
   border: 1px solid rgba(255,68,68,.3);
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+#registerModal, #adminVerifyModal {
+  display: none;
+}
+
+#registerModal.is-visible, #adminVerifyModal.is-visible {
+  display: grid;
+}
+
 #mainGoogleBtn {
   display: flex;
   justify-content: center;
@@ -4107,11 +4121,7 @@ button:not(:disabled):active {
         <button type="submit" class="login-btn">Login</button>
       </form>
 
-      <a href="#" class="login-forgot">Forgot your password? Recover your account</a>
-
-      <div class="login-divider">OR</div>
-
-      <div id="mainGoogleBtn"></div>
+      <p style="margin: 16px 0; color: rgba(255,255,255,.5); font-size: 13px;">Don't have an account? <a href="#" id="showRegister" style="color: #00d4aa;">Register</a></p>
 
       <div id="mainGoogleStatus" class="login-status" role="status" aria-live="polite"></div>
 
@@ -4119,6 +4129,50 @@ button:not(:disabled):active {
         <a href="#">Privacy</a>
         <a href="#">Help</a>
       </div>
+    </div>
+  </section>
+
+  <section id="registerModal" class="main-google-login" role="dialog" aria-modal="true" aria-labelledby="registerTitle" aria-hidden="true">
+    <div class="main-google-login-card">
+      <img class="login-logo" src="./hydra-icon-192.png" alt="HYDRA Logo" />
+      <h2 id="registerTitle">Create Account</h2>
+      <p class="login-subtitle">Join HYDRA today</p>
+
+      <form class="login-form" id="registerForm">
+        <div class="login-input-group">
+          <input type="text" class="login-input" id="registerName" placeholder="Full Name" required autocomplete="name" />
+        </div>
+        <div class="login-input-group">
+          <input type="email" class="login-input" id="registerEmail" placeholder="Email Address" required autocomplete="email" />
+        </div>
+        <div class="login-input-group">
+          <input type="password" class="login-input" id="registerPassword" placeholder="Password (min 4 characters)" required autocomplete="new-password" />
+        </div>
+        <button type="submit" class="login-btn">Create Account</button>
+      </form>
+
+      <p style="margin: 16px 0; color: rgba(255,255,255,.5); font-size: 13px;">Already have an account? <a href="#" id="showLogin" style="color: #00d4aa;">Login</a></p>
+
+      <div id="registerStatus" class="login-status" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="adminVerifyModal" class="main-google-login" role="dialog" aria-modal="true" aria-labelledby="adminVerifyTitle" aria-hidden="true">
+    <div class="main-google-login-card">
+      <h2 id="adminVerifyTitle">Administrator Verification</h2>
+      <p class="login-subtitle">Please enter the Administrator Security Code</p>
+
+      <form class="login-form" id="adminVerifyForm">
+        <div class="login-input-group">
+          <input type="password" class="login-input" id="adminCode" placeholder="Security Code" required autocomplete="off" />
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button type="submit" class="login-btn">Verify</button>
+          <button type="button" class="login-create-account" id="cancelAdminVerify">Cancel</button>
+        </div>
+      </form>
+
+      <div id="adminVerifyStatus" class="login-status" role="status" aria-live="polite"></div>
     </div>
   </section>
 
@@ -5228,6 +5282,11 @@ button:not(:disabled):active {
   }
 
   function initializeMainAuthentication() {
+    // Old Google authentication - disabled in favor of backend system
+    // Kept for reference if needed later
+    return;
+
+    /* Old Google auth code:
     if (location.protocol === 'file:') {
       mainGoogleStatus.textContent = 'Google blocks sign-in from local file URLs. Open the hosted HTTPS version to continue.';
       const hostedLink = document.createElement('a');
@@ -5253,6 +5312,7 @@ button:not(:disabled):active {
       mainGoogleStatus.textContent = 'Google Sign-In failed to load. Check your connection and try refreshing.';
     }, { once: true });
     document.head.appendChild(googleIdentityScript);
+    */
   }
 
   function exportMainProfile() {
@@ -5320,6 +5380,139 @@ button:not(:disabled):active {
       exportMainProfile();
     } else if (password !== null) {
       alert('Invalid security code. Access denied.');
+    }
+  }
+
+  // Backend API configuration
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : '/api';
+
+  // Backend authentication functions
+  async function backendLogin(email, password) {
+    try {
+      const response = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
+      return { error: 'Network error. Please try again.' };
+    }
+  }
+
+  async function backendRegister(name, email, password) {
+    try {
+      const response = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { error: 'Network error. Please try again.' };
+    }
+  }
+
+  async function backendVerifyAdmin(code) {
+    try {
+      const response = await fetch(`${API_BASE}/verify-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code })
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Admin verification error:', error);
+      return { error: 'Network error. Please try again.' };
+    }
+  }
+
+  async function backendLogout() {
+    try {
+      const response = await fetch(`${API_BASE}/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Logout error:', error);
+      return { error: 'Network error.' };
+    }
+  }
+
+  async function getBackendProfile() {
+    try {
+      const response = await fetch(`${API_BASE}/profile`, {
+        credentials: 'include'
+      });
+      if (response.status === 401) return null;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Profile error:', error);
+      return null;
+    }
+  }
+
+  async function downloadAdminExcel() {
+    try {
+      const response = await fetch(`${API_BASE}/download-xls`, {
+        credentials: 'include'
+      });
+      if (response.status === 403) {
+        alert('Access denied. Administrator verification required.');
+        return false;
+      }
+      if (!response.ok) {
+        alert('Failed to download Excel file.');
+        return false;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'users.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      return true;
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download Excel file.');
+      return false;
+    }
+  }
+
+  // Session heartbeat for tracking usage time
+  let sessionStartTime = Date.now();
+  let heartbeatInterval;
+
+  function startSessionHeartbeat() {
+    sessionStartTime = Date.now();
+    heartbeatInterval = setInterval(() => {
+      const sessionTime = (Date.now() - sessionStartTime) / 1000;
+      fetch(`${API_BASE}/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ sessionTime })
+      }).catch(err => console.error('Heartbeat error:', err));
+    }, 30000); // Every 30 seconds
+  }
+
+  function stopSessionHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
     }
   }
 
@@ -5392,7 +5585,10 @@ button:not(:disabled):active {
     const loginForm = document.getElementById('loginForm');
     const togglePassword = document.getElementById('togglePassword');
     const loginPassword = document.getElementById('loginPassword');
+    const registerForm = document.getElementById('registerForm');
+    const adminVerifyForm = document.getElementById('adminVerifyForm');
 
+    // Toggle password visibility
     if (togglePassword && loginPassword) {
       togglePassword.addEventListener('click', () => {
         const type = loginPassword.type === 'password' ? 'text' : 'password';
@@ -5401,20 +5597,158 @@ button:not(:disabled):active {
       });
     }
 
+    // Show/hide modals
+    document.getElementById('showRegister')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('mainGoogleLogin').classList.remove('is-visible');
+      document.getElementById('mainGoogleLogin').setAttribute('aria-hidden', 'true');
+      document.getElementById('registerModal').classList.add('is-visible');
+      document.getElementById('registerModal').setAttribute('aria-hidden', 'false');
+    });
+
+    document.getElementById('showLogin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('registerModal').classList.remove('is-visible');
+      document.getElementById('registerModal').setAttribute('aria-hidden', 'true');
+      document.getElementById('mainGoogleLogin').classList.add('is-visible');
+      document.getElementById('mainGoogleLogin').setAttribute('aria-hidden', 'false');
+    });
+
+    document.getElementById('cancelAdminVerify')?.addEventListener('click', () => {
+      document.getElementById('adminVerifyModal').classList.remove('is-visible');
+      document.getElementById('adminVerifyModal').setAttribute('aria-hidden', 'true');
+    });
+
+    // Login form submit
     if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         const status = document.getElementById('mainGoogleStatus');
 
-        // Simple validation - in production, this would check against a server
-        if (email && password) {
-          status.textContent = 'Login feature coming soon. Use Google Sign-In below.';
-          status.className = 'login-status is-visible';
+        status.textContent = 'Logging in...';
+        status.className = 'login-status is-visible';
+        status.classList.remove('error', 'success');
+
+        const result = await backendLogin(email, password);
+
+        if (result.error) {
+          status.textContent = result.error;
           status.classList.add('error');
+        } else {
+          status.textContent = 'Login successful!';
+          status.classList.add('success');
+          localStorage.setItem('hydra.auth.user', JSON.stringify(result.user));
+
+          setTimeout(() => {
+            document.getElementById('mainGoogleLogin').classList.remove('is-visible');
+            document.getElementById('mainGoogleLogin').setAttribute('aria-hidden', 'true');
+            startSessionHeartbeat();
+            updateAuthUI();
+          }, 1000);
         }
       });
+    }
+
+    // Register form submit
+    if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const status = document.getElementById('registerStatus');
+
+        status.textContent = 'Creating account...';
+        status.className = 'login-status is-visible';
+        status.classList.remove('error', 'success');
+
+        const result = await backendRegister(name, email, password);
+
+        if (result.error) {
+          status.textContent = result.error;
+          status.classList.add('error');
+        } else {
+          status.textContent = 'Account created successfully! Please login.';
+          status.classList.add('success');
+
+          setTimeout(() => {
+            document.getElementById('registerModal').classList.remove('is-visible');
+            document.getElementById('registerModal').setAttribute('aria-hidden', 'true');
+            document.getElementById('mainGoogleLogin').classList.add('is-visible');
+            document.getElementById('mainGoogleLogin').setAttribute('aria-hidden', 'false');
+          }, 1500);
+        }
+      });
+    }
+
+    // Admin verification form submit
+    if (adminVerifyForm) {
+      adminVerifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.getElementById('adminCode').value;
+        const status = document.getElementById('adminVerifyStatus');
+
+        status.textContent = 'Verifying...';
+        status.className = 'login-status is-visible';
+        status.classList.remove('error', 'success');
+
+        const result = await backendVerifyAdmin(code);
+
+        if (result.error) {
+          status.textContent = result.error;
+          status.classList.add('error');
+          // Shake animation
+          const card = document.querySelector('#adminVerifyModal .main-google-login-card');
+          card.style.animation = 'none';
+          card.offsetHeight; // Trigger reflow
+          card.style.animation = 'shake 0.5s ease';
+        } else {
+          status.textContent = 'Administrator verified successfully!';
+          status.classList.add('success');
+
+          setTimeout(() => {
+            document.getElementById('adminVerifyModal').classList.remove('is-visible');
+            document.getElementById('adminVerifyModal').setAttribute('aria-hidden', 'true');
+            updateAuthUI();
+          }, 1000);
+        }
+      });
+    }
+  }
+
+  // Update auth UI based on login state
+  function updateAuthUI() {
+    const user = JSON.parse(localStorage.getItem('hydra.auth.user') || 'null');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (user) {
+      if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+          if (confirm('Are you sure you want to logout?')) {
+            await backendLogout();
+            localStorage.removeItem('hydra.auth.user');
+            stopSessionHeartbeat();
+            location.reload();
+          }
+        };
+      }
+    }
+  }
+
+  // Check if user is logged in on page load
+  async function checkAuthState() {
+    const user = JSON.parse(localStorage.getItem('hydra.auth.user') || 'null');
+    if (user) {
+      updateAuthUI();
+      startSessionHeartbeat();
+    } else {
+      // Show login modal after boot sequence
+      setTimeout(() => {
+        document.getElementById('mainGoogleLogin').classList.add('is-visible');
+        document.getElementById('mainGoogleLogin').setAttribute('aria-hidden', 'false');
+      }, 6500);
     }
   }
 
@@ -5425,6 +5759,9 @@ button:not(:disabled):active {
 
     // Initialize login form
     initLoginForm();
+
+    // Check auth state
+    checkAuthState();
     runHydraBootSequence();
     initializeMainAuthentication();
 
