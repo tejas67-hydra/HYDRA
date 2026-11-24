@@ -8891,7 +8891,8 @@ __def("profile-studio", function () {
       const saved = ['openai', 'gemini'].filter((name) => engineKey(name));
       help.innerHTML = saved.length
         ? `Will use ${ENGINES[saved[0]].label} because a key is saved on this device.`
-        : 'No key saved, so the free engine will be used. ' + ENGINES.free.help;
+        : 'No key saved here, so HYDRA tries its own Gemini and OpenAI keys first and falls '
+          + 'back to the free engine when they are out of quota. ' + ENGINES.free.help;
       $('imgkey').placeholder = 'Pick an engine to save its key';
     } else {
       help.innerHTML = conf.help;
