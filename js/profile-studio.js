@@ -413,6 +413,100 @@
     }
   }
 
+  function drawGalleryAvatar(index) {
+    const size = 192;
+    const names = Object.keys(PALETTES);
+    const palette = PALETTES[names[index % names.length]];
+    const [c1, c2, base] = palette.colors;
+    const rand = rng(hash(`gallery|${index}|${state.set}`));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const angle = (index / 12) * Math.PI * 2 + rand() * 0.6;
+    const grad = ctx.createLinearGradient(
+      size / 2 + Math.cos(angle) * size / 2, size / 2 + Math.sin(angle) * size / 2,
+      size / 2 - Math.cos(angle) * size / 2, size / 2 - Math.sin(angle) * size / 2,
+    );
+    grad.addColorStop(0, c1);
+    grad.addColorStop(0.55, c2);
+    grad.addColorStop(1, base);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.strokeStyle = 'rgba(255,255,255,.30)';
+    ctx.fillStyle = 'rgba(255,255,255,.20)';
+    const motif = index % 6;
+
+    if (motif === 0) {
+      for (let ring = 1; ring <= 4; ring += 1) {
+        ctx.beginPath();
+        ctx.arc(0, 0, (size * 0.1) * ring, 0, Math.PI * 2);
+        ctx.lineWidth = size * 0.012;
+        ctx.stroke();
+      }
+    } else if (motif === 1) {
+      for (let row = -3; row <= 3; row += 1) {
+        for (let col = -3; col <= 3; col += 1) {
+          if (rand() > 0.45) {
+            ctx.beginPath();
+            ctx.arc(col * size * 0.14, row * size * 0.14, size * 0.022, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    } else if (motif === 2) {
+      for (let line = -size / 2; line < size / 2; line += size * 0.11) {
+        ctx.beginPath();
+        ctx.moveTo(-size / 2, line);
+        ctx.lineTo(size / 2, line + size * 0.12);
+        ctx.lineWidth = size * 0.014;
+        ctx.stroke();
+      }
+    } else if (motif === 3) {
+      for (let arc = 1; arc <= 3; arc += 1) {
+        ctx.beginPath();
+        ctx.arc(0, size * 0.35, size * 0.18 * arc, Math.PI, Math.PI * 2);
+        ctx.lineWidth = size * 0.016;
+        ctx.stroke();
+      }
+    } else if (motif === 4) {
+      ctx.beginPath();
+      const points = 3 + (index % 3);
+      for (let point = 0; point <= points; point += 1) {
+        const theta = (point / points) * Math.PI * 2 - Math.PI / 2;
+        const radius = size * 0.34;
+        const x = Math.cos(theta) * radius;
+        const y = Math.sin(theta) * radius;
+        if (point === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.lineWidth = size * 0.018;
+      ctx.stroke();
+    } else {
+      for (let bar = 0; bar < 6; bar += 1) {
+        const height = size * (0.08 + rand() * 0.4);
+        ctx.fillRect(-size * 0.34 + bar * size * 0.12, size * 0.4 - height, size * 0.06, height);
+      }
+    }
+    ctx.restore();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `700 ${Math.round(size * 0.38)}px "Segoe UI", system-ui, sans-serif`;
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillText(initials(state.name), size / 2 + 2, size / 2 + 3);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(initials(state.name), size / 2, size / 2);
+
+    return canvas.toDataURL('image/jpeg', 0.88);
+  }
+
   /* ------------------------------- gallery ------------------------------- */
 
   function buildGallery() {
@@ -422,10 +516,10 @@
     for (let variant = 0; variant < 12; variant += 1) {
       const tile = document.createElement('button');
       tile.type = 'button';
-      tile.title = 'Use this avatar';
+      tile.title = `Use avatar ${variant + 1}`;
       const image = document.createElement('img');
-      image.alt = '';
-      image.src = drawAvatar(variant);
+      image.alt = `Avatar ${variant + 1}`;
+      image.src = drawGalleryAvatar(variant);
       tile.append(image);
       tile.addEventListener('click', async () => {
         applyAvatar(image.src);
@@ -591,6 +685,8 @@
 
     $('name').addEventListener('input', (event) => {
       event.target.dataset.dirty = '1';
+      state.name = event.target.value;
+      buildGallery();
     });
     $('name').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') onSave();
