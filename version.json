@@ -1,6 +1,6 @@
 {
-  "version": "2.6.2",
-  "build": "2026.12.15",
+  "version": "2.6.3",
+  "build": "2026.12.16",
   "notes": [
     "API field in the app switcher: paste your server URL and every app uses it",
     "Real server login when the API is up, on-device account when it is not"
