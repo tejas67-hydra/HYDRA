@@ -8666,7 +8666,7 @@ __def("profile-studio", function () {
       ? `<img src="${state.avatar}" alt="Your profile picture" />`
       : initials(state.name || 'H');
     const field = $('name');
-    if (field && field.value !== state.name) field.value = state.name;
+    if (field && !field.value) field.value = state.name;
   }
 
   function status(text, kind = '') {
@@ -8677,18 +8677,22 @@ __def("profile-studio", function () {
   }
 
   async function load() {
-    state.name = localStorage.getItem(NAME_KEY) || '';
-    state.avatar = localStorage.getItem(PP_KEY) || '';
+    const field = $('name');
+    const typed = Boolean(field?.value && field.dataset.dirty === '1');
+    let name = localStorage.getItem(NAME_KEY) || '';
+    let avatar = localStorage.getItem(PP_KEY) || '';
     const u = universal();
     if (u) {
       try {
         await u.init();
         if (u.signedIn) {
-          state.name = u.profile?.displayName || state.name;
-          state.avatar = u.profile?.avatar || state.avatar;
+          name = u.profile?.displayName || name;
+          avatar = u.profile?.avatar || avatar;
         }
       } catch { /* the studio still works offline */ }
     }
+    state.avatar = avatar;
+    if (!typed) state.name = name;
     state.ready = true;
     paint();
     buildPrompt();
@@ -8887,6 +8891,7 @@ __def("profile-studio", function () {
     if (name.length < 2) return status('Use at least two characters for your name.', 'bad');
     state.name = name;
     localStorage.setItem(NAME_KEY, name);
+    delete $('name').dataset.dirty;
     paint();
     status('Saving…');
     const ok = await save({ displayName: name, avatar: state.avatar });
@@ -8958,12 +8963,16 @@ __def("profile-studio", function () {
       status(ok ? 'Look applied to your avatar.' : 'Look applied on this device only.', ok ? 'good' : '');
     });
 
+    $('name').addEventListener('input', (event) => {
+      event.target.dataset.dirty = '1';
+    });
     $('name').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') onSave();
     });
   }
 
   window.addEventListener('hydra:universal-ready', load);
+  document.addEventListener('hydra:session', load);
   document.addEventListener('hydra:pp', (event) => {
     if (event.detail?.avatar !== undefined && event.detail.avatar !== state.avatar) {
       state.avatar = event.detail.avatar;
@@ -11205,7 +11214,7 @@ const universal = {
       await persist();
       broadcast('session');
     }
-    await this.pullSync();
+    await pullSync();
     return state.account;
   },
 
@@ -11283,7 +11292,7 @@ const universal = {
       state.account.userId = user.userId || state.account.id;
       await persist();
       broadcast('session');
-      await this.pullSync();
+      await pullSync();
       return state.account;
     }
     if (!state.security.password) {

@@ -447,7 +447,7 @@ export const universal = {
       await persist();
       broadcast('session');
     }
-    await this.pullSync();
+    await pullSync();
     return state.account;
   },
 
@@ -525,7 +525,7 @@ export const universal = {
       state.account.userId = user.userId || state.account.id;
       await persist();
       broadcast('session');
-      await this.pullSync();
+      await pullSync();
       return state.account;
     }
     if (!state.security.password) {
