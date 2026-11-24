@@ -179,5 +179,10 @@
 </script>
 <script src="js/nav.js" defer></script>
 <script src="js/profile-studio.js" defer></script>
+<script type="module">
+  import { initAppSwitcher } from './js/app-switcher.js';
+  initAppSwitcher({ currentApp: 'profile', mount: document.getElementById('hydra-nav-switch') })
+    .catch((error) => console.error('[switcher]', error));
+</script>
 </body>
 </html>
