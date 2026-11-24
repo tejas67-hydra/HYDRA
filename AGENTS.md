@@ -260,3 +260,20 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   While developing, point `window.HYDRA_API` in `js/config.js` at
   `http://localhost:3100` and run `node server.js`; otherwise sign-in falls back to
   the on-device account and no bearer token appears.
+
+## Profile studio (v2.9.0)
+- `profile.html` + `js/profile-studio.js` (plain script, works on file://) edit
+  the display name and picture, and generate a profile-photo prompt from a
+  style, mood and palette. Reached from the nav avatar menu on every page and
+  from the Workspace "Your profile" card.
+- Name and picture go through `universal.updateProfile({ displayName, avatar })`,
+  which persists locally, PATCHes `/api/account`, then pushes the sync doc.
+  The server stores `users.name` and `users.avatar` (a data URL under 400 kB)
+  and returns both from `publicUser`, so a new device restores them on
+  `restoreFromToken`.
+- `hydra.pp` mirrors the avatar for pages that load before the module runs, and
+  `hydra.displayName` mirrors the name. Both are updated on save.
+- The generated avatar is drawn on a 192 px canvas (gradient, glow, monogram,
+  style flourish) and stored as JPEG; it is deterministic from
+  name + style + palette + salt, so "New wording" and "Use this look" produce a
+  fresh variant without a network call.

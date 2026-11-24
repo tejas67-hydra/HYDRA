@@ -393,7 +393,12 @@ async function restoreFromToken() {
     return false;
   }
   const user = res.data.user || {};
-  applyAccount({ email: user.email, name: user.name || state?.profile?.displayName, provider: 'server' });
+  applyAccount({
+    email: user.email,
+    name: user.name || state?.profile?.displayName,
+    provider: 'server',
+    avatar: user.avatar || '',
+  });
   if (state?.account) state.account.userId = user.userId;
   await persistQuiet();
   emit('change', { state, origin: 'token' });
@@ -568,6 +573,17 @@ export const universal = {
     state.profile = { ...state.profile, ...patch, updatedAt: now() };
     await persist();
     broadcast('profile');
+    const body = {};
+    if (patch.displayName !== undefined) body.name = patch.displayName;
+    if (patch.avatar !== undefined) body.avatar = patch.avatar;
+    if (Object.keys(body).length && state.account) {
+      const res = await serverCall('/api/account', { method: 'PATCH', body: JSON.stringify(body) });
+      if (res?.ok && res.data?.user?.name) {
+        state.profile.displayName = res.data.user.name;
+        await persistQuiet();
+      }
+      pushSync().catch(() => {});
+    }
     return state.profile;
   },
 

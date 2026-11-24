@@ -1,8 +1,9 @@
 /* HYDRA service worker — offline shell, runtime caching for local assets. */
-const CACHE = 'hydra-v2.8.1';
+const CACHE = 'hydra-v2.9.0';
 const CORE = [
   './', './index.html', './style.css', './hydra.bundle.js', './script.js',
-  './js/nav.js', './js/config.js', './emo.html', './fullhydra.html', './account.html',
+  './js/nav.js', './js/config.js', './js/profile-studio.js', './emo.html', './fullhydra.html',
+  './account.html', './profile.html',
   './manifest.webmanifest', './manifest.companion.json', './manifest.workspace.json',
   './manifest.classic.json', './manifest.suite.json', './install.html', './install-app.html',
 ];

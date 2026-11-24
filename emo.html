@@ -39,6 +39,12 @@
     width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
     background: linear-gradient(140deg, var(--accent), #38bdf8); color: #0b0714; font-weight: 800; font-size: 12px;
   }
+  .avatar.big { width: 54px; height: 54px; font-size: 20px; overflow: hidden; flex: none; }
+  .avatar.big img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .profile-line { display: flex; align-items: center; gap: 14px; }
+  .profile-line .who { flex: 1; min-width: 0; }
+  .profile-line .who b { display: block; font-size: 15px; }
+  .profile-line .who small { color: var(--muted); font-size: 12px; }
   .switch {
     padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--text);
     background: linear-gradient(140deg, rgba(168, 85, 247, .28), rgba(56, 189, 248, .14));
@@ -105,6 +111,17 @@
   <p class="page-title">Workspace</p>
   <main id="shell" hidden>
     <div class="grid">
+      <section class="card">
+        <h2>Your profile</h2>
+        <div class="profile-line">
+          <div class="avatar big" id="me-avatar">H</div>
+          <div class="who">
+            <b id="me-name">Operator</b>
+            <small id="me-email"></small>
+          </div>
+          <a class="switch" href="profile.html">Edit profile</a>
+        </div>
+      </section>
       <section class="card">
         <h2>Tasks</h2>
         <div class="row" style="margin-bottom:12px">
@@ -177,13 +194,24 @@ if (universal.profile?.accent) document.documentElement.style.setProperty('--acc
 universal.on('profile', () => {
   if (universal.profile?.accent) document.documentElement.style.setProperty('--accent', universal.profile.accent);
   if (universal.profile?.theme) document.documentElement.dataset.theme = universal.profile.theme;
+  render();
 });
+document.addEventListener('hydra:pp', () => render());
 
 function render() {
   const signed = universal.signedIn;
   $('shell').hidden = !signed;
   $('locked').hidden = signed;
   if (!signed) return;
+
+  const me = universal.profile || {};
+  const avatar = localStorage.getItem('hydra.pp') || me.avatar || '';
+  const name = me.displayName || (me.email || '').split('@')[0] || 'Operator';
+  $('me-avatar').innerHTML = avatar
+    ? `<img src="${avatar}" alt="" />`
+    : name.trim().charAt(0).toUpperCase() || 'H';
+  $('me-name').textContent = name;
+  $('me-email').textContent = me.email || '';
 
   const tasks = universal.list('tasks');
   $('tasks').innerHTML = tasks.length

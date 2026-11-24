@@ -1,7 +1,10 @@
 {
-  "version": "2.8.1",
+  "version": "2.9.0",
   "build": "2026.11.22",
   "notes": [
+    "Profile studio: change your display name and picture, and it follows you into all three apps",
+    "A profile photo prompt generator with styles, moods and palettes, plus an offline avatar generator",
+    "Workspace shows your name and picture with a one-click Edit profile button",
     "The nav avatar shows your name and picture as soon as the page settles, not after a click",
     "A failed server call says the HYDRA server could not be reached instead of claiming there is no on-device account",
     "One navigation bar on every page: ecosystem switch, search, add to device, fullscreen and your profile",

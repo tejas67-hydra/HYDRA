@@ -52,6 +52,7 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
       data TEXT NOT NULL
     )`);
     db.run('ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0', () => {});
+    db.run('ALTER TABLE users ADD COLUMN avatar TEXT', () => {});
   });
 
   const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
@@ -129,6 +130,7 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
     name: user.name,
     email: user.email,
     role: user.role,
+    avatar: user.avatar || '',
     emailVerified: user.email_verified === 1,
   });
 
@@ -342,6 +344,39 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
         available: Object.fromEntries(Object.entries(providers).map(([key, p]) => [key, Boolean(p.clientId() && p.clientSecret())])),
         sync: doc ? { rev: doc.rev, updated: doc.updated } : { rev: 0, updated: null },
       });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.patch('/api/account', requireAuth, async (req, res) => {
+    try {
+      const body = req.body || {};
+      const user = await get('SELECT * FROM users WHERE user_id = ?', [req.session.userId]);
+      if (!user) return res.status(404).json({ error: 'Account not found' });
+
+      if (body.name !== undefined) {
+        const name = String(body.name).trim().replace(/\s+/g, ' ');
+        if (name.length < 2 || name.length > 60) {
+          return res.status(400).json({ error: 'Name must be between 2 and 60 characters.' });
+        }
+        await run('UPDATE users SET name = ? WHERE user_id = ?', [name, user.user_id]);
+        req.session.userName = name;
+      }
+
+      if (body.avatar !== undefined) {
+        const avatar = String(body.avatar || '');
+        if (avatar && !/^data:image\/(png|jpeg|webp);base64,/.test(avatar)) {
+          return res.status(400).json({ error: 'Avatar must be a PNG, JPEG or WebP data URL.' });
+        }
+        if (avatar.length > 400_000) {
+          return res.status(413).json({ error: 'That picture is too large. Try a smaller one.' });
+        }
+        await run('UPDATE users SET avatar = ? WHERE user_id = ?', [avatar, user.user_id]);
+      }
+
+      const fresh = await get('SELECT * FROM users WHERE user_id = ?', [user.user_id]);
+      res.json({ user: publicUser(fresh) });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

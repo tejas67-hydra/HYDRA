@@ -18,9 +18,14 @@
   const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   // The single-file build is the companion app with everything inlined.
   const page = file === 'hydra.html' ? 'index.html' : file;
-  const current = APPS.find((app) => app.href.toLowerCase() === page) || {
-    id: 'account', name: 'Account', href: page, tag: 'Account settings',
+  const PAGES = {
+    'account.html': { id: 'account', name: 'Account', tag: 'Account settings' },
+    'profile.html': { id: 'profile', name: 'Profile', tag: 'Name, photo, prompt' },
+    'install.html': { id: 'install', name: 'Install', tag: 'Add to device' },
+    'install-app.html': { id: 'install', name: 'Install', tag: 'Add to device' },
   };
+  const current = APPS.find((app) => app.href.toLowerCase() === page) ||
+    { ...(PAGES[page] || { id: 'account', name: 'Account', tag: 'Account settings' }), href: page };
 
   const api = () => String(window.HYDRA_API || localStorage.getItem('hydra.api') || '').replace(/\/+$/, '');
   const token = () => localStorage.getItem('hydra.token');
@@ -245,6 +250,7 @@
     head.textContent = me.email ? me.email : 'Not signed in';
     box.append(head);
 
+    add('Profile studio', null, 'profile.html');
     add('Change profile picture', () => pickPicture());
     add('Account settings', null, 'account.html');
     box.append(document.createElement('hr'));
@@ -308,6 +314,7 @@
     const list = [
       { label: 'Add to device', hint: 'Install', run: () => installDialog() },
       { label: 'Fullscreen', hint: 'View', run: toggleFullscreen },
+      { label: 'Profile studio', hint: 'Name, photo, prompt', run: () => { location.href = 'profile.html'; } },
       { label: 'Account settings', hint: 'Account', run: () => { location.href = 'account.html'; } },
       { label: 'Change profile picture', hint: 'Account', run: pickPicture },
     ];
