@@ -15311,6 +15311,15 @@ __def("profile-studio", function () {
  * Plain script on purpose: it must work on file:// where ES modules are blocked.
  */
 (() => {
+  /* Owner's own keys, written into the page on request. They are public: rotate
+     them by editing this array, and delete the entry once it is revoked. A dead
+     key is skipped for ten minutes so it never slows down a generation. */
+  const BUILTIN_KEYS = [
+    { engine: 'gemini', key: 'AQ.Ab8RN6Ip9a8FJcb9HbN5WToKwzkeW32g2vCubThi8V7T0oDVUA' },
+    { engine: 'openai', key: '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' },
+  ];
+  const OFF_KEY = 'hydra.imgkey.off';
+
   const PP_KEY = 'hydra.pp';
   const NAME_KEY = 'hydra.displayName';
 
@@ -15701,6 +15710,40 @@ __def("profile-studio", function () {
     throw new Error(lastError || 'OpenAI could not make that picture with this key.');
   }
 
+  function keyIsOff(engine) {
+    try {
+      const map = JSON.parse(localStorage.getItem(OFF_KEY) || '{}');
+      return (map[engine] || 0) > Date.now();
+    } catch {
+      return false;
+    }
+  }
+
+  function markKeyOff(engine) {
+    try {
+      const map = JSON.parse(localStorage.getItem(OFF_KEY) || '{}');
+      map[engine] = Date.now() + 10 * 60 * 1000;
+      localStorage.setItem(OFF_KEY, JSON.stringify(map));
+    } catch {
+      /* storage full or blocked: nothing to remember */
+    }
+  }
+
+  async function builtinImage(prompt) {
+    for (const item of BUILTIN_KEYS) {
+      if (!item.key || keyIsOff(item.engine)) continue;
+      try {
+        const image = item.engine === 'openai'
+          ? await openaiImage(prompt, item.key)
+          : await geminiImage(prompt, item.key);
+        return { image, engine: item.engine };
+      } catch {
+        markKeyOff(item.engine);
+      }
+    }
+    return null;
+  }
+
   async function serverImage(prompt, engine) {
     const base = window.HYDRA_API || '';
     const token = localStorage.getItem('hydra.token');
@@ -15750,15 +15793,19 @@ __def("profile-studio", function () {
         } catch (err) {
           if (engine !== 'free') throw err;
         }
+        const built = shared ? null : await builtinImage(prompt);
         if (shared) {
           data = shared.image;
           source = `HYDRA's shared ${shared.engine} key`;
+        } else if (built) {
+          data = built.image;
+          source = `HYDRA's built-in ${built.engine} key`;
         } else if (engine === 'free') {
           data = await freeImage(prompt);
         } else {
           throw new Error(
-            `${ENGINES[engine].label} needs a key, and this HYDRA server has no shared one. `
-            + 'Save your own key below, or switch the engine to the free one.',
+            `${ENGINES[engine].label} has no working key right now — the built-in one is out of `
+            + 'quota or credit. Save your own key below, or switch the engine to the free one.',
           );
         }
       }

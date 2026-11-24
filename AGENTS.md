@@ -290,3 +290,7 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   server environment (Render → Environment), is limited to 20 pictures per user
   per hour, and answers 503 when no key is configured so the studio falls back
   to the free engine.
+- `js/profile-studio.js` carries the owner's own Gemini and OpenAI keys in
+  `BUILTIN_KEYS` at the owner's explicit request. They are public, so they will be
+  scraped and eventually revoked; a key that fails is skipped for ten minutes
+  (`hydra.imgkey.off`) and the free engine takes over. Rotate by editing the array.
