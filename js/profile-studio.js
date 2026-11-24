@@ -85,12 +85,12 @@
     gemini: {
       label: 'Google Gemini',
       key: 'hydra.imgkey.gemini',
-      help: 'Needs a Google AI Studio key (free tier): <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>',
+      help: 'Needs a Google AI Studio key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The free tier allows only a few images per day; billing raises the limit.',
     },
     openai: {
       label: 'OpenAI',
       key: 'hydra.imgkey.openai',
-      help: 'Needs an OpenAI key: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. gpt-image-1 bills per picture.',
+      help: 'Needs an OpenAI key with credits: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. Image models bill per picture.',
     },
   };
 
@@ -349,6 +349,12 @@
       },
     );
     const data = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      throw new Error(
+        'Gemini has no image quota left on this key right now. The free tier is capped per day — '
+        + 'wait for the reset, enable billing on the Google project, or switch to another engine.',
+      );
+    }
     if (!res.ok) throw new Error(data.error?.message || `Gemini answered ${res.status}. Check the key.`);
     const parts = data.candidates?.[0]?.content?.parts || [];
     const image = parts.find((part) => part.inlineData?.data || part.inline_data?.data);
@@ -357,18 +363,34 @@
     return toSquare(`data:image/png;base64,${raw}`);
   }
 
+  const OPENAI_MODELS = ['gpt-image-1-mini', 'gpt-image-1.5', 'gpt-image-1', 'gpt-image-2'];
+
   async function openaiImage(prompt, key) {
-    const res = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error?.message || `OpenAI answered ${res.status}. Check the key and billing.`);
-    const item = data.data?.[0] || {};
-    if (item.b64_json) return toSquare(`data:image/png;base64,${item.b64_json}`);
-    if (item.url) return toSquare(item.url);
-    throw new Error('OpenAI returned no picture.');
+    let lastError = '';
+    for (const model of OPENAI_MODELS) {
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, prompt, size: '1024x1024', quality: 'low', n: 1 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const message = data.error?.message || `OpenAI answered ${res.status}.`;
+      if (res.ok) {
+        const item = data.data?.[0] || {};
+        if (item.b64_json) return toSquare(`data:image/png;base64,${item.b64_json}`);
+        if (item.url) return toSquare(item.url);
+        throw new Error('OpenAI returned no picture.');
+      }
+      if (/credit|billing|quota/i.test(message)) {
+        throw new Error(`OpenAI: ${message}`);
+      }
+      if (res.status === 404 || /model/i.test(message)) {
+        lastError = message;
+        continue;
+      }
+      throw new Error(message);
+    }
+    throw new Error(lastError || 'OpenAI could not make that picture with this key.');
   }
 
   async function generatePhoto() {
