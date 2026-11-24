@@ -1,0 +1,58 @@
+/* HYDRA — computer vision panel */
+
+.cv {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+}
+
+.cv__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cv__head h3 {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+#cv-status[data-tone="ok"] { color: #86efac; border-color: rgba(134, 239, 172, .35); }
+#cv-status[data-tone="warn"] { color: #fca5a5; border-color: rgba(252, 165, 165, .35); }
+
+.cv__modes { display: flex; flex-wrap: wrap; gap: 6px; }
+.cv-mode {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .03);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color .16s var(--ease), border-color .16s var(--ease), background .16s var(--ease), transform .16s var(--ease-spring);
+}
+.cv-mode:hover { color: var(--text); border-color: var(--line-strong); }
+.cv-mode:active { transform: scale(.96); }
+.cv-mode.is-on {
+  color: #fff;
+  background: linear-gradient(120deg, rgba(168, 85, 247, .5), rgba(124, 58, 237, .22));
+  border-color: rgba(216, 180, 254, .45);
+  box-shadow: 0 0 18px rgba(168, 85, 247, .25);
+}
+
+.cv__meta {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+#vision-cv { z-index: 1; }

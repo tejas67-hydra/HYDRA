@@ -1,0 +1,252 @@
+/* ============================================================
+   HYDRA — motion layer
+   Entrance, hover, press and ambient motion applied across the
+   shell. Everything here is decorative and is disabled when the
+   visitor asks for reduced motion.
+   ============================================================ */
+
+:root {
+  --ease-out: cubic-bezier(.22, .61, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ----------------------------- entrances ----------------------------- */
+@keyframes top-in { from { transform: translateY(-16px); } to { transform: none; } }
+@keyframes side-in { from { transform: translateX(-22px); } to { transform: none; } }
+@keyframes dock-in {
+  from { transform: translate(-50%, 28px) scale(.96); }
+  to   { transform: translate(-50%, 0) scale(1); }
+}
+@keyframes rise-only { from { transform: translateY(12px); } to { transform: none; } }
+@keyframes card-in { from { transform: translateY(14px) scale(.985); } to { transform: none; } }
+@keyframes widget-in { from { transform: translateY(10px) scale(.96); } to { transform: none; } }
+@keyframes nav-bar { from { transform: translateY(-50%) scaleY(.2); opacity: 0; } to { transform: translateY(-50%) scaleY(1); opacity: 1; } }
+
+body.motion-on .topbar { animation: top-in .55s var(--ease-out) backwards; }
+@media (min-width: 981px) { body.motion-on .sidebar { animation: side-in .6s .04s var(--ease-out) backwards; } }
+body.motion-on .dock { animation: dock-in .7s .08s var(--ease-spring) backwards; }
+
+/* Panels fade in via .view.is-active; children lift in sequence. */
+body.motion-on .view.is-active > * { animation: rise-only .42s var(--ease-out) backwards; }
+body.motion-on .view.is-active > *:nth-child(1) { animation-delay: 20ms; }
+body.motion-on .view.is-active > *:nth-child(2) { animation-delay: 70ms; }
+body.motion-on .view.is-active > *:nth-child(3) { animation-delay: 115ms; }
+body.motion-on .view.is-active > *:nth-child(4) { animation-delay: 155ms; }
+body.motion-on .view.is-active > *:nth-child(5) { animation-delay: 190ms; }
+body.motion-on .view.is-active > *:nth-child(n + 6) { animation-delay: 220ms; }
+
+body.motion-on .deck-card { animation: card-in .55s var(--ease-out) backwards; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(1) { animation-delay: 0ms; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(2) { animation-delay: 55ms; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(3) { animation-delay: 110ms; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(4) { animation-delay: 165ms; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(5) { animation-delay: 220ms; }
+body.motion-on .deck__col:nth-child(1) .deck-card:nth-child(6) { animation-delay: 275ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(1) { animation-delay: 60ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(2) { animation-delay: 115ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(3) { animation-delay: 170ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(4) { animation-delay: 225ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(5) { animation-delay: 280ms; }
+body.motion-on .deck__col:nth-child(2) .deck-card:nth-child(6) { animation-delay: 335ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(1) { animation-delay: 120ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(2) { animation-delay: 175ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(3) { animation-delay: 230ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(4) { animation-delay: 285ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(5) { animation-delay: 340ms; }
+body.motion-on .deck__col:nth-child(3) .deck-card:nth-child(6) { animation-delay: 395ms; }
+.widget.is-new { animation: widget-in .42s var(--ease-spring) both; }
+
+/* Never leave content hidden if the timeline stalls (background tab, paused
+   compositor): after the entrance window everything is forced visible. */
+body.motion-settled .topbar,
+body.motion-settled .sidebar,
+body.motion-settled .dock,
+body.motion-settled .deck-card,
+body.motion-settled .view.is-active > * { animation: none !important; }
+
+/* ------------------------------ hover ------------------------------- */
+.nav-item { position: relative; overflow: hidden; transition: background .18s var(--ease), color .18s var(--ease), transform .18s var(--ease); }
+.nav-item .icon { transition: transform .22s var(--ease-spring); }
+.nav-item:hover { transform: translateX(2px); }
+.nav-item:hover .icon { transform: scale(1.1) rotate(-5deg); }
+.nav-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--accent-strong, #c084fc);
+  box-shadow: 0 0 10px var(--accent-strong, #c084fc);
+  animation: nav-bar .32s var(--ease-spring) both;
+}
+
+.icon-btn .icon { transition: transform .22s var(--ease-spring); }
+.icon-btn:hover .icon { transform: rotate(-7deg) scale(1.1); }
+.icon-btn:active { transform: scale(.92); }
+
+.deck-card { transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease); }
+.deck-card:hover { transform: translateY(-3px); border-color: rgba(168, 85, 247, .42); box-shadow: 0 22px 44px -30px #000, 0 0 24px rgba(168, 85, 247, .18); }
+
+.widget { transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease); }
+.widget:hover { transform: translateY(-2px); }
+
+.chip { transition: transform .18s var(--ease-spring), border-color .18s var(--ease), color .18s var(--ease); }
+.chip:hover { transform: translateY(-1px); }
+.chip:active { transform: scale(.96); }
+
+.btn:active, .ghost-btn:active, .dock__btn:active { transform: scale(.96); }
+
+/* ------------------------------ press ------------------------------- */
+.btn, .ghost-btn, .chip, .dock__btn { position: relative; overflow: hidden; }
+.dock__btn.is-bounce .icon { animation: dock-bounce .5s var(--ease-spring); }
+@keyframes dock-bounce {
+  0%   { transform: none; }
+  35%  { transform: translateY(-7px) scale(1.14); }
+  68%  { transform: translateY(1px) scale(.98); }
+  100% { transform: none; }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .26;
+  transform: scale(0);
+  pointer-events: none;
+  animation: ripple .62s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(2.8); opacity: 0; } }
+
+.dock__btn.is-active::after { animation: dot-pulse 2.6s ease-in-out infinite; }
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, .55); }
+  55%      { box-shadow: 0 0 0 6px rgba(168, 85, 247, 0); }
+}
+
+/* ----------------------------- ambience ----------------------------- */
+@keyframes logo-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(168, 85, 247, 0)); }
+  50%      { filter: drop-shadow(0 0 10px rgba(168, 85, 247, .55)); }
+}
+.brand__mark { animation: logo-glow 5.5s ease-in-out infinite; }
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
+.status-pill .icon { animation: status-pulse 3.4s ease-in-out infinite; }
+
+/* --------------------------- theme change --------------------------- */
+.theme-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(168, 85, 247, .38), transparent 66%);
+  animation: theme-flash .75s ease-out forwards;
+}
+@keyframes theme-flash { 0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; } }
+
+/* --------------------------- motion levels --------------------------- */
+/* The OS preference no longer wins outright: HYDRA's own Motion setting
+   decides, so "Full" still animates on machines with Reduce Motion on. */
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after {
+  animation-duration: .001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-motion="off"] .ripple, html[data-motion="off"] .theme-flash { display: none; }
+
+html[data-motion="subtle"] .topbar,
+html[data-motion="subtle"] .sidebar,
+html[data-motion="subtle"] .dock,
+html[data-motion="subtle"] .deck-card,
+html[data-motion="subtle"] .view.is-active > * { animation: none; }
+html[data-motion="subtle"] .cursor-glow { display: none; }
+
+/* ------------------------- card hover family ------------------------- */
+.market-card, .stat-card, .plugin-card {
+  transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease);
+}
+.market-card:hover, .stat-card:hover, .plugin-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(168, 85, 247, .42);
+  box-shadow: 0 20px 40px -30px #000, 0 0 22px rgba(168, 85, 247, .16);
+}
+
+.companion__glow { animation: orb-breathe 6.5s ease-in-out infinite; }
+
+/* ---------------------------- cursor glow ---------------------------- */
+.cursor-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .5s ease;
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 40%), rgba(168, 85, 247, .11), transparent 62%);
+}
+body.motion-on .cursor-glow { opacity: 1; }
+@media (hover: none) { .cursor-glow { display: none; } }
+
+/* --------------------------- lists & swatches -------------------------- */
+@keyframes item-in { from { transform: translateY(6px); } to { transform: none; } }
+body.motion-on .palette__item { animation: item-in .22s var(--ease-out) backwards; }
+body.motion-on .palette__item:nth-child(1) { animation-delay: 10ms; }
+body.motion-on .palette__item:nth-child(2) { animation-delay: 28ms; }
+body.motion-on .palette__item:nth-child(3) { animation-delay: 46ms; }
+body.motion-on .palette__item:nth-child(4) { animation-delay: 64ms; }
+body.motion-on .palette__item:nth-child(5) { animation-delay: 82ms; }
+body.motion-on .palette__item:nth-child(n + 6) { animation-delay: 100ms; }
+
+.theme-dot { transition: transform .2s var(--ease-spring), box-shadow .2s var(--ease); }
+.theme-dot:hover { transform: scale(1.18); }
+.theme-dot:active { transform: scale(.94); }
+
+.feature-tile, .deck-nav a, .dock__btn { transition: transform .18s var(--ease), background .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease); }
+.feature-tile:hover { transform: translateY(-2px); }
+.feature-tile:active { transform: scale(.97); }
+
+/* ------------------------------- games -------------------------------- */
+.tile:not(.is-empty) { animation: tile-pop .2s var(--ease-spring) backwards; }
+@keyframes tile-pop { from { transform: scale(.86); } to { transform: none; } }
+
+
+/* --------------------------- living interface ------------------------ */
+@keyframes title-sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.view__title {
+  background: linear-gradient(100deg, currentColor 15%, #e9d5ff 45%, currentColor 75%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-sheen 9s ease-in-out infinite;
+}
+@keyframes icon-wiggle { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(-10deg); } 70% { transform: rotate(8deg); } }
+.nav-item:hover .icon { animation: icon-wiggle .5s ease; }
+.chip { transition: border-color .2s var(--ease), box-shadow .2s var(--ease), color .2s var(--ease); }
+.chip:hover { border-color: rgba(168, 85, 247, .5); box-shadow: 0 0 16px rgba(168, 85, 247, .22); }
+.widget { transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease); }
+.widget:hover { transform: translateY(-2px); border-color: rgba(168, 85, 247, .38); }
+@keyframes bar-sheen { from { background-position: -120% 0; } to { background-position: 220% 0; } }
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(233, 213, 255, .10) 50%, transparent 65%);
+  background-size: 220% 100%;
+  animation: bar-sheen 6s linear infinite;
+}
+
+/* -------------------------- micro motion ---------------------------- */
+@keyframes icon-breathe { 0%, 100% { transform: scale(1); opacity: .92; } 50% { transform: scale(1.08); opacity: 1; } }
+.nav-item .icon { animation: icon-breathe 6.4s ease-in-out infinite; }
+.nav-item:nth-child(2n) .icon { animation-delay: -1.6s; }
+.nav-item:nth-child(3n) .icon { animation-delay: -3.2s; }
+.dock__btn:hover { box-shadow: 0 0 0 1px rgba(196, 181, 253, .35), 0 10px 26px -14px rgba(168, 85, 247, .8); }

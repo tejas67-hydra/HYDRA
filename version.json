@@ -1,0 +1,8 @@
+{
+  "version": "2.3.2",
+  "build": "2026.12.10",
+  "notes": [
+    "The companion now patrols the home screen: it walks to a new spot every few seconds and stays there",
+    "Walking turns the body toward the direction of travel and paces the glide to the distance"
+  ]
+}

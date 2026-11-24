@@ -1,20 +1,1644 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="nebula">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="pragma" content="no-cache">
-  <meta http-equiv="expires" content="0">
-  <meta http-equiv="refresh" content="0; url=fullhydra.html?v=20261120-2200">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HYDRA</title>
-  <style>
-    html, body { height: 100%; margin: 0; background: #07030f; color: #dbc0ff; font-family: Consolas, monospace; }
-    body { display: grid; place-items: center; }
-    a { color: #ff3df2; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0714" />
+<meta name="description" content="HYDRA — a local-first AI companion and desktop environment for the web." />
+<meta name="color-scheme" content="dark light" />
+<title>HYDRA</title>
+<link rel="icon" href="assets/icons/hydra.svg" type="image/svg+xml" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#8b5cf6" />
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="css/themes.css" />
+<link rel="stylesheet" href="css/animations.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+<link rel="stylesheet" href="css/widgets.css" />
+<link rel="stylesheet" href="css/ai.css" />
+<link rel="stylesheet" href="css/cv.css" />
+<link rel="stylesheet" href="css/world.css" />
+<link rel="stylesheet" href="css/extras.css" />
+<link rel="stylesheet" href="css/auth.css" />
+<link rel="stylesheet" href="css/motion.css" />
+    <link rel="stylesheet" href="css/pack.css" />
+  <link rel="stylesheet" href="css/mobile.css" />
 </head>
-<body>
-  <a href="fullhydra.html?v=20261120-2200">Launch HYDRA</a>
+<body class="auth-locked">
+<div class="auth" id="auth">
+  <div class="auth__card">
+    <div class="auth__logo">
+      <svg viewBox="6 4 52 56" aria-hidden="true">
+        <g stroke="#ffffff" stroke-width="5.4" stroke-linecap="round" fill="none">
+          <path d="M23 31c-5 6-8 13-8 20 0 4 3 6 5 4 3-3 4-8 3-12"/>
+          <path d="M28 33c-3 7-3 15-1 22 1 4 6 3 6-1 0-6-1-11-2-15"/>
+          <path d="M36 33c3 7 3 15 1 22-1 4-6 3-6-1 0-6 1-11 2-15"/>
+          <path d="M41 31c5 6 8 13 8 20 0 4-3 6-5 4-3-3-4-8-3-12"/>
+        </g>
+        <circle cx="32" cy="21" r="13.5" fill="#ffffff"/>
+        <path d="M27 8.5c0-3 3.4-4 4.6-1.6C32.8 4.5 36.2 5.5 36.2 8.5" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="27.5" cy="19.5" r="1.7" fill="#0a0a0b"/>
+        <circle cx="36.5" cy="19.5" r="1.7" fill="#0a0a0b"/>
+      </svg>
+    </div>
+    <h1 class="auth__title">Sign in to Hydra</h1>
+    <p class="auth__sub">Welcome back!</p>
+    <form class="auth__form" id="auth-form" autocomplete="on">
+      <label class="auth__field">
+        <input id="auth-user" type="text" name="username" placeholder="Username or email" autocomplete="username" spellcheck="false" />
+      </label>
+      <label class="auth__field auth__field--pass">
+        <input id="auth-pass" type="password" name="password" placeholder="Password" autocomplete="current-password" />
+        <button class="auth__eye" id="auth-eye" type="button" aria-label="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </label>
+      <p class="auth__forgot">Forgot your password? <button class="auth__link" id="auth-recover" type="button">Recover your account</button></p>
+      <button class="auth__login" type="submit">Login</button>
+      <button class="auth__create" id="auth-create" type="button">Create an account</button>
+      <button class="auth__guest" id="auth-guest" type="button">Continue as guest</button>
+      <p class="auth__note" id="auth-note"></p>
+    </form>
+    <p class="auth__foot">Local account — credentials stay in this browser.</p>
+  </div>
+</div>
+
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l10-2v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M10 4.5a2 2 0 1 1 4 0V6h3.5a1.5 1.5 0 0 1 1.5 1.5V11h-1.5a2 2 0 1 0 0 4H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2 2 0 1 0-4 0V20H6.5A1.5 1.5 0 0 1 5 18.5V15h1.5a2 2 0 1 0 0-4H5V7.5A1.5 1.5 0 0 1 6.5 6H10z"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-8-8-4z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.5"/></symbol>
+  <symbol id="i-mic-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M9 9v1.5a3 3 0 0 0 4.5 2.6"/><path d="M15 10V5.5a3 3 0 0 0-5.6-1.5"/><path d="M5.5 11.5a6.5 6.5 0 0 0 9.9 5.5"/><path d="M12 18v3.5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.2-2h7l1.2 2h1.8A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5l13 7.5-13 7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M6 5l10 7-10 7z"/><rect x="17" y="5" width="2.5" height="14" rx="1"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M18 5L8 12l10 7z"/><rect x="4.5" y="5" width="2.5" height="14" rx="1"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.2"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M8.5 15.5a6 6 0 0 1 5-1.4"/><path d="M5.5 12a10.5 10.5 0 0 1 3.6-1.9"/><path d="M2.5 8.5A15 15 0 0 1 9 5.4"/><circle cx="12" cy="19" r="1.2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.5 18a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 18.6 10a4 4 0 0 1-.6 8z"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9 7V4.5h6V7M6.5 7l.8 13h9.4l.8-13"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.6 6.4"/><path d="M20 4.5V11h-6.5"/></symbol>
+  <symbol id="i-command" viewBox="0 0 24 24"><path d="M9 6.5a2.5 2.5 0 1 0-2.5 2.5H9zm0 0V9m0 0v6m0 0v2.5A2.5 2.5 0 1 1 6.5 15H9zm0 0h6m0 0v2.5a2.5 2.5 0 1 0 2.5-2.5H15zm0 0V9m0 0V6.5A2.5 2.5 0 1 1 17.5 9H15z"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.9 0-1.2-1-1.6-1-2.6 0-.9.7-1.5 1.7-1.5H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="11" cy="7" r="1.2"/><circle cx="15.5" cy="8" r="1.2"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-volume-x" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="10" r="1.8"/><path d="M3.5 17l5-4.5 4 3.5 3-2.5 5 4"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M4 12h16"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 4.8-9 4.8-9-4.8z"/><path d="M3 12.4l9 4.8 9-4.8"/><path d="M3 16.8l9 4.8 9-4.8"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12.5h4l2.5-7 5 14 2.5-7h4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v10.5M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V5M7.5 9.5L12 5l4.5 4.5"/><path d="M4.5 19.5h15"/></symbol>
+  <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8-7.5 9.5-4.4-1.5-7.5-4.9-7.5-9.5V6z"/><path d="M8.8 12.2l2.3 2.3 4.2-4.4"/></symbol>
+  <symbol id="i-window" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9h18"/><circle cx="6.3" cy="6.7" r=".8"/><circle cx="9" cy="6.7" r=".8"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H19"/></symbol>
+  <symbol id="i-gamepad" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10.5" rx="5"/><path d="M7 10.5v3.5M5.2 12.2h3.6"/><circle cx="16" cy="11.5" r="1"/><circle cx="18.3" cy="13.8" r="1"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10.5" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+</svg>
+
+<!-- ============================ BOOT SEQUENCE ============================ -->
+<div id="boot" class="boot" role="status" aria-live="polite">
+  <div class="boot__noise"></div>
+  <div class="boot__core">
+    <svg class="boot__mark" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <linearGradient id="bootGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#c084fc"/>
+          <stop offset="55%" stop-color="#8b5cf6"/>
+          <stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+      </defs>
+      <circle class="boot__ring boot__ring--1" cx="60" cy="60" r="52" fill="none" stroke="url(#bootGrad)" stroke-width="1.2" stroke-dasharray="6 10"/>
+      <circle class="boot__ring boot__ring--2" cx="60" cy="60" r="40" fill="none" stroke="url(#bootGrad)" stroke-width="1.6" stroke-dasharray="90 40"/>
+      <circle class="boot__ring boot__ring--3" cx="60" cy="60" r="28" fill="none" stroke="rgba(168,85,247,.45)" stroke-width="1"/>
+      <path class="boot__glyph" d="M60 30l22 15v30L60 90 38 75V45z" fill="none" stroke="url(#bootGrad)" stroke-width="2"/>
+      <circle class="boot__pulse" cx="60" cy="60" r="5" fill="#c084fc"/>
+    </svg>
+    <h1 class="boot__title" data-text="HYDRA">HYDRA</h1>
+    <p class="boot__tagline">Your AI companion</p>
+    <div class="boot__progress"><span class="boot__bar"></span></div>
+    <p class="boot__stage">initialising core</p>
+    <ul class="boot__log" id="boot-log"></ul>
+  </div>
+  <button class="boot__skip" id="boot-skip" type="button">Skip intro</button>
+</div>
+
+<!-- ============================ APPLICATION ============================ -->
+<div id="app" class="app" hidden>
+
+  <header class="topbar">
+    <button class="icon-btn topbar__menu" id="btn-menu" type="button" aria-label="Toggle navigation">
+      <svg class="icon"><use href="#i-grid"/></svg>
+    </button>
+
+    <a class="brand" href="#home" data-view-link="home" aria-label="HYDRA home">
+      <span class="brand__mark">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M20 5l5 9 9 6-9 6-5 9-5-9-9-6 9-6z" fill="currentColor" opacity=".9"/>
+          <circle cx="20" cy="20" r="3" fill="#0b0814"/>
+        </svg>
+      </span>
+      <span class="brand__text">
+        <strong>HYDRA</strong>
+        <small>Your AI companion</small>
+      </span>
+    </a>
+
+    <div class="omni" id="omni-wrap">
+      <svg class="icon"><use href="#i-search"/></svg>
+      <input id="omni-input" type="text" placeholder="Search any feature — vision, files, theme, device…" aria-label="Search features" autocomplete="off" spellcheck="false" />
+      <kbd class="omni__kbd" id="omni-kbd">Ctrl K</kbd>
+    </div>
+
+    <div class="topbar__meta">
+      <div class="status-pill" id="status-net" title="Connection status">
+        <svg class="icon"><use href="#i-wifi"/></svg>
+        <span>online</span>
+      </div>
+      <div class="status-pill status-pill--muted" id="status-weather" title="Weather">
+        <svg class="icon"><use href="#i-cloud"/></svg>
+        <span>--°</span>
+      </div>
+      <div class="clock-pill" id="topbar-clock" aria-live="off">
+        <span class="clock-pill__time">00:00</span>
+        <span class="clock-pill__date">—</span>
+      </div>
+    </div>
+
+    <div class="topbar__actions">
+      <button class="icon-btn" id="btn-theme" type="button" aria-label="Cycle theme" title="Cycle theme">
+        <svg class="icon"><use href="#i-palette"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-notifications" type="button" aria-label="Notifications" title="Notifications">
+        <svg class="icon"><use href="#i-bell"/></svg>
+        <span class="badge" id="notif-badge" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="btn-settings" type="button" aria-label="Settings" title="Settings">
+        <svg class="icon"><use href="#i-settings"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <button class="sidebar__brand" type="button" data-view="home" aria-label="HYDRA home">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f3e8ff"/><stop offset=".45" stop-color="#c084fc"/><stop offset="1" stop-color="#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 8C22 18 8 20 5 32c9-2 17 1 27 10 10-9 18-12 27-10-3-12-17-14-27-24z" fill="url(#logoG)"/>
+          <path d="M32 20v26" stroke="#2a1046" stroke-width="2.5" opacity=".55"/>
+          <path d="M32 46c-5 6-11 8-18 8 4-6 9-9 18-8z" fill="url(#logoG)" opacity=".8"/>
+          <path d="M32 46c5 6 11 8 18 8-4-6-9-9-18-8z" fill="url(#logoG)" opacity=".8"/>
+        </svg>
+        <span class="sidebar__brand-text"><strong>HYDRA</strong><small>Your AI Companion</small></span>
+      </button>
+      <nav class="sidebar__nav">
+        <p class="sidebar__label">Companion</p>
+        <button class="nav-item is-active" data-view="home" type="button">
+          <svg class="icon"><use href="#i-grid"/></svg><span>Home</span>
+        </button>
+        <button class="nav-item" data-view="assistant" type="button">
+          <svg class="icon"><use href="#i-sparkles"/></svg><span>Chat</span>
+          <span class="nav-item__dot" data-ai-indicator></span>
+        </button>
+        <button class="nav-item" data-view="play" type="button">
+          <svg class="icon"><use href="#i-gamepad"/></svg><span>Play</span>
+        </button>
+        <button class="nav-item" data-view="memories" type="button">
+          <svg class="icon"><use href="#i-book"/></svg><span>Memories</span>
+        </button>
+
+        <p class="sidebar__label">Workspace</p>
+        <button class="nav-item" data-view="dashboard" type="button">
+          <svg class="icon"><use href="#i-layers"/></svg><span>Tools</span>
+        </button>
+        <button class="nav-item" data-view="vision" type="button">
+          <svg class="icon"><use href="#i-eye"/></svg><span>Vision</span>
+        </button>
+        <button class="nav-item" data-view="music" type="button">
+          <svg class="icon"><use href="#i-music"/></svg><span>Studio</span>
+        </button>
+
+        <p class="sidebar__label">Lab</p>
+        <button class="nav-item" data-view="workspace" type="button">
+          <svg class="icon"><use href="#i-book"/></svg><span>Workspace</span>
+        </button>
+        <button class="nav-item" data-view="files" type="button">
+          <svg class="icon"><use href="#i-layers"/></svg><span>Files</span>
+        </button>
+        <button class="nav-item" data-view="games" type="button">
+          <svg class="icon"><use href="#i-gamepad"/></svg><span>Games</span>
+        </button>
+        <button class="nav-item" data-view="stats" type="button">
+          <svg class="icon"><use href="#i-activity"/></svg><span>Stats</span>
+        </button>
+        <button class="nav-item" data-view="market" type="button">
+          <svg class="icon"><use href="#i-puzzle"/></svg><span>Market</span>
+        </button>
+        <button class="nav-item" data-view="automations" type="button">
+          <svg class="icon"><use href="#i-refresh"/></svg><span>Automations</span>
+        </button>
+        <button class="nav-item" data-view="device" type="button">
+          <svg class="icon"><use href="#i-cpu"/></svg><span>Device</span>
+        </button>
+        <button class="nav-item" data-view="windows" type="button">
+          <svg class="icon"><use href="#i-window"/></svg><span>Windows</span>
+        </button>
+
+        <p class="sidebar__label">System</p>
+        <button class="nav-item" data-view="plugins" type="button">
+          <svg class="icon"><use href="#i-puzzle"/></svg><span>Plugins</span>
+        </button>
+        <button class="nav-item" data-view="settings" type="button">
+          <svg class="icon"><use href="#i-settings"/></svg><span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="companion-status">
+          <div class="companion-status__avatar"><span></span></div>
+          <div class="grow">
+            <strong>HYDRA</strong>
+            <span><i class="online-dot"></i> Online · mood <b id="companion-mood">calm</b> · <b id="build-chip" title="HYDRA build">v2.3.2</b></span>
+          </div>
+          <div class="mini-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <p class="sidebar__tagline">Dream · Create · Explore · Together ♥</p>
+      </div>
+    </aside>
+
+    <main class="workspace" id="workspace">
+
+      <!-- ============================ HOME / WORLD ============================ -->
+      <section class="view is-active" id="view-home" data-view-panel="home">
+        <div class="world" id="world" data-time="night" data-weather="clear">
+          <div class="scene" aria-hidden="true">
+            <svg class="scene__art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#08040f"/>
+      <stop offset="0.38" stop-color="#170a2c"/>
+      <stop offset="0.68" stop-color="#2f1450"/>
+      <stop offset="1" stop-color="#1b0c30"/>
+    </linearGradient>
+    <radialGradient id="skyGlow" cx="0.66" cy="0.52" r="0.62">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.3"/>
+      <stop offset="0.55" stop-color="#7c3aed" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="waterG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b1249"/>
+      <stop offset="0.45" stop-color="#180a2e"/>
+      <stop offset="1" stop-color="#0b0518"/>
+    </linearGradient>
+    <linearGradient id="trunkG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0d0617"/>
+      <stop offset="0.45" stop-color="#2a1338"/>
+      <stop offset="1" stop-color="#140a20"/>
+    </linearGradient>
+    <linearGradient id="roofG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#331a40"/>
+      <stop offset="1" stop-color="#130a1c"/>
+    </linearGradient>
+    <linearGradient id="wallG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d1e35"/>
+      <stop offset="1" stop-color="#1c0e22"/>
+    </linearGradient>
+    <linearGradient id="pathG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a2247"/>
+      <stop offset="1" stop-color="#1a0f24"/>
+    </linearGradient>
+    <radialGradient id="lampG">
+      <stop offset="0" stop-color="#fff0cf"/>
+      <stop offset="0.42" stop-color="#ffbd6b"/>
+      <stop offset="1" stop-color="#ff7a2f"/>
+    </radialGradient>
+    <radialGradient id="glowWarm">
+      <stop offset="0" stop-color="#ffb45e" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#ffb45e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowPurple">
+      <stop offset="0" stop-color="#c084fc" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#c084fc" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.48" r="0.72">
+      <stop offset="0.55" stop-color="#05020c" stop-opacity="0"/>
+      <stop offset="1" stop-color="#05020c" stop-opacity="0.82"/>
+    </radialGradient>
+    <filter id="blurL"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="blurM"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="blurS"><feGaussianBlur stdDeviation="3.5"/></filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.045"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#skyG)"/>
+  <rect width="1600" height="900" fill="url(#skyGlow)"/>
+
+  <g class="art-stars" fill="#e9d5ff">
+    <circle cx="180" cy="90" r="1.6" opacity=".8"/><circle cx="360" cy="60" r="1.2" opacity=".5"/>
+    <circle cx="520" cy="130" r="1.8" opacity=".7"/><circle cx="760" cy="70" r="1.3" opacity=".6"/>
+    <circle cx="980" cy="120" r="1.5" opacity=".5"/><circle cx="1180" cy="80" r="1.2" opacity=".7"/>
+    <circle cx="1400" cy="60" r="1.7" opacity=".6"/><circle cx="1520" cy="150" r="1.3" opacity=".5"/>
+    <circle cx="660" cy="200" r="1.1" opacity=".4"/><circle cx="1280" cy="210" r="1.4" opacity=".45"/>
+  </g>
+
+  <path d="M0 560 Q120 520 260 548 T540 540 T820 556 T1100 534 T1400 552 T1600 540 V620 H0 Z" fill="#160a26"/>
+  <path d="M0 596 Q200 566 400 590 T800 596 T1200 584 T1600 600 V660 H0 Z" fill="#1d0f31"/>
+
+  <g class="art-house" transform="translate(-260 0)">
+    <ellipse cx="1310" cy="600" rx="340" ry="150" fill="url(#glowWarm)" opacity=".35" filter="url(#blurL)"/>
+    <path d="M1035 398 Q1300 318 1610 372 L1610 424 Q1300 368 1035 448 Z" fill="url(#roofG)"/>
+    <path d="M1035 398 Q1300 318 1610 372" stroke="#5b2c6b" stroke-width="5" fill="none" opacity=".8"/>
+    <path d="M1052 432 Q1300 372 1610 416 L1610 474 Q1300 428 1052 492 Z" fill="#0f0718" opacity=".85"/>
+    <rect x="1104" y="470" width="506" height="190" fill="url(#wallG)"/>
+    <rect x="1104" y="470" width="506" height="190" fill="none" stroke="#4a2356" stroke-width="2" opacity=".6"/>
+
+    <g class="art-windows">
+      <g>
+        <rect x="1142" y="502" width="126" height="94" rx="4" fill="#ffc078" opacity=".92"/>
+        <rect x="1142" y="502" width="126" height="94" rx="4" fill="none" stroke="#3a1c2c" stroke-width="7"/>
+        <path d="M1205 502v94M1142 549h126" stroke="#3a1c2c" stroke-width="5"/>
+      </g>
+      <g>
+        <rect x="1298" y="496" width="140" height="100" rx="4" fill="#ffb765" opacity=".95"/>
+        <rect x="1298" y="496" width="140" height="100" rx="4" fill="none" stroke="#3a1c2c" stroke-width="7"/>
+        <path d="M1368 496v100M1298 546h140" stroke="#3a1c2c" stroke-width="5"/>
+      </g>
+      <g>
+        <rect x="1468" y="506" width="112" height="90" rx="4" fill="#ffc078" opacity=".88"/>
+        <rect x="1468" y="506" width="112" height="90" rx="4" fill="none" stroke="#3a1c2c" stroke-width="7"/>
+        <path d="M1524 506v90M1468 551h112" stroke="#3a1c2c" stroke-width="5"/>
+      </g>
+    </g>
+
+    <rect x="1150" y="508" width="118" height="88" fill="#ffcf94" opacity=".5" filter="url(#blurM)"/>
+    <rect x="1306" y="502" width="132" height="94" fill="#ffcf94" opacity=".55" filter="url(#blurM)"/>
+    <rect x="1476" y="512" width="104" height="84" fill="#ffcf94" opacity=".45" filter="url(#blurM)"/>
+
+    <rect x="1246" y="588" width="78" height="72" fill="#180b20"/>
+    <rect x="1258" y="600" width="54" height="60" fill="#ffb765" opacity=".35"/>
+
+    <rect x="1060" y="656" width="560" height="18" rx="4" fill="#2a1533"/>
+    <rect x="1060" y="656" width="560" height="5" fill="#4b2458" opacity=".7"/>
+    <g fill="#241230">
+      <rect x="1092" y="620" width="8" height="40" rx="3"/>
+      <rect x="1180" y="620" width="8" height="40" rx="3"/>
+      <rect x="1420" y="620" width="8" height="40" rx="3"/>
+      <rect x="1520" y="620" width="8" height="40" rx="3"/>
+      <rect x="1088" y="616" width="120" height="7" rx="3"/>
+      <rect x="1416" y="616" width="120" height="7" rx="3"/>
+    </g>
+    <rect x="1060" y="674" width="560" height="8" fill="#120a1a" opacity=".9"/>
+    <ellipse cx="1330" cy="676" rx="300" ry="26" fill="#ffb45e" opacity=".18" filter="url(#blurM)"/>
+  </g>
+
+  <g class="art-tree">
+    <ellipse cx="250" cy="360" rx="330" ry="300" fill="url(#glowPurple)" opacity=".5" filter="url(#blurL)"/>
+    <path d="M150 905 C176 742 128 610 196 470 C226 408 272 372 300 322" stroke="url(#trunkG)" stroke-width="78" fill="none" stroke-linecap="round"/>
+    <path d="M186 640 C250 596 300 548 318 470" stroke="url(#trunkG)" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <path d="M196 500 C140 460 96 430 60 380" stroke="url(#trunkG)" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M212 430 C286 400 352 366 402 306" stroke="url(#trunkG)" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <path d="M150 780 C110 750 70 736 28 730" stroke="url(#trunkG)" stroke-width="24" fill="none" stroke-linecap="round"/>
+    <path d="M150 900 C120 866 96 850 60 842" stroke="url(#trunkG)" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <path d="M168 900 C196 868 222 852 258 846" stroke="url(#trunkG)" stroke-width="22" fill="none" stroke-linecap="round"/>
+
+    <g class="art-canopy" filter="url(#blurS)">
+      <ellipse cx="300" cy="250" rx="300" ry="210" fill="#2a0f4a"/>
+      <ellipse cx="120" cy="300" rx="210" ry="170" fill="#220c3d"/>
+      <ellipse cx="470" cy="190" rx="220" ry="150" fill="#33125a"/>
+      <ellipse cx="230" cy="130" rx="220" ry="140" fill="#3b1668"/>
+      <ellipse cx="560" cy="300" rx="150" ry="110" fill="#2b1050"/>
+    </g>
+    <g class="art-leaves" filter="url(#blurS)">
+      <ellipse cx="352" cy="324" rx="18" ry="13" fill="#7c3aed" opacity="0.48"/>
+      <ellipse cx="202" cy="247" rx="8" ry="6" fill="#6d28d9" opacity="0.48"/>
+      <ellipse cx="531" cy="179" rx="8" ry="6" fill="#7c3aed" opacity="0.84"/>
+      <ellipse cx="329" cy="171" rx="14" ry="13" fill="#3b1668" opacity="0.71"/>
+      <ellipse cx="399" cy="334" rx="15" ry="13" fill="#7c3aed" opacity="0.64"/>
+      <ellipse cx="225" cy="126" rx="11" ry="10" fill="#2a0f4a" opacity="0.80"/>
+      <ellipse cx="176" cy="201" rx="16" ry="13" fill="#3b1668" opacity="0.50"/>
+      <ellipse cx="491" cy="174" rx="12" ry="12" fill="#3b1668" opacity="0.79"/>
+      <ellipse cx="85" cy="175" rx="16" ry="14" fill="#7c3aed" opacity="0.81"/>
+      <ellipse cx="203" cy="218" rx="16" ry="12" fill="#2a0f4a" opacity="0.77"/>
+      <ellipse cx="143" cy="103" rx="16" ry="16" fill="#5b21b6" opacity="0.46"/>
+      <ellipse cx="416" cy="230" rx="8" ry="7" fill="#4c1d95" opacity="0.78"/>
+      <ellipse cx="102" cy="354" rx="9" ry="8" fill="#5b21b6" opacity="0.85"/>
+      <ellipse cx="200" cy="97" rx="20" ry="18" fill="#6d28d9" opacity="0.88"/>
+      <ellipse cx="371" cy="320" rx="7" ry="7" fill="#4c1d95" opacity="0.57"/>
+      <ellipse cx="138" cy="247" rx="19" ry="18" fill="#7c3aed" opacity="0.88"/>
+      <ellipse cx="178" cy="123" rx="12" ry="10" fill="#6d28d9" opacity="0.74"/>
+      <ellipse cx="395" cy="222" rx="9" ry="7" fill="#3b1668" opacity="0.50"/>
+      <ellipse cx="133" cy="303" rx="8" ry="6" fill="#6d28d9" opacity="0.52"/>
+      <ellipse cx="298" cy="144" rx="9" ry="8" fill="#6d28d9" opacity="0.67"/>
+      <ellipse cx="256" cy="174" rx="13" ry="12" fill="#7c3aed" opacity="0.46"/>
+      <ellipse cx="472" cy="289" rx="17" ry="13" fill="#2a0f4a" opacity="0.84"/>
+      <ellipse cx="255" cy="340" rx="12" ry="9" fill="#7c3aed" opacity="0.80"/>
+      <ellipse cx="362" cy="330" rx="18" ry="16" fill="#4c1d95" opacity="0.54"/>
+      <ellipse cx="515" cy="243" rx="13" ry="10" fill="#7c3aed" opacity="0.88"/>
+      <ellipse cx="63" cy="192" rx="8" ry="6" fill="#6d28d9" opacity="0.54"/>
+      <ellipse cx="158" cy="192" rx="19" ry="15" fill="#2a0f4a" opacity="0.49"/>
+      <ellipse cx="210" cy="182" rx="19" ry="15" fill="#2a0f4a" opacity="0.60"/>
+      <ellipse cx="65" cy="162" rx="12" ry="12" fill="#2a0f4a" opacity="0.52"/>
+      <ellipse cx="54" cy="302" rx="15" ry="13" fill="#6d28d9" opacity="0.75"/>
+      <ellipse cx="195" cy="385" rx="7" ry="7" fill="#2a0f4a" opacity="0.50"/>
+      <ellipse cx="120" cy="365" rx="7" ry="6" fill="#7c3aed" opacity="0.56"/>
+      <ellipse cx="40" cy="340" rx="8" ry="7" fill="#6d28d9" opacity="0.75"/>
+      <ellipse cx="169" cy="393" rx="14" ry="10" fill="#6d28d9" opacity="0.80"/>
+      <ellipse cx="239" cy="380" rx="9" ry="8" fill="#3b1668" opacity="0.70"/>
+      <ellipse cx="63" cy="391" rx="18" ry="13" fill="#4c1d95" opacity="0.57"/>
+      <ellipse cx="137" cy="400" rx="13" ry="11" fill="#7c3aed" opacity="0.72"/>
+      <ellipse cx="90" cy="375" rx="16" ry="15" fill="#5b21b6" opacity="0.87"/>
+      <ellipse cx="52" cy="345" rx="12" ry="10" fill="#5b21b6" opacity="0.48"/>
+      <ellipse cx="116" cy="359" rx="19" ry="14" fill="#2a0f4a" opacity="0.74"/>
+      <ellipse cx="182" cy="243" rx="10" ry="10" fill="#6d28d9" opacity="0.85"/>
+      <ellipse cx="194" cy="399" rx="16" ry="16" fill="#6d28d9" opacity="0.60"/>
+      <ellipse cx="86" cy="378" rx="11" ry="10" fill="#2a0f4a" opacity="0.46"/>
+      <ellipse cx="187" cy="398" rx="20" ry="19" fill="#3b1668" opacity="0.49"/>
+      <ellipse cx="143" cy="162" rx="17" ry="16" fill="#421a73" opacity="0.86"/>
+      <ellipse cx="159" cy="230" rx="16" ry="12" fill="#3b1668" opacity="0.81"/>
+      <ellipse cx="52" cy="426" rx="15" ry="14" fill="#3b1668" opacity="0.72"/>
+      <ellipse cx="136" cy="224" rx="7" ry="7" fill="#6d28d9" opacity="0.87"/>
+      <ellipse cx="129" cy="364" rx="20" ry="15" fill="#4c1d95" opacity="0.54"/>
+      <ellipse cx="157" cy="225" rx="13" ry="12" fill="#5b21b6" opacity="0.61"/>
+      <ellipse cx="212" cy="309" rx="17" ry="14" fill="#4c1d95" opacity="0.68"/>
+      <ellipse cx="117" cy="205" rx="14" ry="14" fill="#7c3aed" opacity="0.59"/>
+      <ellipse cx="491" cy="255" rx="12" ry="10" fill="#3b1668" opacity="0.83"/>
+      <ellipse cx="324" cy="181" rx="9" ry="7" fill="#421a73" opacity="0.62"/>
+      <ellipse cx="660" cy="185" rx="8" ry="6" fill="#5b21b6" opacity="0.65"/>
+      <ellipse cx="454" cy="319" rx="7" ry="7" fill="#4c1d95" opacity="0.61"/>
+      <ellipse cx="354" cy="189" rx="14" ry="10" fill="#7c3aed" opacity="0.80"/>
+      <ellipse cx="613" cy="127" rx="15" ry="12" fill="#5b21b6" opacity="0.59"/>
+      <ellipse cx="485" cy="93" rx="17" ry="16" fill="#6d28d9" opacity="0.52"/>
+      <ellipse cx="494" cy="89" rx="17" ry="16" fill="#4c1d95" opacity="0.86"/>
+      <ellipse cx="472" cy="286" rx="8" ry="6" fill="#2a0f4a" opacity="0.61"/>
+      <ellipse cx="607" cy="263" rx="15" ry="14" fill="#6d28d9" opacity="0.57"/>
+      <ellipse cx="544" cy="204" rx="17" ry="14" fill="#421a73" opacity="0.48"/>
+      <ellipse cx="486" cy="299" rx="17" ry="16" fill="#6d28d9" opacity="0.83"/>
+      <ellipse cx="309" cy="248" rx="15" ry="13" fill="#3b1668" opacity="0.72"/>
+      <ellipse cx="396" cy="280" rx="7" ry="5" fill="#5b21b6" opacity="0.89"/>
+      <ellipse cx="393" cy="152" rx="16" ry="13" fill="#6d28d9" opacity="0.66"/>
+      <ellipse cx="602" cy="106" rx="20" ry="19" fill="#3b1668" opacity="0.58"/>
+      <ellipse cx="353" cy="148" rx="12" ry="12" fill="#4c1d95" opacity="0.48"/>
+      <ellipse cx="334" cy="130" rx="9" ry="8" fill="#7c3aed" opacity="0.58"/>
+      <ellipse cx="384" cy="139" rx="12" ry="9" fill="#6d28d9" opacity="0.76"/>
+      <ellipse cx="338" cy="129" rx="12" ry="9" fill="#5b21b6" opacity="0.45"/>
+      <ellipse cx="471" cy="309" rx="16" ry="16" fill="#5b21b6" opacity="0.56"/>
+      <ellipse cx="577" cy="158" rx="19" ry="18" fill="#421a73" opacity="0.47"/>
+      <ellipse cx="331" cy="261" rx="10" ry="8" fill="#7c3aed" opacity="0.59"/>
+      <ellipse cx="446" cy="303" rx="18" ry="16" fill="#7c3aed" opacity="0.70"/>
+      <ellipse cx="456" cy="140" rx="15" ry="11" fill="#421a73" opacity="0.58"/>
+      <ellipse cx="646" cy="228" rx="13" ry="11" fill="#5b21b6" opacity="0.57"/>
+      <ellipse cx="219" cy="226" rx="11" ry="9" fill="#6d28d9" opacity="0.50"/>
+      <ellipse cx="182" cy="169" rx="13" ry="10" fill="#421a73" opacity="0.65"/>
+      <ellipse cx="289" cy="175" rx="11" ry="8" fill="#4c1d95" opacity="0.62"/>
+      <ellipse cx="264" cy="74" rx="12" ry="11" fill="#4c1d95" opacity="0.62"/>
+      <ellipse cx="190" cy="89" rx="9" ry="7" fill="#2a0f4a" opacity="0.81"/>
+      <ellipse cx="276" cy="89" rx="12" ry="10" fill="#5b21b6" opacity="0.83"/>
+      <ellipse cx="279" cy="98" rx="16" ry="16" fill="#6d28d9" opacity="0.89"/>
+      <ellipse cx="153" cy="127" rx="10" ry="7" fill="#4c1d95" opacity="0.52"/>
+      <ellipse cx="150" cy="139" rx="14" ry="10" fill="#421a73" opacity="0.51"/>
+      <ellipse cx="164" cy="150" rx="15" ry="13" fill="#6d28d9" opacity="0.76"/>
+      <ellipse cx="288" cy="98" rx="10" ry="10" fill="#3b1668" opacity="0.45"/>
+      <ellipse cx="190" cy="206" rx="13" ry="10" fill="#4c1d95" opacity="0.46"/>
+      <ellipse cx="357" cy="180" rx="10" ry="9" fill="#2a0f4a" opacity="0.64"/>
+      <ellipse cx="223" cy="227" rx="13" ry="12" fill="#2a0f4a" opacity="0.64"/>
+      <ellipse cx="192" cy="184" rx="10" ry="10" fill="#5b21b6" opacity="0.79"/>
+      <ellipse cx="186" cy="54" rx="8" ry="7" fill="#7c3aed" opacity="0.53"/>
+      <ellipse cx="250" cy="206" rx="19" ry="14" fill="#3b1668" opacity="0.89"/>
+      <ellipse cx="277" cy="167" rx="12" ry="12" fill="#5b21b6" opacity="0.78"/>
+      <ellipse cx="45" cy="132" rx="9" ry="9" fill="#2a0f4a" opacity="0.66"/>
+      <ellipse cx="170" cy="36" rx="13" ry="9" fill="#3b1668" opacity="0.58"/>
+      <ellipse cx="342" cy="227" rx="12" ry="11" fill="#5b21b6" opacity="0.82"/>
+      <ellipse cx="163" cy="150" rx="12" ry="12" fill="#4c1d95" opacity="0.60"/>
+      <ellipse cx="220" cy="212" rx="18" ry="16" fill="#3b1668" opacity="0.62"/>
+      <ellipse cx="394" cy="106" rx="10" ry="7" fill="#7c3aed" opacity="0.60"/>
+      <ellipse cx="256" cy="10" rx="17" ry="15" fill="#5b21b6" opacity="0.58"/>
+      <ellipse cx="255" cy="220" rx="18" ry="13" fill="#2a0f4a" opacity="0.88"/>
+      <ellipse cx="483" cy="283" rx="18" ry="13" fill="#6d28d9" opacity="0.53"/>
+      <ellipse cx="596" cy="376" rx="11" ry="9" fill="#5b21b6" opacity="0.80"/>
+      <ellipse cx="485" cy="338" rx="10" ry="7" fill="#3b1668" opacity="0.67"/>
+      <ellipse cx="502" cy="312" rx="20" ry="15" fill="#3b1668" opacity="0.54"/>
+      <ellipse cx="444" cy="346" rx="10" ry="8" fill="#7c3aed" opacity="0.85"/>
+      <ellipse cx="569" cy="232" rx="11" ry="9" fill="#5b21b6" opacity="0.56"/>
+      <ellipse cx="565" cy="362" rx="10" ry="8" fill="#7c3aed" opacity="0.53"/>
+      <ellipse cx="623" cy="320" rx="15" ry="11" fill="#6d28d9" opacity="0.90"/>
+      <ellipse cx="630" cy="262" rx="19" ry="13" fill="#5b21b6" opacity="0.55"/>
+      <ellipse cx="654" cy="322" rx="12" ry="11" fill="#6d28d9" opacity="0.72"/>
+      <ellipse cx="576" cy="375" rx="15" ry="14" fill="#5b21b6" opacity="0.55"/>
+      <ellipse cx="600" cy="268" rx="7" ry="7" fill="#4c1d95" opacity="0.82"/>
+      <ellipse cx="526" cy="354" rx="15" ry="11" fill="#3b1668" opacity="0.81"/>
+      <ellipse cx="610" cy="289" rx="16" ry="12" fill="#7c3aed" opacity="0.49"/>
+      <ellipse cx="505" cy="233" rx="16" ry="13" fill="#3b1668" opacity="0.59"/>
+      <ellipse cx="489" cy="323" rx="18" ry="18" fill="#5b21b6" opacity="0.74"/>
+      <ellipse cx="623" cy="262" rx="19" ry="15" fill="#421a73" opacity="0.49"/>
+      <ellipse cx="629" cy="327" rx="7" ry="6" fill="#2a0f4a" opacity="0.81"/>
+      <ellipse cx="483" cy="342" rx="9" ry="7" fill="#7c3aed" opacity="0.53"/>
+      <ellipse cx="633" cy="276" rx="9" ry="8" fill="#6d28d9" opacity="0.59"/>
+      <ellipse cx="639" cy="346" rx="15" ry="15" fill="#7c3aed" opacity="0.63"/>
+      <ellipse cx="627" cy="371" rx="8" ry="7" fill="#4c1d95" opacity="0.62"/>
+      <ellipse cx="609" cy="335" rx="18" ry="18" fill="#2a0f4a" opacity="0.47"/>
+      <ellipse cx="530" cy="265" rx="15" ry="12" fill="#4c1d95" opacity="0.64"/>
+      <ellipse cx="514" cy="352" rx="7" ry="6" fill="#6d28d9" opacity="0.66"/>
+      <ellipse cx="465" cy="324" rx="18" ry="14" fill="#3b1668" opacity="0.51"/>
+    </g>
+    <g class="art-canopy-glow" opacity=".55" filter="url(#blurM)">
+      <ellipse cx="300" cy="170" rx="190" ry="110" fill="#6d28d9"/>
+      <ellipse cx="470" cy="220" rx="130" ry="80" fill="#7c3aed"/>
+      <ellipse cx="150" cy="240" rx="110" ry="70" fill="#5b21b6"/>
+    </g>
+    <g class="art-blossoms" fill="#e9d5ff">
+      <circle cx="250" cy="120" r="7" opacity=".5"/><circle cx="330" cy="96" r="5" opacity=".45"/>
+      <circle cx="410" cy="150" r="6" opacity=".4"/><circle cx="170" cy="190" r="5" opacity=".4"/>
+      <circle cx="480" cy="110" r="4" opacity=".35"/><circle cx="120" cy="260" r="6" opacity=".35"/>
+      <circle cx="540" cy="210" r="5" opacity=".3"/><circle cx="300" cy="210" r="4" opacity=".3"/>
+      <circle cx="210" cy="90" r="4" opacity=".4"/><circle cx="380" cy="250" r="5" opacity=".3"/>
+    </g>
+    <g class="art-vines" stroke="#3b1668" stroke-width="4" fill="none" opacity=".9">
+      <path d="M300 322 C320 380 300 430 316 480"/>
+      <path d="M330 360 C352 400 344 440 360 470"/>
+      <path d="M286 380 C264 420 274 452 258 486"/>
+    </g>
+  </g>
+
+  <g class="art-wisteria">
+    <path d="M250 352 C258 412.0 242 457.0 254.0 502" stroke="#3b1668" stroke-width="2" fill="none" opacity=".7"/>
+    <ellipse cx="254.0" cy="484" rx="26" ry="34" fill="#7c3aed" opacity=".22" filter="url(#blurM)"/>
+    <circle cx="258" cy="469" r="5.3" fill="#e9d5ff" opacity="0.78"/>
+    <circle cx="263" cy="491" r="2.7" fill="#c084fc" opacity="0.45"/>
+    <circle cx="253" cy="491" r="4.4" fill="#c084fc" opacity="0.41"/>
+    <circle cx="245" cy="490" r="5.7" fill="#d8b4fe" opacity="0.47"/>
+    <circle cx="264" cy="496" r="4.7" fill="#c084fc" opacity="0.46"/>
+    <circle cx="269" cy="502" r="5.2" fill="#c084fc" opacity="0.79"/>
+    <circle cx="247" cy="460" r="4.4" fill="#c084fc" opacity="0.48"/>
+    <circle cx="269" cy="493" r="5.9" fill="#d8b4fe" opacity="0.53"/>
+    <circle cx="250" cy="495" r="3.0" fill="#e9d5ff" opacity="0.55"/>
+    <circle cx="264" cy="476" r="4.6" fill="#a855f7" opacity="0.43"/>
+    <circle cx="249" cy="489" r="4.9" fill="#c084fc" opacity="0.62"/>
+    <circle cx="261" cy="499" r="5.9" fill="#e9d5ff" opacity="0.83"/>
+    <path d="M330 352 C340 424.0 320 478.0 335.0 532" stroke="#3b1668" stroke-width="2" fill="none" opacity=".7"/>
+    <ellipse cx="335.0" cy="514" rx="26" ry="34" fill="#7c3aed" opacity=".22" filter="url(#blurM)"/>
+    <circle cx="330" cy="514" r="4.4" fill="#d8b4fe" opacity="0.56"/>
+    <circle cx="338" cy="532" r="2.7" fill="#c084fc" opacity="0.68"/>
+    <circle cx="350" cy="527" r="3.4" fill="#d8b4fe" opacity="0.55"/>
+    <circle cx="330" cy="509" r="5.2" fill="#e9d5ff" opacity="0.67"/>
+    <circle cx="344" cy="516" r="3.5" fill="#d8b4fe" opacity="0.83"/>
+    <circle cx="322" cy="517" r="4.6" fill="#c084fc" opacity="0.55"/>
+    <circle cx="349" cy="508" r="3.6" fill="#a855f7" opacity="0.54"/>
+    <circle cx="345" cy="504" r="5.0" fill="#a855f7" opacity="0.85"/>
+    <circle cx="324" cy="530" r="6.0" fill="#d8b4fe" opacity="0.41"/>
+    <circle cx="343" cy="517" r="3.4" fill="#d8b4fe" opacity="0.47"/>
+    <circle cx="350" cy="504" r="5.3" fill="#a855f7" opacity="0.78"/>
+    <circle cx="323" cy="500" r="5.8" fill="#d8b4fe" opacity="0.45"/>
+    <path d="M430 352 C436 396.0 424 429.0 433.0 462" stroke="#3b1668" stroke-width="2" fill="none" opacity=".7"/>
+    <ellipse cx="433.0" cy="444" rx="26" ry="34" fill="#7c3aed" opacity=".22" filter="url(#blurM)"/>
+    <circle cx="431" cy="455" r="5.5" fill="#a855f7" opacity="0.46"/>
+    <circle cx="447" cy="435" r="3.1" fill="#d8b4fe" opacity="0.83"/>
+    <circle cx="439" cy="448" r="3.5" fill="#d8b4fe" opacity="0.58"/>
+    <circle cx="422" cy="445" r="6.0" fill="#c084fc" opacity="0.68"/>
+    <circle cx="433" cy="447" r="2.8" fill="#a855f7" opacity="0.63"/>
+    <circle cx="435" cy="440" r="2.7" fill="#a855f7" opacity="0.71"/>
+    <circle cx="438" cy="429" r="3.8" fill="#a855f7" opacity="0.78"/>
+    <circle cx="425" cy="419" r="5.0" fill="#a855f7" opacity="0.69"/>
+    <circle cx="436" cy="461" r="4.4" fill="#a855f7" opacity="0.55"/>
+    <circle cx="426" cy="449" r="4.3" fill="#a855f7" opacity="0.56"/>
+    <circle cx="438" cy="430" r="5.4" fill="#a855f7" opacity="0.82"/>
+    <circle cx="423" cy="424" r="4.1" fill="#a855f7" opacity="0.83"/>
+  </g>
+  <g class="art-lanterns">
+    <g class="lantern lantern--1">
+      <path d="M318 322 L318 372" stroke="#2a1338" stroke-width="3"/>
+      <circle cx="318" cy="404" r="54" fill="url(#glowWarm)" filter="url(#blurM)"/>
+      <rect x="298" y="374" width="40" height="56" rx="12" fill="url(#lampG)"/>
+      <rect x="294" y="370" width="48" height="9" rx="4" fill="#2a1338"/>
+      <rect x="302" y="428" width="32" height="7" rx="3" fill="#2a1338"/>
+    </g>
+    <g class="lantern lantern--2">
+      <path d="M402 306 L402 470" stroke="#2a1338" stroke-width="3"/>
+      <circle cx="402" cy="506" r="60" fill="url(#glowWarm)" filter="url(#blurM)"/>
+      <rect x="379" y="472" width="46" height="64" rx="14" fill="url(#lampG)"/>
+      <rect x="375" y="468" width="54" height="10" rx="5" fill="#2a1338"/>
+      <rect x="384" y="534" width="36" height="8" rx="4" fill="#2a1338"/>
+    </g>
+    <g class="lantern lantern--3">
+      <path d="M60 380 L60 330" stroke="#2a1338" stroke-width="3"/>
+      <circle cx="60" cy="372" r="48" fill="url(#glowWarm)" filter="url(#blurM)"/>
+      <rect x="42" y="344" width="36" height="50" rx="11" fill="url(#lampG)"/>
+      <rect x="38" y="340" width="44" height="8" rx="4" fill="#2a1338"/>
+    </g>
+  </g>
+
+  <g class="art-water">
+    <rect x="0" y="664" width="1600" height="150" fill="url(#waterG)"/>
+    <g filter="url(#blurM)" opacity=".5">
+      <rect x="1150" y="668" width="30" height="110" fill="#ffb765" opacity=".55"/>
+      <rect x="1210" y="668" width="18" height="96" fill="#ffc078" opacity=".4"/>
+      <rect x="1320" y="668" width="34" height="120" fill="#ffb765" opacity=".55"/>
+      <rect x="1390" y="668" width="16" height="88" fill="#ffc078" opacity=".35"/>
+      <rect x="1490" y="668" width="26" height="104" fill="#ffb765" opacity=".45"/>
+    </g>
+    <g filter="url(#blurM)" opacity=".35">
+      <ellipse cx="420" cy="690" rx="70" ry="10" fill="#c4b5fd"/>
+      <ellipse cx="420" cy="716" rx="46" ry="7" fill="#a78bfa"/>
+      <ellipse cx="420" cy="738" rx="26" ry="5" fill="#8b5cf6"/>
+    </g>
+    <g stroke="#a855f7" fill="none" opacity=".18">
+      <path d="M1080 700 Q1200 694 1320 700 T1560 698"/>
+      <path d="M1120 736 Q1240 730 1360 736 T1600 734"/>
+      <path d="M1060 772 Q1180 766 1300 772 T1540 770"/>
+      <path d="M900 690 Q980 686 1060 690"/>
+      <path d="M860 724 Q940 720 1020 724"/>
+    </g>
+    <g fill="#1a0f2a" opacity=".9">
+      <ellipse cx="1080" cy="666" rx="70" ry="20"/>
+      <ellipse cx="1160" cy="670" rx="46" ry="14"/>
+      <ellipse cx="1030" cy="672" rx="34" ry="11"/>
+    </g>
+    <g fill="#2b1740">
+      <ellipse cx="1062" cy="656" rx="34" ry="14"/>
+      <ellipse cx="1118" cy="660" rx="26" ry="11"/>
+      <ellipse cx="1006" cy="662" rx="20" ry="9"/>
+    </g>
+  </g>
+
+  <g class="art-dais">
+    <ellipse cx="800" cy="748" rx="270" ry="58" fill="#150c22" opacity=".9"/>
+    <ellipse cx="800" cy="738" rx="262" ry="54" fill="#241435"/>
+    <ellipse cx="800" cy="730" rx="248" ry="48" fill="#2f1b45"/>
+    <ellipse cx="800" cy="724" rx="214" ry="38" fill="#392352" opacity=".9"/>
+    <g fill="#4a2f66" opacity=".7">
+      <ellipse cx="700" cy="724" rx="46" ry="12"/><ellipse cx="820" cy="714" rx="40" ry="11"/>
+      <ellipse cx="900" cy="732" rx="36" ry="10"/><ellipse cx="760" cy="742" rx="50" ry="12"/>
+    </g>
+    <ellipse cx="800" cy="712" rx="150" ry="20" fill="#8b5cf6" opacity=".16" filter="url(#blurM)"/>
+  </g>
+  <path d="M690 905 L806 706 L902 706 L1000 905 Z" fill="url(#pathG)"/>
+  <path d="M706 905 L812 712 L896 712 L984 905 Z" fill="#2c1a3a" opacity=".6"/>
+  <g class="art-cobbles" fill="#4a2f66">
+    <ellipse cx="790" cy="872" rx="62" ry="16"/>
+    <ellipse cx="880" cy="880" rx="52" ry="14"/>
+    <ellipse cx="820" cy="840" rx="48" ry="13"/>
+    <ellipse cx="900" cy="836" rx="40" ry="11"/>
+    <ellipse cx="856" cy="800" rx="40" ry="11"/>
+    <ellipse cx="806" cy="792" rx="34" ry="10"/>
+    <ellipse cx="872" cy="762" rx="32" ry="9"/>
+    <ellipse cx="828" cy="748" rx="26" ry="8"/>
+  </g>
+  <g class="art-cobble-light" fill="#8b5cf6" opacity=".22" filter="url(#blurS)">
+    <ellipse cx="790" cy="870" rx="40" ry="8"/>
+    <ellipse cx="820" cy="838" rx="30" ry="6"/>
+    <ellipse cx="856" cy="798" rx="24" ry="5"/>
+  </g>
+
+  <g class="art-bushes">
+    <ellipse cx="70" cy="852" rx="150" ry="86" fill="#170b28"/>
+    <ellipse cx="188" cy="874" rx="120" ry="70" fill="#1d0f33"/>
+    <ellipse cx="20" cy="884" rx="110" ry="66" fill="#120820"/>
+    <path d="M-10 800c40-26 92-28 138-8" stroke="#6d28d9" stroke-width="3" fill="none" opacity=".45"/>
+    <ellipse cx="1330" cy="884" rx="170" ry="80" fill="#150a24"/>
+    <ellipse cx="1470" cy="892" rx="140" ry="70" fill="#1b0d2e"/>
+    <path d="M1200 836c46-24 96-24 142-4" stroke="#7c3aed" stroke-width="3" fill="none" opacity=".35"/>
+  </g>
+  <g class="art-plants" stroke-linecap="round" fill="none">
+    <g stroke="#2b1740" stroke-width="6">
+      <path d="M60 900 C70 850 40 820 20 800"/>
+      <path d="M90 900 C96 856 120 830 140 812"/>
+      <path d="M120 900 C118 862 100 840 84 824"/>
+      <path d="M1010 900 C1000 856 1024 826 1046 806"/>
+      <path d="M1050 900 C1054 862 1076 838 1096 822"/>
+      <path d="M1540 900 C1530 856 1552 828 1574 810"/>
+      <path d="M1580 900 C1584 864 1596 844 1600 834"/>
+    </g>
+    <g stroke="#7c3aed" stroke-width="2" opacity=".5">
+      <path d="M60 900 C70 850 40 820 20 800"/>
+      <path d="M1010 900 C1000 856 1024 826 1046 806"/>
+    </g>
+  </g>
+
+  <g class="art-cat">
+    <ellipse cx="1186" cy="742" rx="86" ry="20" fill="#0a0512" opacity=".55" filter="url(#blurM)"/>
+    <ellipse cx="1186" cy="716" rx="74" ry="36" fill="#e6ddf3"/>
+    <circle cx="1136" cy="694" r="34" fill="#efe7fa"/>
+    <path d="M1112 674 L1104 646 L1128 660 Z" fill="#efe7fa"/>
+    <path d="M1152 668 L1160 640 L1172 668 Z" fill="#efe7fa"/>
+    <path d="M1112 674 L1106 654 L1122 664 Z" fill="#f9a8d4" opacity=".8"/>
+    <path d="M1154 670 L1159 650 L1167 670 Z" fill="#f9a8d4" opacity=".8"/>
+    <path d="M1118 696 q8 6 16 0" stroke="#3b2a52" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M1146 694 q8 6 16 0" stroke="#3b2a52" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M1134 706 q6 5 12 0" stroke="#3b2a52" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="1122" cy="706" rx="7" ry="4" fill="#f9a8d4" opacity=".6"/>
+    <ellipse cx="1156" cy="704" rx="7" ry="4" fill="#f9a8d4" opacity=".6"/>
+    <path d="M1246 726 C1272 722 1278 700 1262 688" stroke="#e6ddf3" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <ellipse cx="1150" cy="726" rx="26" ry="12" fill="#d8cbe8"/>
+    <ellipse cx="1218" cy="728" rx="24" ry="11" fill="#d8cbe8"/>
+  </g>
+
+  <g class="art-butterflies">
+    <g class="bfly bfly--1" transform="translate(600 330)">
+      <path d="M0 0 C-26 -22 -44 -6 -34 14 C-26 30 -8 24 0 6" fill="#c084fc" opacity=".9"/>
+      <path d="M0 0 C26 -22 44 -6 34 14 C26 30 8 24 0 6" fill="#a855f7" opacity=".9"/>
+      <path d="M0 0 C-14 10 -12 24 -2 28 C4 20 4 10 0 0" fill="#e9d5ff" opacity=".8"/>
+      <path d="M0 0 C14 10 12 24 2 28 C-4 20 -4 10 0 0" fill="#d8b4fe" opacity=".8"/>
+    </g>
+    <g class="bfly bfly--2" transform="translate(760 230) scale(.75)">
+      <path d="M0 0 C-26 -22 -44 -6 -34 14 C-26 30 -8 24 0 6" fill="#e879f9" opacity=".85"/>
+      <path d="M0 0 C26 -22 44 -6 34 14 C26 30 8 24 0 6" fill="#c026d3" opacity=".85"/>
+      <path d="M0 0 C-14 10 -12 24 -2 28 C4 20 4 10 0 0" fill="#f5d0fe" opacity=".8"/>
+      <path d="M0 0 C14 10 12 24 2 28 C-4 20 -4 10 0 0" fill="#f0abfc" opacity=".8"/>
+    </g>
+    <g class="bfly bfly--3" transform="translate(520 470) scale(.6)">
+      <path d="M0 0 C-26 -22 -44 -6 -34 14 C-26 30 -8 24 0 6" fill="#a78bfa" opacity=".8"/>
+      <path d="M0 0 C26 -22 44 -6 34 14 C26 30 8 24 0 6" fill="#8b5cf6" opacity=".8"/>
+      <path d="M0 0 C-14 10 -12 24 -2 28 C4 20 4 10 0 0" fill="#ede9fe" opacity=".8"/>
+      <path d="M0 0 C14 10 12 24 2 28 C-4 20 -4 10 0 0" fill="#ddd6fe" opacity=".8"/>
+    </g>
+    <g class="bfly bfly--4" transform="translate(980 300) scale(.55)">
+      <path d="M0 0 C-26 -22 -44 -6 -34 14 C-26 30 -8 24 0 6" fill="#d8b4fe" opacity=".75"/>
+      <path d="M0 0 C26 -22 44 -6 34 14 C26 30 8 24 0 6" fill="#a855f7" opacity=".75"/>
+    </g>
+  </g>
+
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+  <rect width="1600" height="900" filter="url(#grain)" opacity=".55"/>
+</svg>
+            <div class="scene__fog"></div>
+            <div class="scene__petals"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="scene__fireflies"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="scene__rain"></div>
+            <div class="scene__snow"></div>
+          </div>
+
+          <p class="world__greeting" id="home-greeting">Good evening</p>
+
+          <!-- companion -->
+          <div class="companion" id="companion" data-emotion="neutral" data-pose="idle" data-time="night" data-weather="clear">
+            <div class="companion__glow"></div>
+            <div class="companion__bubble" id="companion-bubble" hidden>
+              <p class="bubble__text">Welcome back! I missed you.</p>
+              <span class="bubble__tail"></span>
+            </div>
+            <div class="companion__shadow"></div>
+
+            <svg class="robot" viewBox="0 0 460 520" aria-hidden="true">
+  <defs>
+    <linearGradient id="shellG" x1="0.12" y1="0" x2="0.88" y2="1">
+      <stop offset="0" stop-color="#fbf7ff"/>
+      <stop offset="0.32" stop-color="#e8dcfb"/>
+      <stop offset="0.62" stop-color="#c9b0ee"/>
+      <stop offset="0.85" stop-color="#a184d6"/>
+      <stop offset="1" stop-color="#7d5cb8"/>
+    </linearGradient>
+    <linearGradient id="rimG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4ecff"/>
+      <stop offset="0.5" stop-color="#cdb6ef"/>
+      <stop offset="1" stop-color="#8f6cc9"/>
+    </linearGradient>
+    <linearGradient id="visorG" x1="0.25" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#241436"/>
+      <stop offset="0.42" stop-color="#0d0618"/>
+      <stop offset="1" stop-color="#040209"/>
+    </linearGradient>
+    <linearGradient id="earG" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#b184f2"/>
+      <stop offset="0.45" stop-color="#6d3fc0"/>
+      <stop offset="1" stop-color="#2a1447"/>
+    </linearGradient>
+    <linearGradient id="accentG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5e8ff"/>
+      <stop offset="0.45" stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="eyeG" cx="0.5" cy="0.3" r="0.75">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.4" stop-color="#efe0ff"/>
+      <stop offset="1" stop-color="#b57bff"/>
+    </radialGradient>
+    <radialGradient id="blushG">
+      <stop offset="0" stop-color="#f0abfc" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#f0abfc" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="chestGlow">
+      <stop offset="0" stop-color="#c084fc" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="botGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="botSoft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <ellipse class="robot__shadow" cx="230" cy="500" rx="152" ry="20" fill="#05030a" opacity="0.6" filter="url(#botSoft)"/>
+
+  <g class="robot__bounce">
+    <g class="robot__wheels robot__legs">
+      <g class="robot__leg robot__leg--l">
+        <rect class="robot__strut" x="132" y="398" width="28" height="46" rx="14" fill="url(#rimG)"/>
+      <g class="robot__wheel robot__wheel--l">
+        <circle cx="146" cy="452" r="57" fill="url(#rimG)"/>
+        <circle cx="146" cy="452" r="57" fill="none" stroke="#f4ecff" stroke-width="2" opacity="0.45"/>
+        <circle cx="146" cy="452" r="44" fill="#130b20"/>
+        <circle cx="146" cy="452" r="35" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.75"/>
+        <circle cx="146" cy="452" r="21" fill="#241537"/>
+        <circle cx="146" cy="452" r="10" fill="#c4b5fd" opacity="0.85"/>
+        <path d="M108 424a48 48 0 0 1 40 -18" stroke="#ffffff" stroke-width="4" fill="none" opacity="0.5" stroke-linecap="round"/>
+      </g>
+      </g>
+      <g class="robot__leg robot__leg--r">
+        <rect class="robot__strut" x="300" y="398" width="28" height="46" rx="14" fill="url(#rimG)"/>
+      <g class="robot__wheel robot__wheel--r">
+        <circle cx="314" cy="452" r="57" fill="url(#rimG)"/>
+        <circle cx="314" cy="452" r="57" fill="none" stroke="#f4ecff" stroke-width="2" opacity="0.45"/>
+        <circle cx="314" cy="452" r="44" fill="#130b20"/>
+        <circle cx="314" cy="452" r="35" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.75"/>
+        <circle cx="314" cy="452" r="21" fill="#241537"/>
+        <circle cx="314" cy="452" r="10" fill="#c4b5fd" opacity="0.85"/>
+        <path d="M276 424a48 48 0 0 1 40 -18" stroke="#ffffff" stroke-width="4" fill="none" opacity="0.5" stroke-linecap="round"/>
+      </g>
+      </g>
+    </g>
+
+    <g class="robot__arm robot__arm--l">
+      <rect class="robot__upper" x="100" y="330" width="46" height="56" rx="23" fill="url(#shellG)"/>
+      <rect class="robot__upper" x="100" y="330" width="46" height="56" rx="23" fill="none" stroke="#f7f1ff" stroke-width="2" opacity="0.35"/>
+      <g class="robot__forearm">
+        <rect class="robot__lower" x="104" y="376" width="38" height="40" rx="19" fill="url(#shellG)"/>
+        <circle class="robot__hand" cx="123" cy="424" r="22" fill="#150d24"/>
+        <circle class="robot__hand" cx="123" cy="424" r="22" fill="none" stroke="#a855f7" stroke-width="2.5" opacity="0.65"/>
+        <circle class="robot__palm" cx="123" cy="424" r="8" fill="#c4b5fd" opacity="0.6"/>
+        <g class="robot__fingers">
+          <rect x="108" y="398" width="7" height="17" rx="3.5" fill="#1c1130"/>
+          <rect x="117" y="394" width="7" height="20" rx="3.5" fill="#1c1130"/>
+          <rect x="126" y="395" width="7" height="19" rx="3.5" fill="#1c1130"/>
+          <rect x="135" y="400" width="7" height="15" rx="3.5" fill="#1c1130"/>
+          <rect x="143" y="410" width="14" height="7" rx="3.5" fill="#1c1130" transform="rotate(24 150 413)"/>
+        </g>
+      </g>
+    </g>
+    <g class="robot__arm robot__arm--r">
+      <rect class="robot__upper" x="314" y="330" width="46" height="56" rx="23" fill="url(#shellG)"/>
+      <rect class="robot__upper" x="314" y="330" width="46" height="56" rx="23" fill="none" stroke="#f7f1ff" stroke-width="2" opacity="0.35"/>
+      <g class="robot__forearm">
+        <rect class="robot__lower" x="318" y="376" width="38" height="40" rx="19" fill="url(#shellG)"/>
+        <circle class="robot__hand" cx="337" cy="424" r="22" fill="#150d24"/>
+        <circle class="robot__hand" cx="337" cy="424" r="22" fill="none" stroke="#a855f7" stroke-width="2.5" opacity="0.65"/>
+        <circle class="robot__palm" cx="337" cy="424" r="8" fill="#c4b5fd" opacity="0.6"/>
+        <g class="robot__fingers">
+          <rect x="322" y="398" width="7" height="17" rx="3.5" fill="#1c1130"/>
+          <rect x="331" y="394" width="7" height="20" rx="3.5" fill="#1c1130"/>
+          <rect x="340" y="395" width="7" height="19" rx="3.5" fill="#1c1130"/>
+          <rect x="349" y="400" width="7" height="15" rx="3.5" fill="#1c1130"/>
+          <rect x="300" y="410" width="14" height="7" rx="3.5" fill="#1c1130" transform="rotate(-24 307 413)"/>
+        </g>
+      </g>
+    </g>
+
+    <rect x="206" y="300" width="48" height="30" rx="14" fill="#1a1029"/>
+
+    <g class="robot__body">
+      <rect x="144" y="318" width="172" height="120" rx="54" fill="url(#shellG)"/>
+      <rect x="144" y="318" width="172" height="120" rx="54" fill="none" stroke="#f7f1ff" stroke-width="2" opacity="0.4"/>
+      <path d="M182 332h96a42 42 0 0 1 42 42v6a42 42 0 0 1-42 42h-96a42 42 0 0 1-42-42v-6a42 42 0 0 1 42-42z" fill="#120b1e"/>
+      <ellipse cx="230" cy="380" rx="54" ry="46" fill="url(#chestGlow)" opacity="0.5" filter="url(#botSoft)"/>
+      <g class="robot__chest" filter="url(#botGlow)">
+        <path d="M230 352c-9-12-30-12-30 3 0 9 10 15 22 13-4 8-2 14 8 14s12-6 8-14c12 2 22-4 22-13 0-15-21-15-30-3z" fill="url(#accentG)" opacity="0.95"/>
+      </g>
+      <path d="M162 326c12-7 26-9 40-9" stroke="#ffffff" stroke-width="4" fill="none" opacity="0.5" stroke-linecap="round"/>
+    </g>
+
+    <g class="robot__head">
+      <g class="robot__ear robot__ear--l">
+        <path d="M104 190C62 172 24 116 6 42c42 24 90 68 122 116z" fill="url(#earG)" stroke="#b184f2" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M98 174c-24-28-44-62-56-94 24 16 52 42 74 74z" fill="#e9d5ff" opacity="0.4" filter="url(#botSoft)"/>
+      </g>
+      <g class="robot__ear robot__ear--r">
+        <path d="M356 190c42-18 80-74 98-148-42 24-90 68-122 116z" fill="url(#earG)" stroke="#b184f2" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M362 174c24-28 44-62 56-94-24 16-52 42-74 74z" fill="#e9d5ff" opacity="0.4" filter="url(#botSoft)"/>
+      </g>
+
+      <g class="robot__pod robot__pod--l">
+        <rect x="36" y="212" width="54" height="116" rx="27" fill="#130b20" stroke="#7c3aed" stroke-width="3"/>
+        <circle cx="63" cy="270" r="17" fill="none" stroke="#c084fc" stroke-width="4" opacity="0.9" filter="url(#botGlow)"/>
+      </g>
+      <g class="robot__pod robot__pod--r">
+        <rect x="370" y="212" width="54" height="116" rx="27" fill="#130b20" stroke="#7c3aed" stroke-width="3"/>
+        <circle cx="397" cy="270" r="17" fill="none" stroke="#c084fc" stroke-width="4" opacity="0.9" filter="url(#botGlow)"/>
+      </g>
+
+      <rect class="robot__helmet" x="66" y="86" width="328" height="272" rx="108" fill="url(#shellG)"/>
+      <rect class="robot__helmet-rim" x="66" y="86" width="328" height="272" rx="108" fill="none" stroke="#fbf7ff" stroke-width="3" opacity="0.55"/>
+      <rect x="66" y="86" width="328" height="272" rx="108" fill="none" stroke="#a855f7" stroke-width="2" opacity="0.35"/>
+      <path d="M104 132c26-24 60-34 96-36" stroke="#ffffff" stroke-width="7" fill="none" opacity="0.55" stroke-linecap="round"/>
+      <path d="M96 316c36 26 88 34 134 34s98-8 134-34" stroke="#a78bfa" stroke-width="3" fill="none" opacity="0.28" stroke-linecap="round"/>
+
+      <rect class="robot__visor" x="92" y="110" width="276" height="216" rx="88" fill="url(#visorG)"/>
+      <rect class="robot__visor-edge" x="92" y="110" width="276" height="216" rx="88" fill="none" stroke="#6d4aa0" stroke-width="3" opacity="0.9"/>
+      <ellipse class="robot__visor-gloss" cx="182" cy="146" rx="92" ry="32" fill="#ffffff" opacity="0.08"/>
+
+      <g class="robot__brows">
+        <path class="robot__brow robot__brow--l" d="M128 186q26-12 52-4" fill="none" stroke="#c4b5fd" stroke-width="7" stroke-linecap="round" opacity="0"/>
+        <path class="robot__brow robot__brow--r" d="M280 182q26-8 52 4" fill="none" stroke="#c4b5fd" stroke-width="7" stroke-linecap="round" opacity="0"/>
+      </g>
+
+      <g class="robot__eyes">
+        <g class="robot__eye robot__eye--happy">
+          <path d="M132 226c16-34 44-34 60 0" fill="none" stroke="url(#eyeG)" stroke-width="18" stroke-linecap="round"/>
+          <path d="M268 226c16-34 44-34 60 0" fill="none" stroke="url(#eyeG)" stroke-width="18" stroke-linecap="round"/>
+          <path d="M136 218c12-20 30-24 44-14" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+          <path d="M272 218c12-20 30-24 44-14" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+          <path d="M126 236l-8 10M334 236l8 10" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+        </g>
+        <g class="robot__eye robot__eye--heart">
+          <path d="M162 240c-10-12-26-10-26 2 0 10 14 18 26 26 12-8 26-16 26-26 0-12-16-14-26-2z" fill="#f0abfc" filter="url(#botGlow)"/>
+          <path d="M298 240c-10-12-26-10-26 2 0 10 14 18 26 26 12-8 26-16 26-26 0-12-16-14-26-2z" fill="#f0abfc" filter="url(#botGlow)"/>
+        </g>
+        <g class="robot__eye robot__eye--open">
+          <ellipse cx="162" cy="226" rx="25" ry="31" fill="url(#eyeG)"/>
+          <ellipse cx="298" cy="226" rx="25" ry="31" fill="url(#eyeG)"/>
+          <circle class="robot__pupil" cx="162" cy="232" r="10" fill="#2a1046"/>
+          <circle class="robot__pupil" cx="298" cy="232" r="10" fill="#2a1046"/>
+          <circle cx="155" cy="219" r="5.5" fill="#ffffff" opacity="0.9"/>
+          <circle cx="291" cy="219" r="5.5" fill="#ffffff" opacity="0.9"/>
+        </g>
+      </g>
+
+      <ellipse class="robot__blush robot__blush--l" cx="120" cy="264" rx="24" ry="11" fill="url(#blushG)"/>
+      <ellipse class="robot__blush robot__blush--r" cx="340" cy="264" rx="24" ry="11" fill="url(#blushG)"/>
+
+      <g class="robot__mouths">
+        <path class="robot__mouth robot__mouth--smile" d="M212 270q18 16 36 0" fill="none" stroke="#e9d5ff" stroke-width="5.5" stroke-linecap="round"/>
+        <path class="robot__mouth robot__mouth--flat" d="M214 274h32" fill="none" stroke="#c4b5fd" stroke-width="5.5" stroke-linecap="round"/>
+        <path class="robot__mouth robot__mouth--frown" d="M212 278q18-15 36 0" fill="none" stroke="#fda4af" stroke-width="5.5" stroke-linecap="round"/>
+        <ellipse class="robot__mouth robot__mouth--o" cx="230" cy="274" rx="11" ry="13" fill="#c4b5fd"/>
+        <path class="robot__mouth robot__mouth--laugh" d="M204 264q26 34 52 0z" fill="#c084fc" stroke="#e9d5ff" stroke-width="3" stroke-linejoin="round"/>
+        <path class="robot__mouth robot__mouth--grit" d="M208 272h44" fill="none" stroke="#fda4af" stroke-width="7" stroke-linecap="round"/>
+      </g>
+
+      <g class="robot__zzz">
+        <text x="352" y="140" font-size="30" fill="#c4b5fd">z</text>
+        <text x="378" y="108" font-size="22" fill="#a78bfa">z</text>
+        <text x="398" y="80" font-size="16" fill="#8b5cf6">z</text>
+      </g>
+    </g>
+  </g>
+</svg>
+
+          </div>
+
+          <nav class="deck-nav" aria-label="Primary">
+            <button type="button" data-view="home" class="is-on">Home</button>
+            <button type="button" data-view="dashboard">Apps</button>
+            <button type="button" data-view="games">Games</button>
+            <button type="button" data-view="dashboard">Tools</button>
+            <button type="button" data-view="plugins">Plugins</button>
+            <button type="button" data-view="settings">Settings</button>
+          </nav>
+
+          <div class="world-hud deck">
+            <div class="deck__col deck__col--l">
+              <section class="deck-card deck-clock">
+                <div class="deck-clock__top">
+                  <div class="world-clock">
+                    <div class="world-clock__row">
+                      <span id="home-clock-time">10:45</span>
+                      <span class="world-clock__ampm" id="home-clock-ampm">PM</span>
+                    </div>
+                    <div class="world-clock__date" id="home-clock-date">Sat, Apr 26, 2025</div>
+                  </div>
+                  <div class="deck-weather">
+                    <div class="float-card__icon" id="home-weather-icon">⛅</div>
+                    <div>
+                      <strong id="home-weather-temp">24°</strong>
+                      <span id="home-weather-cond">Partly cloudy</span>
+                      <small id="home-weather-place">—</small>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="deck-card deck-features">
+                <header><h4>HYDRA Features</h4><button class="deck-link" type="button" data-view="dashboard">Explore all →</button></header>
+                <div class="feature-grid">
+                  <button class="feature-tile" type="button" data-view="assistant"><svg class="icon"><use href="#i-sparkles"/></svg><span>AI Assistant</span></button>
+                  <button class="feature-tile" type="button" data-view="vision"><svg class="icon"><use href="#i-eye"/></svg><span>Vision AI</span></button>
+                  <button class="feature-tile" type="button" data-deck-action="emotion"><svg class="icon"><use href="#i-scan"/></svg><span>Emotion Engine</span></button>
+                  <button class="feature-tile" type="button" data-view="memories"><svg class="icon"><use href="#i-book"/></svg><span>Memory</span></button>
+                  <button class="feature-tile" type="button" data-deck-action="voice"><svg class="icon"><use href="#i-mic"/></svg><span>Voice Control</span></button>
+                  <button class="feature-tile" type="button" data-view="device"><svg class="icon"><use href="#i-cpu"/></svg><span>Computer Control</span></button>
+                  <button class="feature-tile" type="button" data-deck-action="search"><svg class="icon"><use href="#i-search"/></svg><span>Smart Search</span></button>
+                  <button class="feature-tile" type="button" data-view="plugins"><svg class="icon"><use href="#i-puzzle"/></svg><span>Plugins</span></button>
+                  <button class="feature-tile" type="button" data-view="games"><svg class="icon"><use href="#i-gamepad"/></svg><span>Games &amp; Fun</span></button>
+                  <button class="feature-tile" type="button" data-view="dashboard"><svg class="icon"><use href="#i-check"/></svg><span>Productivity</span></button>
+                  <button class="feature-tile" type="button" data-view="home"><svg class="icon"><use href="#i-cloud"/></svg><span>Live World</span></button>
+                  <button class="feature-tile" type="button" data-view="market"><svg class="icon"><use href="#i-layers"/></svg><span>More…</span></button>
+                </div>
+              </section>
+
+              <section class="deck-card deck-activity">
+                <header><h4>Recent Activity</h4><button class="deck-link" type="button" data-view="stats">View all →</button></header>
+                <ul id="home-activity-list"></ul>
+                <div class="activity-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              </section>
+
+              <section class="deck-card card-music deck-music" id="home-music">
+                <div class="card-music__art"><svg class="icon"><use href="#i-music"/></svg></div>
+                <div class="grow">
+                  <strong id="home-music-title">Nebula Drift</strong>
+                  <span id="home-music-artist">HYDRA generative</span>
+                </div>
+                <div class="card-music__ctl">
+                  <button class="icon-btn" id="home-music-prev" type="button" aria-label="Previous"><svg class="icon"><use href="#i-prev"/></svg></button>
+                  <button class="icon-btn" id="home-music-toggle" type="button" aria-label="Play"><svg class="icon"><use href="#i-play"/></svg></button>
+                  <button class="icon-btn" id="home-music-next" type="button" aria-label="Next"><svg class="icon"><use href="#i-next"/></svg></button>
+                </div>
+                <div class="card-music__bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+              </section>
+            </div>
+
+            <div class="deck__col deck__col--r">
+              <div class="deck-stats">
+                <article class="stat-mini">
+                  <span><svg class="icon"><use href="#i-cpu"/></svg> CPU</span>
+                  <b id="home-cpu">18%</b>
+                  <div class="spark" data-spark="cpu"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                </article>
+                <article class="stat-mini">
+                  <span><svg class="icon"><use href="#i-activity"/></svg> RAM</span>
+                  <b id="home-ram">42%</b>
+                  <div class="spark" data-spark="ram"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                </article>
+                <article class="stat-mini">
+                  <span><svg class="icon"><use href="#i-wifi"/></svg> Net</span>
+                  <b id="home-net">12.5 MB/s</b>
+                  <div class="spark" data-spark="net"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                </article>
+                <div class="sys-hidden" hidden>
+                  <span id="home-cpu-bar"></span><span id="home-ram-bar"></span>
+                  <span id="home-battery">87%</span><span id="home-battery-bar"></span>
+                </div>
+              </div>
+
+              <section class="deck-card deck-calendar">
+                <header><h4>Calendar</h4><button class="deck-link" type="button" data-view="dashboard">View all →</button></header>
+                <ul id="home-upcoming-list"></ul>
+              </section>
+
+              <section class="deck-card deck-tasks">
+                <header><h4>Tasks</h4><button class="deck-link" type="button" id="home-add-task">Add task +</button></header>
+                <ul id="home-task-list"></ul>
+              </section>
+
+              <section class="deck-card deck-ent">
+                <header><h4>Entertainment</h4><span class="chip">See all</span></header>
+                <div class="ent-row">
+                  <a href="https://www.youtube.com" target="_blank" rel="noopener"><b class="ent-ico ent-yt">▶</b><span>YouTube</span></a>
+                  <a href="https://open.spotify.com" target="_blank" rel="noopener"><b class="ent-ico ent-sp">◉</b><span>Spotify</span></a>
+                  <a href="https://www.netflix.com" target="_blank" rel="noopener"><b class="ent-ico ent-nf">N</b><span>Netflix</span></a>
+                  <a href="https://discord.com/app" target="_blank" rel="noopener"><b class="ent-ico ent-dc">◍</b><span>Discord</span></a>
+                  <a href="https://store.steampowered.com" target="_blank" rel="noopener"><b class="ent-ico ent-st">◐</b><span>Steam</span></a>
+                </div>
+              </section>
+
+              <section class="deck-card deck-themes">
+                <header><h4>Themes</h4><button class="deck-link" type="button" data-view="settings">Change theme →</button></header>
+                <div class="theme-row" id="home-themes"></div>
+              </section>
+
+              <section class="deck-card deck-games">
+                <header><h4>Mini Games</h4><button class="deck-link" type="button" data-view="games">Play now →</button></header>
+                <div class="game-row">
+                  <button type="button" data-game="chess"><b>♞</b><span>Chess</span></button>
+                  <button type="button" data-game="snake"><b>≈</b><span>Snake</span></button>
+                  <button type="button" data-game="ttt"><b>#</b><span>Tic-Tac-Toe</span></button>
+                  <button type="button" data-game="memory"><b>▦</b><span>Memory</span></button>
+                  <button type="button" data-game="rps"><b>✌</b><span>RPS</span></button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <p class="deck-quote">“Dream Bigger. Discover More. <span>Together with HYDRA.</span>”</p>
+<nav class="dock" aria-label="Dock">
+            <button class="dock__btn is-active" type="button" data-view="home" data-view-link="home" aria-label="Home"><svg class="icon"><use href="#i-grid"/></svg></button>
+            <button class="dock__btn" type="button" data-view="assistant" data-view-link="assistant" aria-label="Chat"><svg class="icon"><use href="#i-sparkles"/></svg></button>
+            <button class="dock__btn" type="button" data-view="play" data-view-link="play" aria-label="Play"><svg class="icon"><use href="#i-gamepad"/></svg></button>
+            <button class="dock__btn" type="button" data-view="music" data-view-link="music" aria-label="Studio"><svg class="icon"><use href="#i-music"/></svg></button>
+            <button class="dock__btn" type="button" data-view="dashboard" data-view-link="dashboard" aria-label="Tools"><svg class="icon"><use href="#i-layers"/></svg></button>
+            <button class="dock__btn" type="button" data-view="vision" data-view-link="vision" aria-label="Vision"><svg class="icon"><use href="#i-eye"/></svg></button>
+            <button class="dock__btn" type="button" data-view="plugins" data-view-link="plugins" aria-label="Plugins"><svg class="icon"><use href="#i-puzzle"/></svg></button>
+            <button class="dock__btn" type="button" data-view="memories" data-view-link="memories" aria-label="Memories"><svg class="icon"><use href="#i-book"/></svg></button>
+          </nav>
+
+          <p class="world__tagline">Dream · Create · Explore · Together <span>♥</span></p>
+        </div>
+      </section>
+
+      <!-- ============================ TOOLS DECK ============================ -->
+      <section class="view" id="view-dashboard" data-view-panel="dashboard">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow" id="greeting-line">Good evening</p>
+            <h2 class="view__title">Tools deck</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-add-widget" type="button">
+              <svg class="icon"><use href="#i-plus"/></svg> Add widget
+            </button>
+            <button class="ghost-btn" id="btn-reset-layout" type="button">
+              <svg class="icon"><use href="#i-refresh"/></svg> Reset layout
+            </button>
+          </div>
+        </div>
+        <div class="widget-grid" id="widget-grid"></div>
+      </section>
+
+      <!-- ============================ PLAY ============================ -->
+      <section class="view" id="view-play" data-view-panel="play">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Downtime</p>
+            <h2 class="view__title">Play room</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-play-dance" type="button">
+              <svg class="icon"><use href="#i-music"/></svg> Dance with HYDRA
+            </button>
+          </div>
+        </div>
+        <div id="play-root"></div>
+      </section>
+
+      <!-- ============================ MEMORIES ============================ -->
+      <section class="view" id="view-memories" data-view-panel="memories">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Long-term memory</p>
+            <h2 class="view__title">Memories</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-export-memories" type="button">
+              <svg class="icon"><use href="#i-download"/></svg> Export
+            </button>
+          </div>
+        </div>
+        <p class="memory-intro">Facts HYDRA keeps about you. Everything is local to this browser and you can delete any line.</p>
+        <div id="memories-root"></div>
+      </section>
+
+      <!-- ============================ ASSISTANT ============================ -->
+      <section class="view" id="view-assistant" data-view-panel="assistant">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Neural interface</p>
+            <h2 class="view__title">Chat</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-new-chat" type="button">
+              <svg class="icon"><use href="#i-plus"/></svg> New session
+            </button>
+            <button class="ghost-btn" id="btn-export-chat" type="button">
+              <svg class="icon"><use href="#i-download"/></svg> Export
+            </button>
+          </div>
+        </div>
+        <div class="assistant">
+          <div class="assistant__stage">
+            <div class="face" id="ai-face" data-emotion="neutral" aria-hidden="true">
+              <div class="face__halo"></div>
+              <div class="face__ring face__ring--outer"></div>
+              <div class="face__ring face__ring--inner"></div>
+              <div class="face__core">
+                <div class="face__eyes">
+                  <span class="eye"><i></i></span>
+                  <span class="eye"><i></i></span>
+                </div>
+                <div class="face__mouth"><span></span></div>
+              </div>
+              <div class="face__orbit"><i></i><i></i><i></i></div>
+            </div>
+            <div class="assistant__state">
+              <span class="pulse-dot"></span>
+              <span id="ai-state-label">Idle · listening for you</span>
+            </div>
+            <div class="emotion-readout" id="emotion-readout">
+              <span class="chip" data-emotion-chip="neutral">neutral</span>
+              <span class="chip" data-emotion-chip="curious">curious</span>
+              <span class="chip" data-emotion-chip="happy">happy</span>
+              <span class="chip" data-emotion-chip="focused">focused</span>
+              <span class="chip" data-emotion-chip="concerned">concerned</span>
+            </div>
+            <div class="waveform" id="ai-waveform" aria-hidden="true"></div>
+          </div>
+          <div class="chat">
+            <div class="chat__log" id="chat-log" role="log" aria-live="polite"></div>
+            <div class="chat__suggestions" id="chat-suggestions">
+              <button type="button" data-suggest="What can you do?">What can you do?</button>
+              <button type="button" data-suggest="Summarise my deck">Summarise my deck</button>
+              <button type="button" data-suggest="Start focus mode">Start focus mode</button>
+            </div>
+            <form class="composer" id="chat-form">
+              <button class="composer__icon" id="btn-mic" type="button" aria-label="Voice input" title="Voice input">
+                <svg class="icon"><use href="#i-mic"/></svg>
+              </button>
+              <textarea id="chat-input" rows="1" placeholder="Ask HYDRA anything…" aria-label="Message"></textarea>
+              <button class="composer__icon" id="btn-attach" type="button" aria-label="Attach" title="Attach">
+                <svg class="icon"><use href="#i-image"/></svg>
+              </button>
+              <button class="composer__send" type="submit" aria-label="Send">
+                <svg class="icon"><use href="#i-send"/></svg>
+              </button>
+            </form>
+            <p class="composer__hint">
+              <kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> newline · <kbd>Ctrl</kbd>+<kbd>K</kbd> palette
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ VISION ============================ -->
+      <section class="view" id="view-vision" data-view-panel="vision">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Perception</p>
+            <h2 class="view__title">Vision</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-vision-toggle" type="button">
+              <svg class="icon"><use href="#i-camera"/></svg> Start camera
+            </button>
+          </div>
+        </div>
+        <div class="vision">
+          <div class="vision__viewport">
+            <video id="vision-video" playsinline muted></video>
+            <canvas id="vision-overlay"></canvas>
+            <canvas id="vision-cv"></canvas>
+            <div class="vision__empty" id="vision-empty">
+              <svg class="icon"><use href="#i-camera"/></svg>
+              <p>Camera is off. Nothing leaves this device.</p>
+            </div>
+            <div class="vision__hud">
+              <span class="chip" id="vision-fps">0 fps</span>
+              <span class="chip" id="vision-res">—</span>
+            </div>
+            <div class="vision__subs" id="vision-subtitles" hidden></div>
+          </div>
+          <div class="vision__panel">
+            <h3>Capabilities</h3>
+            <ul class="cap-list">
+              <li><svg class="icon"><use href="#i-scan"/></svg> QR &amp; barcode scanning</li>
+              <li><svg class="icon"><use href="#i-eye"/></svg> Motion &amp; swipe gestures</li>
+              <li><svg class="icon"><use href="#i-book"/></svg> On-device text reading (OCR)</li>
+              <li><svg class="icon"><use href="#i-layers"/></svg> 1000 ImageNet classes + open vocabulary</li>
+              <li><svg class="icon"><use href="#i-mic"/></svg> Live subtitles</li>
+              <li><svg class="icon"><use href="#i-image"/></svg> Snapshot to disk</li>
+              <li><svg class="icon"><use href="#i-eye"/></svg> Faces, pose, hands and person mask</li>
+              <li><svg class="icon"><use href="#i-sparkles"/></svg> Identify anything with your AI provider</li>
+            </ul>
+            <div class="vision__actions">
+              <button class="btn btn--primary btn--sm" type="button" data-vision-act="identify">Identify</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="ocr">Read text</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="objects">Objects</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="gestures">Gestures</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="subtitles">Subtitles</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="snapshot">Snapshot</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="thousand">1000 objects</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-vision-act="presence">Follow me</button>
+            </div>
+            <div class="vision__ask">
+              <input id="vision-query" type="text" placeholder="cat, dog, laptop, coffee…" aria-label="Objects to look for" />
+              <button class="btn btn--primary btn--sm" type="button" data-vision-act="ask">Ask</button>
+            </div>
+            <div class="vision__result" id="vision-result">No detections yet.</div>
+            <div class="cv">
+              <div class="cv__head">
+                <h3>Computer vision</h3>
+                <span class="chip" id="cv-status">idle</span>
+              </div>
+              <div class="cv__modes">
+                <button class="cv-mode" type="button" data-cv-mode="faces" aria-pressed="false">Faces</button>
+                <button class="cv-mode" type="button" data-cv-mode="pose" aria-pressed="false">Pose</button>
+                <button class="cv-mode" type="button" data-cv-mode="hands" aria-pressed="false">Hands</button>
+                <button class="cv-mode" type="button" data-cv-mode="mask" aria-pressed="false">Person mask</button>
+                <button class="cv-mode" type="button" id="cv-off">Off</button>
+              </div>
+              <p class="cv__meta" id="cv-meta">Pick a model. It downloads once, then runs on this device.</p>
+            </div>
+            <p class="faint" style="font-size:10.5px">Click the viewport to save a snapshot.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ STUDIO ============================ -->
+      <section class="view" id="view-music" data-view-panel="music">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Ambience</p>
+            <h2 class="view__title">Studio</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-load-audio" type="button">
+              <svg class="icon"><use href="#i-upload"/></svg> Load audio
+            </button>
+            <input type="file" id="audio-file" accept="audio/*" hidden />
+          </div>
+        </div>
+        <div class="studio">
+          <div class="studio__deck">
+            <canvas id="viz" class="studio__viz"></canvas>
+            <div class="studio__now">
+              <div class="album"><svg class="icon"><use href="#i-music"/></svg></div>
+              <div class="studio__meta">
+                <strong id="track-title">Nebula Drift</strong>
+                <span id="track-artist">HYDRA generative</span>
+              </div>
+            </div>
+            <div class="studio__scrub">
+              <span id="track-pos">0:00</span>
+              <input type="range" id="track-seek" min="0" max="100" value="0" aria-label="Seek" />
+              <span id="track-len">0:00</span>
+            </div>
+            <div class="studio__controls">
+              <button class="icon-btn" id="btn-prev" type="button" aria-label="Previous"><svg class="icon"><use href="#i-prev"/></svg></button>
+              <button class="play-btn" id="btn-play" type="button" aria-label="Play"><svg class="icon"><use href="#i-play"/></svg></button>
+              <button class="icon-btn" id="btn-next" type="button" aria-label="Next"><svg class="icon"><use href="#i-next"/></svg></button>
+              <div class="studio__vol">
+                <button class="icon-btn" id="btn-mute" type="button" aria-label="Mute"><svg class="icon"><use href="#i-volume"/></svg></button>
+                <input type="range" id="vol" min="0" max="100" value="70" aria-label="Volume" />
+              </div>
+            </div>
+          </div>
+          <div class="studio__queue">
+            <h3>Generative scenes</h3>
+            <div class="queue" id="music-queue"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ PLUGINS ============================ -->
+      <section class="view" id="view-plugins" data-view-panel="plugins">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Extensions</p>
+            <h2 class="view__title">Plugins</h2>
+          </div>
+        </div>
+        <div class="plugins">
+          <div class="plugins__bar">
+            <input type="url" id="plugin-url" placeholder="Install from URL or paste a manifest JSON" />
+            <button class="ghost-btn" id="btn-install-plugin" type="button">
+              <svg class="icon"><use href="#i-plus"/></svg> Install
+            </button>
+          </div>
+          <div class="plugin-grid" id="plugin-grid"></div>
+          <p class="plugins__note">
+            Plugins run in an isolated sandbox with a narrow API surface. Nothing is fetched or
+            executed until you approve it. Bundled modules can be disabled but not removed.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================ SETTINGS ============================ -->
+      <section class="view" id="view-workspace" data-view-panel="workspace">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Studio</p>
+            <h2 class="view__title">AI Workspace</h2>
+            <p class="view__sub">Write on the left, ask the assistant to work on the open document.</p>
+          </div>
+        </div>
+        <div class="workspace-app" id="workspace-app"></div>
+      </section>
+
+      <section class="view" id="view-files" data-view-panel="files">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h2 class="view__title">Files</h2>
+            <p class="view__sub">A local workspace that survives reloads. Import text files, edit, download.</p>
+          </div>
+        </div>
+        <div class="files-app" id="files-app"></div>
+      </section>
+
+      <section class="view" id="view-games" data-view-panel="games">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Downtime</p>
+            <h2 class="view__title">Games</h2>
+            <p class="view__sub">Two small games built into the OS. Keyboard, mouse or touch.</p>
+          </div>
+        </div>
+        <div class="games-app" id="games-app"></div>
+      </section>
+
+      <section class="view" id="view-stats" data-view-panel="stats">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Telemetry</p>
+            <h2 class="view__title">Statistics</h2>
+            <p class="view__sub">Performance, storage, learning profile and personality.</p>
+          </div>
+        </div>
+        <div class="stats-app" id="stats-app"></div>
+      </section>
+
+      <section class="view" id="view-market" data-view-panel="market">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Extensions</p>
+            <h2 class="view__title">Marketplace</h2>
+            <p class="view__sub">Add capabilities without touching the core. Installs are reversible.</p>
+          </div>
+        </div>
+        <div class="market-app" id="market-app"></div>
+      </section>
+
+      <section class="view" id="view-automations" data-view-panel="automations">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Routines</p>
+            <h2 class="view__title">Automations</h2>
+            <p class="view__sub">Prompts that run on a schedule or on demand.</p>
+          </div>
+        </div>
+        <div class="automations-app" id="automations-app"></div>
+      </section>
+
+      <section class="view" id="view-device" data-view-panel="device">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Automation</p>
+            <h2 class="view__title">Device</h2>
+            <p class="view__sub">Real desktop actions through a small local bridge. Nothing runs until you start it.</p>
+          </div>
+        </div>
+        <div class="device-app" id="device-app"></div>
+      </section>
+
+      <section class="view" id="view-windows" data-view-panel="windows">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Desktop</p>
+            <h2 class="view__title">Windows</h2>
+            <p class="view__sub">Floating tools. Drag them by the title bar.</p>
+          </div>
+        </div>
+        <div class="wm-toolbar">
+          <button class="btn btn--ghost btn--sm" type="button" data-wm="notes"><svg class="icon"><use href="#i-book"/></svg>Notes</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-wm="calc"><svg class="icon"><use href="#i-grid"/></svg>Calculator</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-wm="timer"><svg class="icon"><use href="#i-clock"/></svg>Timer</button>
+          <button class="btn btn--ghost btn--sm" type="button" data-wm="stats"><svg class="icon"><use href="#i-activity"/></svg>Live stats</button>
+        </div>
+        <div class="windows-stage" id="windows-stage"></div>
+      </section>
+
+      <section class="view" id="view-settings" data-view-panel="settings">
+        <div class="view__head">
+          <div>
+            <p class="eyebrow">Configuration</p>
+            <h2 class="view__title">Settings</h2>
+          </div>
+          <div class="view__tools">
+            <button class="ghost-btn" id="btn-export-settings" type="button">
+              <svg class="icon"><use href="#i-download"/></svg> Export
+            </button>
+          </div>
+        </div>
+        <div class="settings" id="settings-root"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- now playing mini bar -->
+  <div class="mini-player" id="mini-player" hidden>
+    <button class="icon-btn" id="mini-toggle" type="button" aria-label="Play or pause">
+      <svg class="icon"><use href="#i-play"/></svg>
+    </button>
+    <div class="mini-player__meta">
+      <strong id="mini-title">Nebula Drift</strong>
+      <span id="mini-artist">HYDRA generative</span>
+    </div>
+    <div class="mini-player__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <button class="icon-btn" id="mini-open" type="button" aria-label="Open studio">
+      <svg class="icon"><use href="#i-chevron-right"/></svg>
+    </button>
+  </div>
+
+  <button class="orb" id="ai-orb" type="button" aria-label="Open floating assistant" title="HYDRA assistant">
+    <span class="orb__core"></span>
+    <span class="orb__ring"></span>
+  </button>
+</div>
+
+<!-- ============================ OVERLAYS ============================ -->
+<div class="palette" id="palette" hidden>
+  <div class="palette__backdrop" data-palette-close></div>
+  <div class="palette__box" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette__input">
+      <svg class="icon"><use href="#i-search"/></svg>
+      <input id="palette-input" type="text" placeholder="Type a command, view, or question…" autocomplete="off" spellcheck="false" />
+      <kbd>Esc</kbd>
+    </div>
+    <div class="palette__results" id="palette-results"></div>
+    <div class="palette__foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> run</span>
+      <span><kbd>Ctrl</kbd>+<kbd>K</kbd> toggle</span>
+    </div>
+  </div>
+</div>
+
+<aside class="drawer" id="notif-drawer" hidden aria-label="Notifications">
+  <header class="drawer__head">
+    <h3>Notifications</h3>
+    <div>
+      <button class="icon-btn" id="btn-dnd" type="button" aria-label="Do not disturb" aria-pressed="false" title="Do not disturb">
+        <svg class="icon"><use href="#i-bell"/></svg>
+      </button>
+      <button class="link-btn" id="btn-clear-notifs" type="button">Clear all</button>
+      <button class="icon-btn" id="btn-close-notifs" type="button" aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="drawer__body" id="notif-list"></div>
+</aside>
+
+<div class="sheet" id="widget-sheet" hidden>
+  <div class="sheet__backdrop" data-sheet-close></div>
+  <div class="sheet__box" role="dialog" aria-modal="true" aria-label="Add widget">
+    <header class="sheet__head">
+      <h3>Add a widget</h3>
+      <button class="icon-btn" data-sheet-close type="button" aria-label="Close">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </header>
+    <div class="sheet__body" id="widget-catalog"></div>
+  </div>
+</div>
+
+<div class="floating-chat" id="floating-chat" hidden>
+  <header class="floating-chat__head">
+    <span class="pulse-dot"></span>
+    <strong>HYDRA</strong>
+    <button class="icon-btn" id="btn-close-floating" type="button" aria-label="Close">
+      <svg class="icon"><use href="#i-close"/></svg>
+    </button>
+  </header>
+  <div class="floating-chat__log" id="floating-log"></div>
+  <form class="composer composer--compact" id="floating-form">
+    <input id="floating-input" type="text" placeholder="Quick ask…" aria-label="Quick message" />
+    <button class="composer__send" type="submit" aria-label="Send"><svg class="icon"><use href="#i-send"/></svg></button>
+  </form>
+</div>
+
+<div class="toast-stack" id="toast-stack" role="status" aria-live="polite"></div>
+
+<script>
+  // file:// blocks ES module imports, so the double-click build loads the classic bundle.
+  (function () {
+    var s = document.createElement('script');
+    if (location.protocol === 'file:') {
+      s.src = 'hydra.bundle.js';
+      s.onerror = function () {
+        document.body.insertAdjacentHTML('afterbegin',
+          '<div style="position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#0a0712;color:#ece8f9;font:15px/1.6 system-ui;text-align:center;padding:24px">' +
+          '<div><strong style="font-size:20px">HYDRA needs its bundle</strong><p style="opacity:.7;max-width:460px">Open <b>HYDRA.html</b> (single file) instead, or run a local server:<br><code>python3 -m http.server 8080</code></p></div></div>');
+      };
+    } else {
+      s.type = 'module';
+      s.src = 'script.js';
+    }
+    document.body.appendChild(s);
+  })();
+</script>
 </body>
 </html>

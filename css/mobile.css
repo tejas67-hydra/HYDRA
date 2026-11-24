@@ -1,0 +1,134 @@
+/* ============================================================
+   HYDRA — responsive
+   ============================================================ */
+
+@media (max-width: 1180px) {
+  .assistant { grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr); }
+  .studio, .vision { grid-template-columns: 1fr; }
+  .studio__queue { max-height: 260px; }
+  .topbar__meta .status-pill { display: none; }
+}
+
+@media (max-width: 980px) {
+  :root { --sidebar-w: 0px; }
+
+  .topbar__menu { display: inline-grid; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 45;
+    width: 276px;
+    padding-top: 18px;
+    background: linear-gradient(180deg, rgba(20, 14, 34, 0.98), rgba(9, 6, 16, 0.99));
+    border-right: 1px solid var(--line-strong);
+    box-shadow: 30px 0 90px -40px #000;
+    transform: translateX(-104%);
+    transition: transform 320ms var(--ease);
+    visibility: hidden;
+  }
+  .sidebar.is-open { transform: none; visibility: visible; }
+
+  .nav-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: rgba(3, 2, 8, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fade-in 220ms var(--ease) both;
+  }
+
+  .workspace { padding: 22px 20px 130px; }
+  .assistant { grid-template-columns: 1fr; min-height: 0; }
+  .assistant__stage { padding: 22px 16px; }
+  .face { width: 196px; height: 196px; }
+  .face__core { width: 128px; height: 128px; }
+  .chat { min-height: 420px; }
+  .clock-pill { display: none; }
+}
+
+@media (max-width: 820px) {
+  .widget-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 78px; }
+  .widget { --w: 6; }
+  .widget--third, .widget--quarter { --w: 3; }
+  .widget--half { --w: 6; }
+  .widget--full { --w: 6; }
+  .brand__text { display: none; }
+  .omni__label { display: none; }
+  .omni { max-width: 44px; flex: none; padding: 0; justify-content: center; }
+  .omni__kbd { display: none; }
+  .topbar__meta { margin-left: auto; }
+  .settings { max-width: none; }
+}
+
+@media (max-width: 640px) {
+  .topbar { gap: 8px; padding: 0 12px; }
+  .workspace { padding: 18px 14px 140px; }
+  .view__head { margin-bottom: 16px; }
+  .view__title { font-size: 22px; }
+  .view__tools .ghost-btn span { display: none; }
+  .ghost-btn { padding: 0 11px; }
+  .widget-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; grid-auto-rows: 76px; }
+  .widget { --w: 4; }
+  .widget--third, .widget--quarter, .widget--half, .widget--full { --w: 4; }
+  .widget--tall { --h: 4; }
+  .clock-big { font-size: 38px; }
+  .chat__log { padding: 14px; }
+  .msg { max-width: 100%; }
+  .studio__viz { height: 140px; }
+  .mini-player { bottom: 12px; }
+  .mini-player__meta strong { max-width: 110px; }
+  .orb { right: 14px; bottom: 78px; width: 48px; height: 48px; }
+  .floating-chat { right: 12px; left: 12px; width: auto; bottom: 138px; }
+  .palette__box { margin-top: 6vh; }
+  .toast-stack { bottom: 74px; }
+  .plugin-grid { grid-template-columns: 1fr; }
+  .plugins__bar { flex-direction: column; }
+  .set-row { flex-wrap: wrap; }
+  .set-row__control { width: 100%; }
+  .set-row__control input[type="text"],
+  .set-row__control input[type="password"],
+  .set-row__control select { width: 100%; }
+  .theme-swatches { width: 100%; }
+  .hue-slider { width: 100%; }
+}
+
+@media (max-width: 460px) {
+  .topbar__actions .icon-btn { width: 32px; height: 32px; }
+  .brand__mark { width: 30px; height: 30px; }
+  .face { width: 170px; height: 170px; }
+  .face__core { width: 112px; height: 112px; }
+  .face__mouth { bottom: 24px; }
+  .emotion-readout { display: none; }
+  .assistant__stage { gap: 12px; }
+  .widget-grid { grid-auto-rows: 72px; }
+  .clock-sub { flex-wrap: wrap; gap: 6px; }
+  .launcher { grid-template-columns: repeat(4, 1fr); }
+  .wx-temp { font-size: 30px; }
+  .wx-icon { width: 46px; height: 46px; }
+}
+
+/* landscape phones */
+@media (max-height: 560px) and (orientation: landscape) {
+  .assistant__stage { padding: 14px; }
+  .face { width: 150px; height: 150px; }
+  .face__core { width: 100px; height: 100px; }
+  .waveform { display: none; }
+  .workspace { padding-bottom: 40px; }
+}
+
+/* print — keep it sane */
+@media print {
+  body::before, body::after, .sidebar, .topbar, .orb, .mini-player, .toast-stack { display: none !important; }
+  .app, .shell, .workspace { display: block; height: auto; overflow: visible; }
+  .view { display: block !important; }
+}
+
+@media (max-width: 1180px) {
+  .wx-strip { display: none; }
+  .wx-foot { gap: 3px 8px; font-size: 9.5px; }
+  .widget__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

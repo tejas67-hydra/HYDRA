@@ -1,15 +1,14 @@
 {
-  "id": "./fullhydra.html",
-  "name": "HYDRA",
+  "name": "HYDRA — AI Operating System",
   "short_name": "HYDRA",
-  "description": "HYDRA tri-core battle intelligence",
-  "start_url": "./fullhydra.html?v=20261120-2200",
+  "description": "A local-first AI desktop: companion, voice, vision, music, workspace and plugins.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#07030f",
-  "theme_color": "#07030f",
+  "orientation": "any",
+  "background_color": "#0b0616",
+  "theme_color": "#8b5cf6",
   "icons": [
-    { "src": "./hydra-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "./hydra-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "assets/icons/hydra.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

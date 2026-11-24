@@ -1,0 +1,218 @@
+/* ============================================================
+   HYDRA — themes
+   Every theme only redefines tokens; the whole UI follows.
+   ============================================================ */
+
+[data-theme="nebula"] {
+  --hue: 268;
+  --accent-2: hsl(190 92% 62%);
+  --accent-3: hsl(322 84% 68%);
+  --bg-0: #07050d;
+  --bg-1: #0b0814;
+  --bg-2: #110c1d;
+  --bg-3: #171026;
+}
+
+[data-theme="obsidian"] {
+  --hue: 200;
+  --accent: hsl(200 88% 58%);
+  --accent-strong: hsl(200 92% 70%);
+  --accent-soft: hsl(200 88% 58% / 0.15);
+  --accent-2: hsl(158 84% 55%);
+  --accent-3: hsl(258 80% 68%);
+  --bg-0: #05080c;
+  --bg-1: #080d13;
+  --bg-2: #0c131b;
+  --bg-3: #101a24;
+  --text: #e8f1f8;
+  --text-dim: #9fb2c2;
+  --text-faint: #647a8c;
+}
+
+[data-theme="ember"] {
+  --hue: 22;
+  --accent: hsl(22 92% 60%);
+  --accent-strong: hsl(28 96% 70%);
+  --accent-soft: hsl(22 92% 60% / 0.15);
+  --accent-2: hsl(348 84% 62%);
+  --accent-3: hsl(44 92% 62%);
+  --bg-0: #0c0605;
+  --bg-1: #130a08;
+  --bg-2: #1a0e0b;
+  --bg-3: #221410;
+  --text: #fbeee7;
+  --text-dim: #c9a99b;
+  --text-faint: #8d6e60;
+}
+
+[data-theme="frost"] {
+  --hue: 192;
+  --accent: hsl(192 88% 62%);
+  --accent-strong: hsl(186 92% 72%);
+  --accent-soft: hsl(192 88% 62% / 0.15);
+  --accent-2: hsl(258 88% 72%);
+  --accent-3: hsl(160 78% 58%);
+  --bg-0: #04080b;
+  --bg-1: #070e12;
+  --bg-2: #0b151b;
+  --bg-3: #0f1d25;
+  --text: #e6f5fa;
+  --text-dim: #97b4c1;
+  --text-faint: #5f7d8a;
+}
+
+[data-theme="dawn"] {
+  color-scheme: light;
+  --hue: 262;
+  --accent: hsl(262 82% 56%);
+  --accent-strong: hsl(262 84% 48%);
+  --accent-soft: hsl(262 82% 56% / 0.12);
+  --accent-2: hsl(196 84% 44%);
+  --accent-3: hsl(326 76% 56%);
+  --bg-0: #f4f2fb;
+  --bg-1: #faf9fe;
+  --bg-2: #ffffff;
+  --bg-3: #efeaf9;
+  --text: #1c1630;
+  --text-dim: #544a6e;
+  --text-faint: #867c9c;
+  --line: rgba(28, 22, 48, 0.1);
+  --line-strong: rgba(28, 22, 48, 0.18);
+  --glass: rgba(255, 255, 255, 0.6);
+  --glass-2: rgba(255, 255, 255, 0.82);
+  --glass-deep: rgba(255, 255, 255, 0.85);
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 12px 30px -20px rgba(40, 25, 80, 0.4);
+  --shadow-2: 0 26px 60px -30px rgba(40, 25, 80, 0.45);
+}
+
+[data-theme="dawn"] body::before {
+  background:
+    radial-gradient(60% 45% at 18% 12%, hsl(var(--hue) 90% 80% / 0.55), transparent 70%),
+    radial-gradient(50% 40% at 84% 8%, hsl(190 90% 82% / 0.5), transparent 70%),
+    radial-gradient(55% 50% at 72% 92%, hsl(322 85% 86% / 0.45), transparent 72%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-0) 55%, #ece7f9);
+}
+[data-theme="dawn"] body::after { opacity: 0.16; mix-blend-mode: multiply; }
+[data-theme="dawn"] .boot { background: radial-gradient(60% 50% at 50% 40%, hsl(var(--hue) 90% 88% / 0.7), transparent 70%), #f7f5fd; }
+[data-theme="dawn"] .boot__title { background: linear-gradient(100deg, #2a1a55, #7c3aed 45%, #0891b2 85%); -webkit-background-clip: text; background-clip: text; }
+[data-theme="dawn"] .topbar { background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.55)); }
+[data-theme="dawn"] .sidebar { background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 40%); }
+[data-theme="dawn"] .nav-item.is-active { color: var(--accent-strong); background: hsl(var(--hue) 91% 66% / 0.12); }
+[data-theme="dawn"] .palette__box,
+[data-theme="dawn"] .drawer,
+[data-theme="dawn"] .sheet__box,
+[data-theme="dawn"] .floating-chat,
+[data-theme="dawn"] .mini-player { background: linear-gradient(170deg, rgba(255, 255, 255, 0.98), rgba(248, 246, 254, 0.98)); }
+[data-theme="dawn"] .toast { background: rgba(255, 255, 255, 0.96); }
+[data-theme="dawn"] .badge { box-shadow: 0 0 0 2px #fff; }
+[data-theme="dawn"] .status-pill { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: #047857; }
+[data-theme="dawn"] .status-pill--muted { background: rgba(28, 22, 48, 0.05); color: var(--text-dim); }
+[data-theme="dawn"] .status-pill.is-offline { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.3); color: #be123c; }
+[data-theme="dawn"] kbd { background: rgba(28, 22, 48, 0.06); }
+[data-theme="dawn"] input[type="text"],
+[data-theme="dawn"] input[type="url"],
+[data-theme="dawn"] input[type="search"],
+[data-theme="dawn"] input[type="password"],
+[data-theme="dawn"] input[type="number"],
+[data-theme="dawn"] textarea,
+[data-theme="dawn"] select { background: rgba(28, 22, 48, 0.04); }
+[data-theme="dawn"] .boot__skip { color: var(--text-dim); }
+[data-theme="dawn"] .orb__core { box-shadow: 0 10px 30px -8px hsl(var(--hue) 80% 50% / 0.6), inset 0 0 12px rgba(255, 255, 255, 0.5); }
+[data-theme="dawn"] ::-webkit-scrollbar-thumb { background: rgba(28, 22, 48, 0.18); background-clip: padding-box; }
+
+/* user accent override: --accent-hue is set inline on <html> by settings */
+html[style*="--accent-hue"] {
+  --accent: hsl(var(--accent-hue) 91% 66%);
+  --accent-strong: hsl(var(--accent-hue) 95% 74%);
+  --accent-soft: hsl(var(--accent-hue) 91% 66% / 0.16);
+}
+
+/* ------------------------- crimson (ember) ------------------------- */
+[data-theme="ember"] {
+  --accent: hsl(354 88% 58%);
+  --accent-strong: hsl(354 92% 70%);
+  --accent-soft: hsl(354 88% 58% / 0.16);
+  --accent-2: hsl(20 92% 60%);
+  --accent-3: hsl(320 80% 62%);
+  --text: #ffeef0;
+  --text-dim: #d3a3ab;
+  --text-faint: #9c6a73;
+}
+
+/* --------------------------- matrix green -------------------------- */
+[data-theme="matrix"] {
+  --hue: 140;
+  --accent: hsl(140 72% 52%);
+  --accent-strong: hsl(140 82% 66%);
+  --accent-soft: hsl(140 72% 52% / 0.15);
+  --accent-2: hsl(96 70% 56%);
+  --accent-3: hsl(168 76% 50%);
+  --bg-0: #030805;
+  --bg-1: #050d08;
+  --bg-2: #07140c;
+  --bg-3: #0a1c11;
+  --text: #e2ffe9;
+  --text-dim: #93bfa0;
+  --text-faint: #5c8268;
+  --line: rgba(160, 255, 190, 0.09);
+  --line-strong: rgba(160, 255, 190, 0.18);
+}
+
+/* ------------------------------ galaxy ----------------------------- */
+[data-theme="galaxy"] {
+  --hue: 285;
+  --accent: hsl(285 84% 62%);
+  --accent-strong: hsl(285 92% 74%);
+  --accent-soft: hsl(285 84% 62% / 0.16);
+  --accent-2: hsl(330 86% 64%);
+  --accent-3: hsl(196 92% 62%);
+  --bg-0: #05030c;
+  --bg-1: #0a0616;
+  --bg-2: #100a22;
+  --bg-3: #171030;
+  --text: #f0e9ff;
+  --text-dim: #b3a4cf;
+  --text-faint: #7a6c98;
+}
+
+/* ---------------------------- rgb pulse ---------------------------- */
+@property --hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 268;
+}
+[data-theme="rgb"] {
+  --hue: 300;
+  animation: hue-spin 26s linear infinite;
+}
+[data-theme="rgb"] body::before { opacity: 0.9; }
+@keyframes hue-spin {
+  from { --hue: 0; }
+  to { --hue: 360; }
+}
+
+/* ------------------------------- mono ------------------------------ */
+[data-theme="mono"] {
+  --hue: 220;
+  --accent: hsl(220 12% 66%);
+  --accent-strong: hsl(220 16% 80%);
+  --accent-soft: hsl(220 12% 66% / 0.14);
+  --accent-2: hsl(220 8% 52%);
+  --accent-3: hsl(220 10% 74%);
+  --bg-0: #08090b;
+  --bg-1: #0d0f12;
+  --bg-2: #13161a;
+  --bg-3: #1a1e24;
+  --text: #eef1f5;
+  --text-dim: #a3acb8;
+  --text-faint: #6c7683;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+}
+[data-theme="mono"] body::before {
+  background:
+    radial-gradient(60% 45% at 18% 12%, rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(50% 40% at 84% 8%, rgba(255, 255, 255, 0.05), transparent 70%),
+    linear-gradient(160deg, #0d0f12, #08090b 60%, #05060a);
+}
+[data-theme="mono"] .scene { filter: grayscale(0.85); }
