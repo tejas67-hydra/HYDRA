@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#0b0714" />
 <link rel="icon" href="assets/icons/hydra-icon-192.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/icons/hydra-icon-192.png" />
+<link rel="manifest" href="manifest.workspace.json" />
 <style>
   :root {
     --bg: #08050f; --panel: rgba(23, 14, 40, .72); --line: rgba(168, 85, 247, .22);
@@ -23,6 +24,7 @@
       var(--bg);
   }
   .app { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+  .page-title { margin: 0 0 22px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
   header { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
   .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: .06em; }
   .brand img { width: 34px; height: 34px; filter: drop-shadow(0 0 14px rgba(168, 85, 247, .7)); }
@@ -73,9 +75,20 @@
   .mem p { margin: 0; }
   .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
   .pill { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
-  .locked { text-align: center; padding: 60px 20px; }
+  .locked { text-align: center; padding: 48px 20px 60px; }
   .locked h1 { font-size: 26px; margin: 18px 0 8px; }
   .locked p { color: var(--muted); margin-bottom: 22px; }
+  .auth { display: grid; gap: 10px; max-width: 360px; margin: 0 auto 16px; text-align: left; }
+  .auth input {
+    padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line);
+    background: rgba(10, 6, 18, .7); color: var(--text); font: inherit; font-size: 14px;
+  }
+  .auth input:focus { outline: none; border-color: rgba(168, 85, 247, .6); }
+  .auth .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .auth .row button { width: 100%; }
+  .auth-msg { min-height: 16px; font-size: 12px; color: var(--warn); margin: 0; text-align: center; }
+  .locked .alt { font-size: 12px; color: var(--muted); margin-top: 14px; }
+  .locked .alt a { color: var(--accent); }
   a.primary { text-decoration: none; display: inline-block; }
   .fade-out { animation: fadeOut .42s ease forwards; }
   @keyframes fadeOut { to { opacity: 0; filter: blur(14px); transform: scale(.96); } }
@@ -89,16 +102,7 @@
 </head>
 <body>
 <div class="app">
-  <header>
-    <div class="brand">
-      <img src="assets/icons/hydra.svg" alt="" />
-      <div>HYDRA <small>WORKSPACE</small></div>
-    </div>
-    <div class="spacer"></div>
-    <button class="switch" id="switch-app" type="button">Switch app</button>
-    <button class="chip" id="user-chip" type="button"><span class="avatar" id="avatar">H</span><span id="who">Signing in…</span></button>
-  </header>
-
+  <p class="page-title">Workspace</p>
   <main id="shell" hidden>
     <div class="grid">
       <section class="card">
@@ -137,9 +141,19 @@
 
   <section class="locked" id="locked" hidden>
     <img src="assets/icons/hydra.svg" width="54" alt="" />
-    <h1>Sign in once</h1>
-    <p>Open HYDRA Companion and sign in. This app shares that account, so you will never log in twice.</p>
-    <a class="primary" href="index.html">Open HYDRA Companion</a>
+    <h1>Sign in to HYDRA</h1>
+    <p>One account for Companion, Workspace and Classic. Your tasks, notes and memory follow you to every device.</p>
+    <form class="auth" id="auth-form" novalidate>
+      <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="username" required />
+      <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" required />
+      <div class="row">
+        <button class="primary" id="auth-signin" type="submit">Sign in</button>
+        <button class="switch" id="auth-signup" type="button">Create account</button>
+      </div>
+      <p class="auth-msg" id="auth-msg" role="status" aria-live="polite"></p>
+    </form>
+    <button class="chip" id="auth-guest" type="button">Continue as guest</button>
+    <p class="alt">Forgot the password? <a href="account.html">Reset it on the account page</a>.</p>
   </section>
 </div>
 <div class="toast" id="toast"></div>
@@ -170,10 +184,6 @@ function render() {
   $('shell').hidden = !signed;
   $('locked').hidden = signed;
   if (!signed) return;
-  const profile = universal.profile;
-  const name = profile.displayName || profile.email || 'Operator';
-  $('who').textContent = `${name} · ${profile.plan}`;
-  $('avatar').textContent = (name[0] || 'H').toUpperCase();
 
   const tasks = universal.list('tasks');
   $('tasks').innerHTML = tasks.length
@@ -251,13 +261,35 @@ $('mem-add').addEventListener('click', async () => {
 
 $('mem-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('mem-add').click(); });
 
-$('switch-app').addEventListener('click', () => {
-  document.querySelector('.app').classList.add('fade-out');
-  setTimeout(() => { location.href = 'index.html'; }, 380);
-});
+const authMsg = (text, ok = false) => {
+  const node = $('auth-msg');
+  node.textContent = text;
+  node.style.color = ok ? 'var(--ok)' : 'var(--warn)';
+};
 
-$('user-chip').addEventListener('click', () => {
-  toast(`${universal.profile.email} · ${universal.profile.plan} · ${universal.devices().length} device(s)`);
+async function authenticate(mode) {
+  const email = $('auth-email').value.trim();
+  const password = $('auth-password').value;
+  if (!email || !password) return authMsg('Enter an email and a password.');
+  if (mode === 'signup' && password.length < 8) return authMsg('Use at least 8 characters.');
+  authMsg(mode === 'signup' ? 'Creating the account…' : 'Signing in…', true);
+  try {
+    if (mode === 'signup') await universal.signUp({ email, password, name: email.split('@')[0] });
+    else await universal.signIn({ email, password });
+    authMsg('');
+    render();
+    toast(`Signed in as ${universal.profile.email}`);
+  } catch (error) {
+    authMsg(error.message || 'That did not work. Try again.');
+  }
+}
+
+$('auth-form').addEventListener('submit', (event) => { event.preventDefault(); authenticate('signin'); });
+$('auth-signup').addEventListener('click', () => authenticate('signup'));
+$('auth-guest').addEventListener('click', async () => {
+  await universal.guest('Operator');
+  render();
+  toast('Guest mode — nothing syncs. Sign in to keep your work.');
 });
 
 for (const type of ['session', 'profile', 'memory', 'notify', 'data']) {
@@ -267,5 +299,11 @@ for (const type of ['session', 'profile', 'memory', 'notify', 'data']) {
 render();
 </script>
   <script src="js/config.js"></script>
+  <script src="js/nav.js" defer></script>
+  <script type="module">
+    import { initAppSwitcher } from './js/app-switcher.js';
+    initAppSwitcher({ currentApp: 'workspace', mount: document.getElementById('hydra-nav-switch') })
+      .catch((error) => console.error('[switcher]', error));
+  </script>
 </body>
 </html>

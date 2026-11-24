@@ -9,7 +9,7 @@
 <title>HYDRA</title>
 <link rel="icon" href="assets/icons/hydra-icon-192.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/icons/hydra-icon-192.png" />
-<link rel="manifest" href="manifest.webmanifest" />
+<link rel="manifest" href="manifest.companion.json" />
 <meta name="theme-color" content="#8b5cf6" />
 <link rel="stylesheet" href="style.css" />
 <link rel="stylesheet" href="css/themes.css" />
@@ -60,7 +60,7 @@
       <button class="auth__guest" id="auth-guest" type="button">Continue as guest</button>
       <p class="auth__note" id="auth-note"></p>
     </form>
-    <p class="auth__foot">Local account — credentials stay in this browser.</p>
+    <p class="auth__foot">One account for every HYDRA app, synced across your devices.</p>
   </div>
 </div>
 
@@ -281,7 +281,7 @@
           <div class="companion-status__avatar"><span></span></div>
           <div class="grow">
             <strong>HYDRA</strong>
-            <span><i class="online-dot"></i> Online · mood <b id="companion-mood">calm</b> · <b id="build-chip" title="HYDRA build">v2.7.2</b></span>
+            <span><i class="online-dot"></i> Online · mood <b id="companion-mood">calm</b> · <b id="build-chip" title="HYDRA build">v2.8.0</b></span>
           </div>
           <div class="mini-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         </div>
@@ -1642,5 +1642,6 @@
   })();
 </script>
   <script src="js/config.js"></script>
+  <script src="js/nav.js" defer></script>
 </body>
 </html>

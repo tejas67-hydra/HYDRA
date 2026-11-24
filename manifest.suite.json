@@ -1,0 +1,47 @@
+{
+  "name": "HYDRA",
+  "short_name": "HYDRA",
+  "description": "All three HYDRA apps in one install.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0616",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "assets/icons/hydra.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/hydra-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/hydra-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "id": "./suite",
+  "shortcuts": [
+    {
+      "name": "Companion",
+      "url": "./index.html",
+      "description": "Voice, vision, presence"
+    },
+    {
+      "name": "Workspace",
+      "url": "./emo.html",
+      "description": "Tasks, notes, memory"
+    },
+    {
+      "name": "Classic",
+      "url": "./fullhydra.html",
+      "description": "Tri-core console"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HYDRA · Add to device</title>
+<meta name="theme-color" content="#0b0714" />
+<link rel="manifest" href="manifest.suite.json" />
+<link rel="icon" href="assets/icons/hydra.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/icons/hydra-icon-192.png" />
+<style>
+  :root {
+    --bg: #08050f; --panel: rgba(23, 14, 40, .74); --line: rgba(168, 85, 247, .24);
+    --text: #efe8ff; --muted: #a99bc9; --accent: #a855f7; --ok: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; color: var(--text);
+    background:
+      radial-gradient(1100px 640px at 12% -10%, rgba(124, 58, 237, .35), transparent 60%),
+      radial-gradient(900px 560px at 96% 8%, rgba(56, 189, 248, .16), transparent 60%),
+      var(--bg);
+    display: grid; place-items: center; padding: 28px;
+  }
+  .wrap { width: min(720px, 100%); }
+  h1 { font-size: 15px; letter-spacing: .22em; text-transform: uppercase; color: #c4b5fd; margin: 0 0 6px; }
+  p.lead { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 22px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 18px;
+    backdrop-filter: blur(20px); box-shadow: 0 30px 80px rgba(0, 0, 0, .4); margin-bottom: 14px;
+  }
+  .app-row { display: flex; align-items: center; gap: 14px; }
+  .badge {
+    width: 42px; height: 42px; border-radius: 12px; flex: none; display: grid; place-items: center;
+    background: linear-gradient(140deg, #a855f7, #38bdf8); color: #0b0714; font-weight: 800;
+  }
+  .app-name { font-weight: 600; font-size: 14px; }
+  .app-tag { font-size: 11.5px; color: var(--muted); }
+  .grow { flex: 1; }
+  button {
+    padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line); cursor: pointer;
+    font: inherit; font-size: 12.5px; color: var(--text);
+    background: linear-gradient(140deg, rgba(168, 85, 247, .28), rgba(56, 189, 248, .14));
+  }
+  button:hover { border-color: rgba(168, 85, 247, .6); }
+  button.primary { border: 0; color: #12061f; font-weight: 700; background: linear-gradient(140deg, #d8b4fe, #a855f7); }
+  button[disabled] { opacity: .45; cursor: default; }
+  .steps { margin: 12px 0 0 18px; padding: 0; font-size: 12.5px; line-height: 1.9; color: #d8cff0; }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+  .status { font-size: 12px; color: var(--ok); min-height: 16px; margin-top: 8px; }
+  a { color: #c4b5fd; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Add HYDRA to your device</h1>
+  <p class="lead">Install all three apps at once, or one at a time. Installed apps get their own window, their own icon and work offline.</p>
+
+  <div class="card">
+    <div class="app-row">
+      <span class="badge">⬡</span>
+      <div class="grow">
+        <div class="app-name">All three apps</div>
+        <div class="app-tag">One HYDRA install with Companion, Workspace and Classic as shortcuts</div>
+      </div>
+      <button class="primary" id="install-all" type="button">Install all three</button>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <ul class="steps" id="steps" hidden></ul>
+    <p class="note" id="note"></p>
+  </div>
+
+  <div class="card">
+    <div class="app-row">
+      <span class="badge">◈</span>
+      <div class="grow">
+        <div class="app-name">Companion</div>
+        <div class="app-tag">Voice, vision, presence and memory</div>
+      </div>
+      <button type="button" data-install="manifest.companion.json">Install</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="app-row">
+      <span class="badge">▤</span>
+      <div class="grow">
+        <div class="app-name">Workspace</div>
+        <div class="app-tag">Tasks, notes and shared memory</div>
+      </div>
+      <button type="button" data-install="manifest.workspace.json">Install</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="app-row">
+      <span class="badge">◇</span>
+      <div class="grow">
+        <div class="app-name">Classic</div>
+        <div class="app-tag">The tri-core console and HYDRA OS</div>
+      </div>
+      <button type="button" data-install="manifest.classic.json">Install</button>
+    </div>
+  </div>
+
+  <p class="note">Single-app installs open that app in a new tab with its own install prompt. <a href="index.html">Back to HYDRA</a></p>
+</div>
+
+<script>
+  const status = document.getElementById('status');
+  const steps = document.getElementById('steps');
+  const note = document.getElementById('note');
+  const allButton = document.getElementById('install-all');
+  let deferred = null;
+
+  const platform = () => {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+    if (/Android/i.test(ua)) return 'android';
+    if (/Macintosh/i.test(ua)) return 'mac';
+    return 'desktop';
+  };
+
+  const instructions = () => {
+    const p = platform();
+    if (p === 'ios') return ['Open this page in Safari.', 'Tap the Share button.', 'Choose “Add to Home Screen”, then Add.'];
+    if (p === 'android') return ['Open the browser menu (⋮).', 'Tap “Install app” or “Add to Home screen”.', 'Confirm.'];
+    if (p === 'mac') return ['Use Chrome or Edge.', 'Click the install icon in the address bar.', 'Confirm “Install”.'];
+    return ['Use Chrome or Edge.', 'Click the install icon in the address bar, or ⋮ → Cast, save and share → Install page as app.', 'Confirm “Install”.'];
+  };
+
+  function showSteps() {
+    steps.innerHTML = instructions().map((step) => `<li>${step}</li>`).join('');
+    steps.hidden = false;
+    note.textContent = 'Your browser did not offer an install prompt, so add it from its menu.';
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferred = event;
+    note.textContent = 'Ready — press Install all three.';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    status.textContent = 'Installed. Look for HYDRA in your apps.';
+    allButton.disabled = true;
+    allButton.textContent = 'Installed';
+  });
+
+  allButton.addEventListener('click', async () => {
+    if (!deferred) { showSteps(); return; }
+    deferred.prompt();
+    const choice = await deferred.userChoice.catch(() => ({ outcome: 'dismissed' }));
+    deferred = null;
+    status.textContent = choice.outcome === 'accepted' ? 'Installing…' : 'Install cancelled.';
+  });
+
+  document.querySelectorAll('[data-install]').forEach((button) => {
+    button.addEventListener('click', () => {
+      window.open(`install-app.html?manifest=${encodeURIComponent(button.dataset.install)}`, '_blank', 'noopener');
+    });
+  });
+
+  if (new URLSearchParams(location.search).get('all') === '1' && !deferred) {
+    setTimeout(() => { if (!deferred) showSteps(); }, 1200);
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

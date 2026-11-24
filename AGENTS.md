@@ -229,3 +229,30 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
 - `js/auth.js` (Companion login) and `js/universal.js` both sign in against the
   API; the on-device account is the fallback when the API is unreachable.
 - Voice output defaults to off (`settings.voiceOutput`); Escape stops speech.
+
+## Shared navigation bar (v2.8.0)
+- `js/nav.js` is a plain script (not a module) injected on `index.html`,
+  `emo.html`, `fullhydra.html` and `account.html`. It builds one 46px fixed bar
+  with: brand, ecosystem switch slot (`#hydra-nav-switch`), search, Add to
+  device, fullscreen and the profile button. It sets `body.has-hydra-nav`
+  (padding-top 46px) so page content is never hidden under the bar.
+- The ecosystem switcher is no longer floating. `initAppSwitcher({ mount })`
+  renders into the nav slot: `js/app.js` for Companion, the module block in
+  `emo.html`/`account.html`, and `js/legacy-bridge.js` for Classic. Never call it
+  without `mount` — that restores the old floating button.
+- Search reads apps, nav actions, `hydra.tasks`, `hydra.notes`, `hydra.memory`
+  and quick commands. `Ctrl/Cmd+K` or `/` focuses it. Add new entries to the
+  `list` array in `nav.js` so they stay reachable by search.
+- `app-switch` overlay uses `z-index: 10080` (veil 10070) — Classic's login
+  screen is 10004, so a lower value hides the panel behind it.
+- Install: `manifest.companion.json`, `manifest.workspace.json`,
+  `manifest.classic.json` and `manifest.suite.json` (start_url differs, `id`
+  differs, so Chrome offers three separate installs). `install.html` handles the
+  suite, `install-app.html?manifest=...` handles a single app.
+- Profile picture: `hydra.pp` in localStorage holds a 192px JPEG data URL; the
+  nav avatar, the Workspace header and `universal.updateProfile({avatar})` all
+  read it. The hidden `#hydra-nav-pp-file` input is the only upload path.
+- `build.py` now inlines `js/config.js`, `js/nav.js` and `js/app-switcher.js`
+  (module syntax stripped) into `HYDRA.html`, and strips `export default` /
+  default imports from the bundle. Without that, `hydra.bundle.js` is a syntax
+  error as a classic script and the file:// build never boots.

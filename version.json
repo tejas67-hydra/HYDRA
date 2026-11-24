@@ -1,13 +1,12 @@
 {
-  "version": "2.7.2",
-  "build": "2026.12.20",
+  "version": "2.8.0",
+  "build": "2026.11.22",
   "notes": [
-    "HYDRA no longer speaks replies unless you switch voice output on",
-    "Sign-in now survives reloads and works across sites with a bearer token",
-    "The apps now sign in to the real API: your account works on every device",
-    "Email verification and password reset, with a link when no mail provider is set",
-    "GitHub and Google sign-in, ready for client credentials",
-    "Cross-device sync for memory, notifications, profile and workspace data",
-    "New account page: verification, password, providers, devices, sync"
+    "One navigation bar on every page: ecosystem switch, search, add to device, fullscreen and your profile",
+    "The ecosystem button now lives in the navigation bar, not on the home page",
+    "Search finds apps, actions, tasks, notes and memories \u2014 press Ctrl+K or / to open it",
+    "Workspace has a real sign-in: email and password, create account, or continue as guest",
+    "Install all three apps at once, or one at a time, from Add to device",
+    "Fullscreen and profile-picture buttons sit in the navigation bar"
   ]
 }

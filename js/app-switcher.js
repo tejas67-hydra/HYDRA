@@ -24,7 +24,7 @@ const STYLE = `
 }
 
 .app-switch {
-  position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center;
+  position: fixed; inset: 0; z-index: 10080; display: grid; place-items: center;
   background: rgba(5,2,12,.62); backdrop-filter: blur(18px); opacity: 0; pointer-events: none;
   transition: opacity .28s ease;
 }
@@ -91,7 +91,7 @@ const STYLE = `
   font-size: 20px; cursor: pointer; line-height: 1;
 }
 .switch-veil {
-  position: fixed; inset: 0; z-index: 9500; background: #05020c; opacity: 0; pointer-events: none;
+  position: fixed; inset: 0; z-index: 10070; background: #05020c; opacity: 0; pointer-events: none;
   transition: opacity .4s ease; backdrop-filter: blur(20px);
 }
 .switch-veil.on { opacity: 1; pointer-events: auto; }

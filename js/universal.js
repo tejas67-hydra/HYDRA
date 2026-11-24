@@ -192,6 +192,7 @@ function emit(type, detail) {
 function broadcast(type) {
   channel?.postMessage({ type, rev: state?.rev ?? 0 });
   emit(type, state);
+  window.dispatchEvent(new CustomEvent('hydra:session', { detail: { type } }));
 }
 
 async function reload(origin = 'remote') {
@@ -841,5 +842,7 @@ async function totpValid(secret, code) {
   }
   return false;
 }
+
+window.hydraUniversal = universal;
 
 export default universal;

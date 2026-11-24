@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HYDRA · Account</title>
+<link rel="manifest" href="manifest.suite.json" />
 <link rel="icon" href="assets/icons/favicon.svg" />
 <style>
   :root {
@@ -144,6 +145,12 @@
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/nav.js" defer></script>
+<script type="module">
+  import { initAppSwitcher } from './js/app-switcher.js';
+  initAppSwitcher({ currentApp: 'account', mount: document.getElementById('hydra-nav-switch') })
+    .catch((error) => console.error('[switcher]', error));
+</script>
 <script type="module">
   import universal from './js/universal.js';
   import { VERSION } from './js/updater.js';

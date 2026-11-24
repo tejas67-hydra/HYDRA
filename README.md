@@ -2,7 +2,13 @@
 
 A browser-based AI desktop: a cinematic night scene, a companion robot that reacts to you,
 voice, vision, music, memory, a plugin marketplace, games and a floating window manager.
-No build tools, no server, no account required.
+No build tools, no framework. An account is optional: guest mode works offline, and one
+account syncs across all three apps and every device.
+
+Three apps share one navigation bar — **Companion** (`index.html`), **Workspace**
+(`emo.html`) and **Classic** (`fullhydra.html`). The bar holds the ecosystem switch,
+search (`Ctrl/Cmd+K` or `/`), Add to device, fullscreen and your profile picture. Each app
+installs separately, or all three at once from `install.html`.
 
 ## Open it
 

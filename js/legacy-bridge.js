@@ -192,7 +192,7 @@ async function boot() {
   await universal.init();
   if (universal.signedIn) paintSignedIn();
   mergeMemory();
-  initAppSwitcher({ currentApp: 'legacy' }).catch((err) => console.error('[switcher]', err));
+  initAppSwitcher({ currentApp: 'legacy', mount: document.getElementById('hydra-nav-switch') }).catch((err) => console.error('[switcher]', err));
 
   universal.on('session', () => {
     if (universal.signedIn) paintSignedIn();

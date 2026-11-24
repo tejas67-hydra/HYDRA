@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HYDRA · Install app</title>
+<meta name="theme-color" content="#0b0714" />
+<link rel="icon" href="assets/icons/hydra.svg" type="image/svg+xml" />
+<script>
+  // Point this tab at the requested app manifest before the page finishes loading,
+  // so the browser offers that app — not the one that opened this page.
+  (function () {
+    const allowed = {
+      'manifest.companion.json': 'index.html',
+      'manifest.workspace.json': 'emo.html',
+      'manifest.classic.json': 'fullhydra.html',
+    };
+    const name = new URLSearchParams(location.search).get('manifest');
+    const target = allowed[name] ? name : 'manifest.suite.json';
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = target;
+    document.head.append(link);
+    window.__hydraInstall = {
+      manifest: target,
+      app: allowed[name] || 'index.html',
+      label: { 'manifest.companion.json': 'Companion', 'manifest.workspace.json': 'Workspace', 'manifest.classic.json': 'Classic' }[name] || 'HYDRA',
+    };
+  })();
+</script>
+<style>
+  :root { --panel: rgba(23, 14, 40, .74); --line: rgba(168, 85, 247, .24); --text: #efe8ff; --muted: #a99bc9; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 28px;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(1000px 600px at 20% -10%, rgba(124, 58, 237, .35), transparent 60%), #08050f;
+  }
+  .panel {
+    width: min(420px, 100%); padding: 24px; border-radius: 20px; text-align: center;
+    background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(18px);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  }
+  h1 { font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: #c4b5fd; margin: 0 0 8px; }
+  p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 16px; }
+  button {
+    width: 100%; padding: 12px 16px; border-radius: 12px; border: 0; cursor: pointer; font: inherit;
+    font-size: 13px; font-weight: 700; color: #12061f; background: linear-gradient(140deg, #d8b4fe, #a855f7);
+  }
+  button[disabled] { opacity: .5; cursor: default; }
+  ol { margin: 0 0 16px 18px; padding: 0; text-align: left; font-size: 12.5px; line-height: 1.9; color: #d8cff0; }
+  a { color: #c4b5fd; font-size: 12px; }
+  .status { min-height: 18px; font-size: 12px; color: #4ade80; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <h1>Install <span id="label">HYDRA</span></h1>
+  <p id="lead">Press install. The app gets its own icon and opens in its own window.</p>
+  <ol id="steps" hidden></ol>
+  <button id="go" type="button" disabled>Preparing…</button>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+  <p style="margin-top:14px"><a id="open" href="index.html">Open the app instead</a></p>
+</div>
+
+<script>
+  const { label, app } = window.__hydraInstall;
+  const go = document.getElementById('go');
+  const steps = document.getElementById('steps');
+  const status = document.getElementById('status');
+  const openLink = document.getElementById('open');
+
+  document.getElementById('label').textContent = label;
+  openLink.href = app;
+
+  const platform = () => {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+    if (/Android/i.test(ua)) return 'android';
+    return 'desktop';
+  };
+
+  const instructions = () => {
+    const p = platform();
+    if (p === 'ios') return ['Open this page in Safari.', 'Tap Share.', 'Choose “Add to Home Screen”.'];
+    if (p === 'android') return ['Open the browser menu (⋮).', 'Tap “Install app” or “Add to Home screen”.', 'Confirm.'];
+    return ['Click the install icon in the address bar.', 'Confirm “Install”.', 'The app opens in its own window.'];
+  };
+
+  let deferred = null;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferred = event;
+    go.disabled = false;
+    go.textContent = `Install ${label}`;
+    status.textContent = '';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    status.textContent = `${label} installed.`;
+    go.disabled = true;
+    go.textContent = 'Installed';
+  });
+
+  go.addEventListener('click', async () => {
+    if (!deferred) {
+      steps.innerHTML = instructions().map((step) => `<li>${step}</li>`).join('');
+      steps.hidden = false;
+      return;
+    }
+    deferred.prompt();
+    const choice = await deferred.userChoice.catch(() => ({ outcome: 'dismissed' }));
+    deferred = null;
+    go.disabled = true;
+    status.textContent = choice.outcome === 'accepted' ? 'Installing…' : 'Install cancelled.';
+  });
+
+  // No prompt after a moment means the browser wants a manual install.
+  setTimeout(() => {
+    if (deferred) return;
+    go.disabled = false;
+    go.textContent = 'How to install';
+    document.getElementById('lead').textContent = 'This browser needs a manual install — two taps.';
+    steps.innerHTML = instructions().map((step) => `<li>${step}</li>`).join('');
+    steps.hidden = false;
+  }, 1500);
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -1368,7 +1368,7 @@ async function startUniversal() {
   const local = auth.current();
   if (local && !universal.signedIn) await universal.adopt(local);
   memory.adoptShared(universal.memories(200));
-  initAppSwitcher({ currentApp: 'companion' }).catch((err) => console.error('[switcher]', err));
+  initAppSwitcher({ currentApp: 'companion', mount: document.getElementById('hydra-nav-switch') }).catch((err) => console.error('[switcher]', err));
 
   universal.on('memory', () => {
     const added = memory.adoptShared(universal.memories(200));
