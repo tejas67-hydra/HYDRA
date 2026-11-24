@@ -271,7 +271,7 @@ function applyAccount({ email, name, provider, avatar = '' }) {
     plan: state.profile.plan || 'free',
   };
   state.profile.email = email || state.profile.email;
-  state.profile.displayName = name || state.profile.displayName || (email || '').split('@')[0];
+  state.profile.displayName = state.profile.displayName || name || (email || '').split('@')[0];
   state.profile.username = state.profile.username || ((email || '').split('@')[0] || 'operator');
   state.profile.avatar = avatar || state.profile.avatar;
   registerDevice();
