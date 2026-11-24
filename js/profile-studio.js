@@ -152,7 +152,9 @@
 
   /* ---------------------------- prompt builder ---------------------------- */
 
-  function buildPrompt() {
+  function buildPrompt(force = false) {
+    const box = $('prompt');
+    if (!force && box.dataset.dirty === '1') return;
     const style = STYLES[$('style').value] || STYLES.neon;
     const vibe = VIBES[$('vibe').value] || VIBES.calm;
     const palette = PALETTES[$('palette').value] || PALETTES.violet;
@@ -519,13 +521,16 @@
   }
 
   function bind() {
-    $('style').addEventListener('change', buildPrompt);
-    $('vibe').addEventListener('change', buildPrompt);
-    $('palette').addEventListener('change', buildPrompt);
-    $('extra').addEventListener('input', buildPrompt);
+    $('style').addEventListener('change', () => buildPrompt(true));
+    $('vibe').addEventListener('change', () => buildPrompt(true));
+    $('palette').addEventListener('change', () => buildPrompt(true));
+    $('extra').addEventListener('input', () => buildPrompt(true));
     $('reroll').addEventListener('click', () => {
       state.salt += 1;
-      buildPrompt();
+      buildPrompt(true);
+    });
+    $('prompt').addEventListener('input', (event) => {
+      event.target.dataset.dirty = '1';
     });
     $('copy').addEventListener('click', () => copy($('prompt').value, 'Prompt'));
     $('photo').addEventListener('click', generatePhoto);
@@ -577,7 +582,7 @@
 
     $('use').addEventListener('click', async () => {
       state.salt += 1;
-      buildPrompt();
+      buildPrompt(true);
       const data = drawAvatar();
       applyAvatar(data);
       const ok = await save({ avatar: data });
