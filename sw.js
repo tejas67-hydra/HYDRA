@@ -1,5 +1,5 @@
 /* HYDRA service worker — offline shell, runtime caching for local assets. */
-const CACHE = 'hydra-v2.9.0';
+const CACHE = 'hydra-v2.10.0';
 const CORE = [
   './', './index.html', './style.css', './hydra.bundle.js', './script.js',
   './js/nav.js', './js/config.js', './js/profile-studio.js', './emo.html', './fullhydra.html',

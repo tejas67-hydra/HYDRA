@@ -261,7 +261,7 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   `http://localhost:3100` and run `node server.js`; otherwise sign-in falls back to
   the on-device account and no bearer token appears.
 
-## Profile studio (v2.9.0)
+## Profile studio (v2.10.0)
 - `profile.html` + `js/profile-studio.js` (plain script, works on file://) edit
   the display name and picture, and generate a profile-photo prompt from a
   style, mood and palette. Reached from the nav avatar menu on every page and
