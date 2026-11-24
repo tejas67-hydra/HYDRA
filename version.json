@@ -1,7 +1,9 @@
 {
-  "version": "2.8.0",
+  "version": "2.8.1",
   "build": "2026.11.22",
   "notes": [
+    "The nav avatar shows your name and picture as soon as the page settles, not after a click",
+    "A failed server call says the HYDRA server could not be reached instead of claiming there is no on-device account",
     "One navigation bar on every page: ecosystem switch, search, add to device, fullscreen and your profile",
     "The ecosystem button now lives in the navigation bar, not on the home page",
     "Search finds apps, actions, tasks, notes and memories \u2014 press Ctrl+K or / to open it",
