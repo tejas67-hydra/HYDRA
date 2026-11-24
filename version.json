@@ -1,8 +1,10 @@
 {
-  "version": "2.3.2",
-  "build": "2026.12.10",
+  "version": "2.4.0",
+  "build": "2026.12.11",
   "notes": [
-    "The companion now patrols the home screen: it walks to a new spot every few seconds and stays there",
-    "Walking turns the body toward the direction of travel and paces the glide to the distance"
+    "One HYDRA account: sign in once, every HYDRA app on the site shares it",
+    "Shared memory: something told to the companion shows up in Workspace and back",
+    "App switcher with fade and blur, plus shared notifications and theme",
+    "Account security panel: TOTP two-factor, biometric key, device list, sign out everywhere"
   ]
 }

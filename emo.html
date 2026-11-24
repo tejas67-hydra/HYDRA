@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en" data-theme="purple">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HYDRA Workspace</title>
+<meta name="theme-color" content="#0b0714" />
+<link rel="icon" href="assets/icons/hydra.svg" type="image/svg+xml" />
+<style>
+  :root {
+    --bg: #08050f; --panel: rgba(23, 14, 40, .72); --line: rgba(168, 85, 247, .22);
+    --text: #efe8ff; --muted: #a99bc9; --accent: #a855f7; --accent-2: #7c3aed;
+    --ok: #4ade80; --warn: #fbbf24;
+    --font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; font-family: var(--font); color: var(--text);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(124, 58, 237, .35), transparent 60%),
+      radial-gradient(900px 600px at 95% 10%, rgba(56, 189, 248, .16), transparent 60%),
+      var(--bg);
+  }
+  .app { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: .06em; }
+  .brand img { width: 34px; height: 34px; filter: drop-shadow(0 0 14px rgba(168, 85, 247, .7)); }
+  .brand small { display: block; font-size: 11px; letter-spacing: .18em; color: var(--muted); font-weight: 500; }
+  .spacer { flex: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(18px);
+    font-size: 13px; cursor: pointer;
+  }
+  .avatar {
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(140deg, var(--accent), #38bdf8); color: #0b0714; font-weight: 800; font-size: 12px;
+  }
+  .switch {
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--text);
+    background: linear-gradient(140deg, rgba(168, 85, 247, .28), rgba(56, 189, 248, .14));
+    font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .switch:hover { border-color: rgba(168, 85, 247, .5); }
+  .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 18px;
+    backdrop-filter: blur(20px); box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  }
+  .card h2 { margin: 0 0 12px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  input[type="text"], textarea {
+    flex: 1; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line);
+    background: rgba(10, 6, 18, .7); color: var(--text); font: inherit; font-size: 14px;
+  }
+  input:focus, textarea:focus { outline: none; border-color: rgba(168, 85, 247, .6); }
+  button.primary {
+    padding: 11px 18px; border-radius: 12px; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+    color: #12061f; background: linear-gradient(140deg, #d8b4fe, #a855f7);
+  }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  li.item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border-radius: 12px;
+    background: rgba(10, 6, 18, .55); border: 1px solid rgba(168, 85, 247, .12); font-size: 14px;
+  }
+  li.item.done span { opacity: .45; text-decoration: line-through; }
+  .tick { width: 18px; height: 18px; border-radius: 6px; border: 1px solid var(--line); cursor: pointer; flex: none; margin-top: 2px; }
+  .tick.on { background: var(--ok); border-color: var(--ok); }
+  .meta { font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+  .mem { display: grid; gap: 8px; max-height: 340px; overflow: auto; }
+  .mem p { margin: 0; }
+  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+  .pill { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .locked { text-align: center; padding: 60px 20px; }
+  .locked h1 { font-size: 26px; margin: 18px 0 8px; }
+  .locked p { color: var(--muted); margin-bottom: 22px; }
+  a.primary { text-decoration: none; display: inline-block; }
+  .fade-out { animation: fadeOut .42s ease forwards; }
+  @keyframes fadeOut { to { opacity: 0; filter: blur(14px); transform: scale(.96); } }
+  .toast {
+    position: fixed; right: 20px; bottom: 20px; padding: 12px 16px; border-radius: 14px;
+    background: rgba(23, 14, 40, .95); border: 1px solid var(--line); font-size: 13px; opacity: 0;
+    transform: translateY(8px); transition: .25s; pointer-events: none;
+  }
+  .toast.on { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <img src="assets/icons/hydra.svg" alt="" />
+      <div>HYDRA <small>WORKSPACE</small></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="switch" id="switch-app" type="button">Switch app</button>
+    <button class="chip" id="user-chip" type="button"><span class="avatar" id="avatar">H</span><span id="who">Signing in…</span></button>
+  </header>
+
+  <main id="shell" hidden>
+    <div class="grid">
+      <section class="card">
+        <h2>Tasks</h2>
+        <div class="row" style="margin-bottom:12px">
+          <input type="text" id="task-input" placeholder="Add a task — it appears in Companion too" />
+          <button class="primary" id="task-add" type="button">Add</button>
+        </div>
+        <ul id="tasks"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Shared memory</h2>
+        <div class="row" style="margin-bottom:12px">
+          <input type="text" id="mem-input" placeholder="Tell HYDRA something to remember" />
+          <button class="primary" id="mem-add" type="button">Remember</button>
+        </div>
+        <div class="mem" id="memories"></div>
+      </section>
+
+      <section class="card">
+        <h2>Notes</h2>
+        <div class="row" style="margin-bottom:12px">
+          <input type="text" id="note-input" placeholder="Quick note" />
+          <button class="primary" id="note-add" type="button">Save</button>
+        </div>
+        <ul id="notes"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Notifications</h2>
+        <ul id="notifications"></ul>
+      </section>
+    </div>
+  </main>
+
+  <section class="locked" id="locked" hidden>
+    <img src="assets/icons/hydra.svg" width="54" alt="" />
+    <h1>Sign in once</h1>
+    <p>Open HYDRA Companion and sign in. This app shares that account, so you will never log in twice.</p>
+    <a class="primary" href="index.html">Open HYDRA Companion</a>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import universal from './js/universal.js';
+
+const $ = (id) => document.getElementById(id);
+const toast = (text) => {
+  const el = $('toast');
+  el.textContent = text;
+  el.classList.add('on');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove('on'), 2600);
+};
+
+await universal.init();
+const theme = universal.profile?.theme;
+if (theme) document.documentElement.dataset.theme = theme;
+if (universal.profile?.accent) document.documentElement.style.setProperty('--accent', universal.profile.accent);
+universal.on('profile', () => {
+  if (universal.profile?.accent) document.documentElement.style.setProperty('--accent', universal.profile.accent);
+  if (universal.profile?.theme) document.documentElement.dataset.theme = universal.profile.theme;
+});
+
+function render() {
+  const signed = universal.signedIn;
+  $('shell').hidden = !signed;
+  $('locked').hidden = signed;
+  if (!signed) return;
+  const profile = universal.profile;
+  const name = profile.displayName || profile.email || 'Operator';
+  $('who').textContent = `${name} · ${profile.plan}`;
+  $('avatar').textContent = (name[0] || 'H').toUpperCase();
+
+  const tasks = universal.list('tasks');
+  $('tasks').innerHTML = tasks.length
+    ? tasks.map((t) => `<li class="item ${t.done ? 'done' : ''}" data-task="${t.id}">
+        <span class="tick ${t.done ? 'on' : ''}" data-toggle="${t.id}"></span>
+        <span>${escapeHtml(t.text)}</span>
+        <span class="meta" style="margin-left:auto">${new Date(t.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </li>`).join('')
+    : '<li class="empty">No tasks yet. Add one and it shows up in Companion.</li>';
+
+  const notes = universal.list('notes');
+  $('notes').innerHTML = notes.length
+    ? notes.map((n) => `<li class="item"><span>${escapeHtml(n.text)}</span><span class="meta" style="margin-left:auto">${new Date(n.at).toLocaleDateString()}</span></li>`).join('')
+    : '<li class="empty">No notes yet.</li>';
+
+  const memories = universal.memories(30);
+  $('memories').innerHTML = memories.length
+    ? memories.map((m) => `<div class="item" style="flex-direction:column;gap:4px">
+        <p>${escapeHtml(m.text)}</p>
+        <span class="meta">${escapeHtml(m.source || 'chat')} · ${new Date(m.at).toLocaleString()}</span>
+      </div>`).join('')
+    : '<div class="empty">Nothing remembered yet. Say something in Companion and it lands here.</div>';
+
+  const notes2 = universal.notifications(12);
+  $('notifications').innerHTML = notes2.length
+    ? notes2.map((n) => `<li class="item"><div><p style="margin:0">${escapeHtml(n.title)}</p>
+        <span class="meta">${escapeHtml(n.body || '')} · ${escapeHtml(n.app || 'companion')}</span></div></li>`).join('')
+    : '<li class="empty">No notifications yet.</li>';
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+$('task-add').addEventListener('click', async () => {
+  const input = $('task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  await universal.put('tasks', { text, done: false });
+  await universal.notify({ title: 'New task in Workspace', body: text, app: 'workspace' });
+  input.value = '';
+  render();
+});
+
+$('task-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('task-add').click(); });
+
+$('tasks').addEventListener('click', async (event) => {
+  const toggle = event.target.closest('[data-toggle]');
+  if (!toggle) return;
+  const id = toggle.dataset.toggle;
+  const task = universal.list('tasks').find((t) => t.id === id);
+  if (!task) return;
+  await universal.put('tasks', { ...task, done: !task.done });
+  render();
+});
+
+$('note-add').addEventListener('click', async () => {
+  const input = $('note-input');
+  const text = input.value.trim();
+  if (!text) return;
+  await universal.put('notes', { text });
+  input.value = '';
+  render();
+});
+
+$('mem-add').addEventListener('click', async () => {
+  const input = $('mem-input');
+  const text = input.value.trim();
+  if (!text) return;
+  await universal.remember(text, { source: 'workspace', tags: ['manual'] });
+  input.value = '';
+  toast('Saved to shared memory');
+  render();
+});
+
+$('mem-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('mem-add').click(); });
+
+$('switch-app').addEventListener('click', () => {
+  document.querySelector('.app').classList.add('fade-out');
+  setTimeout(() => { location.href = 'index.html'; }, 380);
+});
+
+$('user-chip').addEventListener('click', () => {
+  toast(`${universal.profile.email} · ${universal.profile.plan} · ${universal.devices().length} device(s)`);
+});
+
+for (const type of ['session', 'profile', 'memory', 'notify', 'data']) {
+  universal.on(type, () => render());
+}
+
+render();
+</script>
+</body>
+</html>

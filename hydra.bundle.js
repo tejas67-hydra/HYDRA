@@ -719,6 +719,285 @@ function mountAurora() {
 return { sleepFrame, playBoot, typewriter, countUp, reveal, mountAurora };
 
 });
+__def("app-switcher", function () {
+/**
+ * App switcher — one HYDRA account across every app on this origin.
+ * Injects its own markup so the shell markup stays untouched.
+ */
+
+import universal from './universal.js';
+
+const STYLE = `
+.app-switch-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px;
+  margin: 0 0 10px; border-radius: 12px; border: 1px solid rgba(168,85,247,.22);
+  background: rgba(168,85,247,.1); color: var(--text, #efe8ff); font: inherit;
+  font-size: 12px; letter-spacing: .04em; cursor: pointer;
+}
+.app-switch-btn:hover { border-color: rgba(168,85,247,.5); background: rgba(168,85,247,.18); }
+.app-switch-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.app-switch-btn .name { flex: 1; text-align: left; opacity: .9; }
+.app-switch-btn .caret { opacity: .5; }
+
+.app-switch {
+  position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center;
+  background: rgba(5,2,12,.62); backdrop-filter: blur(18px); opacity: 0; pointer-events: none;
+  transition: opacity .28s ease;
+}
+.app-switch.on { opacity: 1; pointer-events: auto; }
+.app-switch__panel {
+  width: min(560px, 92vw); padding: 22px; border-radius: 24px;
+  background: rgba(20,11,36,.92); border: 1px solid rgba(168,85,247,.28);
+  box-shadow: 0 40px 120px rgba(0,0,0,.6); transform: translateY(14px) scale(.97);
+  transition: transform .32s cubic-bezier(.2,.9,.2,1);
+}
+.app-switch.on .app-switch__panel { transform: none; }
+.app-switch h2 { margin: 0 0 4px; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; color: #c4b5fd; }
+.app-switch p.sub { margin: 0 0 18px; font-size: 12px; color: #a99bc9; }
+.app-switch__apps { display: grid; gap: 10px; }
+.app-card {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(168,85,247,.2); background: rgba(12,6,24,.7); cursor: pointer;
+  color: #efe8ff; font: inherit; text-align: left; width: 100%;
+}
+.app-card:hover { border-color: rgba(168,85,247,.55); background: rgba(168,85,247,.14); }
+.app-card.is-current { border-color: rgba(74,222,128,.45); }
+.app-card__badge {
+  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none;
+  background: linear-gradient(140deg, #a855f7, #38bdf8); color: #0b0714; font-weight: 800;
+}
+.app-card__name { font-weight: 600; font-size: 14px; }
+.app-card__tag { font-size: 11px; color: #a99bc9; }
+.app-card__state { margin-left: auto; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #4ade80; }
+.app-switch__account {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(168,85,247,.18);
+  display: flex; align-items: center; gap: 12px; font-size: 12px; color: #a99bc9;
+}
+.app-switch__account strong { color: #efe8ff; font-weight: 600; }
+.app-switch__actions { margin-left: auto; display: flex; gap: 8px; }
+.app-switch__actions button {
+  padding: 7px 12px; border-radius: 10px; font: inherit; font-size: 11px; cursor: pointer;
+  background: rgba(168,85,247,.14); color: #efe8ff; border: 1px solid rgba(168,85,247,.28);
+}
+.app-switch__actions button:hover { background: rgba(168,85,247,.26); }
+.app-switch__security {
+  margin-top: 12px; display: grid; gap: 8px; font-size: 12px; color: #a99bc9;
+}
+.app-switch__security .line { display: flex; align-items: center; gap: 10px; }
+.app-switch__security .line strong { color: #efe8ff; font-weight: 600; }
+.app-switch__security .line button {
+  margin-left: auto; padding: 6px 10px; border-radius: 9px; font: inherit; font-size: 11px;
+  cursor: pointer; background: rgba(168,85,247,.14); color: #efe8ff; border: 1px solid rgba(168,85,247,.28);
+}
+.app-switch__security input {
+  width: 96px; padding: 6px 9px; border-radius: 9px; border: 1px solid rgba(168,85,247,.3);
+  background: rgba(8,4,16,.8); color: #efe8ff; font: inherit; font-size: 12px; letter-spacing: .18em;
+}
+.app-switch__secret {
+  font-family: ui-monospace, monospace; font-size: 11px; color: #d8b4fe; word-break: break-all;
+  background: rgba(168,85,247,.1); padding: 8px 10px; border-radius: 9px;
+}
+.app-switch__close {
+  position: absolute; top: 14px; right: 16px; background: none; border: 0; color: #a99bc9;
+  font-size: 20px; cursor: pointer; line-height: 1;
+}
+.switch-veil {
+  position: fixed; inset: 0; z-index: 9500; background: #05020c; opacity: 0; pointer-events: none;
+  transition: opacity .4s ease; backdrop-filter: blur(20px);
+}
+.switch-veil.on { opacity: 1; pointer-events: auto; }
+`;
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === 'class') node.className = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  for (const child of children) node.append(child);
+  return node;
+}
+
+async function initAppSwitcher({ mount = null, currentApp = 'companion' } = {}) {
+  await universal.init();
+
+  if (!document.getElementById('app-switch-style')) {
+    const style = document.createElement('style');
+    style.id = 'app-switch-style';
+    style.textContent = STYLE;
+    document.head.append(style);
+  }
+
+  const button = el('button', { class: 'app-switch-btn', type: 'button', title: 'Switch HYDRA app' },
+    el('span', { class: 'dot' }),
+    el('span', { class: 'name' }, 'HYDRA ecosystem'),
+    el('span', { class: 'caret' }, '⌄'));
+
+  const target = mount || document.querySelector('.sidebar__brand, .sidebar__top, .sidebar');
+  if (target) target.append(button);
+
+  const overlay = el('div', { class: 'app-switch', id: 'app-switch' });
+  const veil = el('div', { class: 'switch-veil', id: 'switch-veil' });
+  const panel = el('div', { class: 'app-switch__panel' });
+  overlay.append(panel);
+  document.body.append(overlay, veil);
+
+  const close = () => overlay.classList.remove('on');
+
+  function render() {
+    const profile = universal.profile;
+    const name = profile.displayName || profile.email || 'Guest';
+    panel.replaceChildren(
+      el('button', { class: 'app-switch__close', type: 'button', onclick: close }, '×'),
+      el('h2', {}, 'HYDRA apps'),
+      el('p', { class: 'sub' }, universal.signedIn
+        ? `Signed in as ${name} — one account, one memory.`
+        : 'Sign in to Companion to unlock every HYDRA app.'),
+      el('div', { class: 'app-switch__apps' },
+        ...universal.apps.map((app) => el('button', {
+          class: `app-card ${app.id === currentApp ? 'is-current' : ''}`,
+          type: 'button',
+          onclick: () => go(app),
+        },
+        el('span', { class: 'app-card__badge' }, app.name.split(' ').pop()[0]),
+        el('span', {},
+          el('div', { class: 'app-card__name' }, app.name),
+          el('div', { class: 'app-card__tag' }, app.tagline)),
+        el('span', { class: 'app-card__state' }, app.id === currentApp ? 'open' : 'switch'))),
+      ),
+      securityPanel(),
+      el('div', { class: 'app-switch__account' },
+        el('span', {}, 'Account ', el('strong', {}, name),
+          universal.signedIn ? ` · ${universal.devices().length} device(s)` : ' · not signed in'),
+        el('div', { class: 'app-switch__actions' },
+          el('button', {
+            type: 'button',
+            onclick: async () => {
+              await universal.signOut();
+              location.reload();
+            },
+          }, 'Sign out'),
+          el('button', {
+            type: 'button',
+            onclick: async () => {
+              await universal.signOut({ all: true });
+              location.reload();
+            },
+          }, 'Sign out everywhere'))),
+    );
+  }
+
+
+  function securityPanel() {
+    if (!universal.signedIn) return el('div');
+    const security = universal.state?.security || {};
+    const twoFactor = security.twoFactor || {};
+    const rows = [
+      el('div', { class: 'line' },
+        el('span', {}, 'Two-factor ', el('strong', {}, twoFactor.enabled ? 'on' : 'off')),
+        el('button', {
+          type: 'button',
+          onclick: async (event) => {
+            if (twoFactor.enabled) {
+              await universal.disable2FA();
+              render();
+              return;
+            }
+            const { secret, uri } = await universal.enable2FA();
+            const holder = event.target.closest('.line').parentElement;
+            const box = el('div', {},
+              el('div', { class: 'app-switch__secret' }, `Secret: ${secret}`),
+              el('div', { class: 'line', style: 'margin-top:8px' },
+                el('input', { id: 'totp-code', placeholder: '123456', maxlength: '6', inputmode: 'numeric' }),
+                el('button', {
+                  type: 'button',
+                  onclick: async () => {
+                    try {
+                      await universal.confirm2FA(document.getElementById('totp-code').value);
+                      box.remove();
+                      render();
+                    } catch (err) {
+                      box.querySelector('.app-switch__secret').textContent = err.message;
+                    }
+                  },
+                }, 'Confirm'),
+                el('a', {
+                  href: uri, style: 'font-size:11px;color:#c4b5fd;margin-left:auto',
+                }, 'Add to authenticator')),
+            );
+            holder.append(box);
+          },
+        }, twoFactor.enabled ? 'Disable' : 'Enable')),
+      el('div', { class: 'line' },
+        el('span', {}, 'Biometric ', el('strong', {}, security.webauthn ? 'registered' : 'not set')),
+        el('button', {
+          type: 'button',
+          onclick: async () => {
+            try {
+              await universal.enableBiometric();
+              render();
+            } catch (err) {
+              alert(err.message);
+            }
+          },
+        }, security.webauthn ? 'Re-register' : 'Register')),
+      el('div', { class: 'line' },
+        el('span', {}, 'Devices ', el('strong', {}, String(universal.devices().length))),
+        el('span', { style: 'margin-left:auto;font-size:11px' },
+          universal.devices().map((d) => d.name).slice(0, 3).join(', '))),
+    ];
+    return el('div', { class: 'app-switch__security' }, ...rows);
+  }
+
+  function go(app) {
+    if (app.id === currentApp) {
+      close();
+      return;
+    }
+    veil.classList.add('on');
+    setTimeout(() => { location.href = app.url; }, 380);
+  }
+
+  button.addEventListener('click', () => {
+    render();
+    overlay.classList.add('on');
+  });
+  overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+
+  universal.on('session', render);
+  universal.on('profile', render);
+
+  /* Theme travels with the account, both directions. */
+  const root = document.documentElement;
+  if (universal.profile.theme && root.dataset.theme !== universal.profile.theme) {
+    root.dataset.theme = universal.profile.theme;
+  }
+  let themeTimer = 0;
+  new MutationObserver(() => {
+    clearTimeout(themeTimer);
+    themeTimer = setTimeout(() => {
+      if (root.dataset.theme && root.dataset.theme !== universal.profile.theme) {
+        universal.updateProfile({ theme: root.dataset.theme }).catch(() => {});
+      }
+    }, 500);
+  }).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+  universal.on('profile', () => {
+    if (universal.profile.theme && root.dataset.theme !== universal.profile.theme) {
+      root.dataset.theme = universal.profile.theme;
+    }
+  });
+
+  return { open: () => { render(); overlay.classList.add('on'); }, close };
+}
+
+export default initAppSwitcher;
+
+return { initAppSwitcher };
+
+});
 __def("app", function () {
 /**
  * HYDRA — application bootstrap and UI wiring.
@@ -752,6 +1031,8 @@ const { initMotion } = __req('motion');
 const { initWorkspace } = __req('workspace');
 const { initDevice } = __req('device');
 const { auth } = __req('auth');
+import universal from './universal.js';
+const { initAppSwitcher } = __req('app-switcher');
 const { initDeck } = __req('deck');
 const { presence } = __req('presence');
 const { objects } = __req('objects');
@@ -2022,13 +2303,14 @@ async function boot() {
   initDeck();
   initExtras();
   initWorkspace();
-  window.__hydra = { companion, emotion, setView, bus, presence, objects, cv };
+  window.__hydra = { companion, emotion, setView, bus, presence, objects, cv, universal, memory, auth };
   try { initDevice(); } catch (err) { console.error('[device]', err); }
   try { auth.init(); } catch (err) {
     console.error('[auth]', err);
     document.querySelector('#auth')?.remove();
     document.body.classList.remove('auth-locked');
   }
+  startUniversal();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     const hadController = Boolean(navigator.serviceWorker.controller);
     let reloaded = false;
@@ -2075,6 +2357,38 @@ async function boot() {
 
   updater.maybeCheck();
   bus.emit('app:ready');
+}
+
+
+/* --------------------- universal account bridge --------------------- */
+async function startUniversal() {
+  await universal.init();
+  const local = auth.current();
+  if (local && !universal.signedIn) await universal.adopt(local);
+  memory.adoptShared(universal.memories(200));
+  initAppSwitcher({ currentApp: 'companion' }).catch((err) => console.error('[switcher]', err));
+
+  universal.on('memory', () => {
+    const added = memory.adoptShared(universal.memories(200));
+    if (added) bus.emit('memory:fact', memory.facts[0]);
+  });
+
+  universal.on('notify', () => {
+    const latest = universal.notifications(1)[0];
+    if (!latest || latest.app === 'companion') return;
+    bus.emit('notify', { title: latest.title, body: latest.body, tone: latest.tone || 'info' });
+    companion.say(`${latest.title}.`, { hold: 3600 });
+  });
+
+  universal.on('session', () => {
+    if (!universal.signedIn) auth.signOut();
+  });
+
+  bus.on('auth:change', async ({ user }) => {
+    if (!user) return;
+    await universal.init();
+    if (!universal.signedIn) await universal.adopt(user);
+  });
 }
 
 return { boot };
@@ -5253,6 +5567,7 @@ __def("memory", function () {
 
 const { bus, uid } = __req('utils');
 const { storage } = __req('storage');
+import universal from './universal.js';
 
 const HISTORY_LIMIT = 240;
 const FACT_LIMIT = 120;
@@ -5336,13 +5651,35 @@ class MemoryEngine {
     this.facts.unshift(fact);
     if (this.facts.length > FACT_LIMIT) this.facts.length = FACT_LIMIT;
     this.persistFacts();
+    universal.remember(fact.text, { tags, source }).catch(() => {});
     bus.emit('memory:fact', fact);
     return fact;
   }
 
   forget(id) {
+    const fact = this.facts.find((f) => f.id === id);
     this.facts = this.facts.filter((f) => f.id !== id);
     this.persistFacts();
+    if (fact) universal.forgetText(fact.text).catch(() => {});
+  }
+
+  /** Pulls facts written by another HYDRA app into this one. */
+  adoptShared(memories = []) {
+    let added = 0;
+    for (const entry of memories) {
+      const text = String(entry.text || '').trim();
+      if (!text) continue;
+      if (this.facts.some((f) => f.text.toLowerCase() === text.toLowerCase())) continue;
+      this.facts.unshift({ id: uid('f'), text: text.slice(0, 400), tags: entry.tags || [], source: entry.source || 'shared', at: entry.at || Date.now() });
+      added += 1;
+    }
+    if (added) {
+      this.facts.sort((a, b) => b.at - a.at);
+      this.facts.length = Math.min(this.facts.length, FACT_LIMIT);
+      this.persistFacts();
+      bus.emit('memory:fact', this.facts[0]);
+    }
+    return added;
   }
 
   persistFacts() {
@@ -9116,6 +9453,607 @@ function toggleThreeBot(on) {
 return { webglSupport, initThreeBot, teardownThreeBot, toggleThreeBot };
 
 });
+__def("universal", function () {
+/**
+ * HYDRA universal account — one identity, one memory, every HYDRA app.
+ *
+ * The account document lives in localStorage, encrypted with a non-extractable
+ * AES-GCM key held in IndexedDB. Every open app mirrors it through a
+ * BroadcastChannel, so Companion and Workspace stay in lockstep on one origin.
+ * A backend is optional: set window.HYDRA_API to a service implementing the
+ * contract in docs/universal-api.md and writes are queued and flushed to it.
+ */
+
+const LS_KEY = 'hydra.universal.v1';
+const CHANNEL_NAME = 'hydra.universal.v1';
+const DEVICE_KEY = 'hydra.universal.device';
+const DB_NAME = 'hydra-universal';
+const DB_STORE = 'keys';
+
+const APPS = [
+  { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
+  { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
+];
+
+const listeners = new Map();
+const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel(CHANNEL_NAME) : null;
+let state = null;
+let cryptoKey = null;
+const queue = [];
+
+const now = () => Date.now();
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${now()}-${Math.random().toString(16).slice(2)}`);
+
+function blank() {
+  return {
+    v: 1,
+    rev: 0,
+    account: null,
+    profile: {
+      displayName: '', username: '', email: '', avatar: '', theme: 'purple', accent: '#a855f7',
+      language: 'en', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      voice: 'aurora', personality: 'warm', plan: 'free',
+    },
+    security: { password: null, twoFactor: { enabled: false, secret: '' }, webauthn: null },
+    devices: [],
+    sessions: [],
+    memory: [],
+    notifications: [],
+    data: { tasks: [], notes: [], files: [], achievements: [], bookmarks: [], projects: [] },
+    relationship: { level: 1, points: 0 },
+    authEpoch: 0,
+    updatedAt: now(),
+  };
+}
+
+/* ------------------------------- storage ------------------------------- */
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(DB_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbSet(key, value) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getKey() {
+  if (cryptoKey) return cryptoKey;
+  if (!globalThis.crypto?.subtle) return null;
+  try {
+    let key = await idbGet('aes');
+    if (!key) {
+      key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      await idbSet('aes', key);
+    }
+    cryptoKey = key;
+    return key;
+  } catch {
+    return null;
+  }
+}
+
+const b64 = {
+  encode: (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))),
+  decode: (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0)),
+};
+
+async function persist() {
+  if (!state) return;
+  state.updatedAt = now();
+  state.rev += 1;
+  const key = await getKey();
+  try {
+    if (key) {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const data = new TextEncoder().encode(JSON.stringify(state));
+      const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+      localStorage.setItem(LS_KEY, JSON.stringify({ v: 1, enc: true, iv: b64.encode(iv), data: b64.encode(cipher) }));
+    } else {
+      localStorage.setItem(LS_KEY, JSON.stringify({ v: 1, enc: false, data: state }));
+    }
+  } catch {
+    localStorage.setItem(LS_KEY, JSON.stringify({ v: 1, enc: false, data: state }));
+  }
+}
+
+async function readStored() {
+  const raw = localStorage.getItem(LS_KEY);
+  if (!raw) return null;
+  let envelope;
+  try {
+    envelope = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!envelope.enc) return envelope.data || null;
+  const key = await getKey();
+  if (!key) return null;
+  try {
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: b64.decode(envelope.iv) }, key, b64.decode(envelope.data),
+    );
+    return JSON.parse(new TextDecoder().decode(plain));
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------- events -------------------------------- */
+
+function emit(type, detail) {
+  for (const cb of listeners.get(type) || []) {
+    try {
+      cb(detail);
+    } catch (err) {
+      console.error('[universal]', err);
+    }
+  }
+}
+
+function broadcast(type) {
+  channel?.postMessage({ type, rev: state?.rev ?? 0 });
+  emit(type, state);
+}
+
+async function reload(origin = 'remote') {
+  const next = await readStored();
+  if (!next) return;
+  const previous = state;
+  state = { ...blank(), ...next };
+  if (previous && previous.authEpoch !== state.authEpoch) emit('session', state);
+  if (previous && JSON.stringify(previous.profile) !== JSON.stringify(state.profile)) emit('profile', state);
+  emit('change', { state, origin });
+}
+
+channel?.addEventListener('message', (event) => {
+  if (!event.data?.type) return;
+  reload('broadcast').then(() => emit(event.data.type, state));
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key === LS_KEY) reload('storage').then(() => emit('change', { state, origin: 'storage' }));
+});
+
+window.addEventListener('online', () => flushQueue());
+
+/* ------------------------------ identity ------------------------------- */
+
+function deviceId() {
+  let id = localStorage.getItem(DEVICE_KEY);
+  if (!id) {
+    id = uid();
+    localStorage.setItem(DEVICE_KEY, id);
+  }
+  return id;
+}
+
+function deviceName() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS device';
+  if (/Android/.test(ua)) return 'Android device';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows PC';
+  return 'Browser';
+}
+
+async function pbkdf2(password, saltB64) {
+  const salt = b64.decode(saltB64);
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, base, 256);
+  return b64.encode(bits);
+}
+
+function registerDevice() {
+  const id = deviceId();
+  state.devices = (state.devices || []).filter((d) => d.id !== id);
+  state.devices.unshift({ id, name: deviceName(), ua: navigator.userAgent.slice(0, 120), lastSeen: now(), current: true });
+  state.devices = state.devices.slice(0, 12).map((d) => ({ ...d, current: d.id === id }));
+}
+
+function openSession(provider) {
+  const id = uid();
+  state.sessions = (state.sessions || []).filter((s) => s.deviceId !== deviceId());
+  state.sessions.unshift({ id, deviceId: deviceId(), provider, startedAt: now(), current: true });
+  state.sessions = state.sessions.slice(0, 12).map((s) => ({ ...s, current: s.deviceId === deviceId() }));
+}
+
+function applyAccount({ email, name, provider, avatar = '' }) {
+  const existing = state.account;
+  state.account = {
+    id: existing?.id || uid(),
+    email,
+    provider,
+    createdAt: existing?.createdAt || now(),
+    plan: state.profile.plan || 'free',
+  };
+  state.profile.email = email || state.profile.email;
+  state.profile.displayName = name || state.profile.displayName || (email || '').split('@')[0];
+  state.profile.username = state.profile.username || ((email || '').split('@')[0] || 'operator');
+  state.profile.avatar = avatar || state.profile.avatar;
+  registerDevice();
+  openSession(provider);
+}
+
+const universal = {
+  async init() {
+    state = (await readStored()) || blank();
+    if (!state.account) registerDevice();
+    emit('change', { state, origin: 'init' });
+    return state;
+  },
+
+  get state() { return state; },
+  get signedIn() { return Boolean(state?.account); },
+  get user() { return state?.account || null; },
+  get profile() { return state?.profile || blank().profile; },
+
+  apps: APPS,
+  registerApp(app) { if (!APPS.some((a) => a.id === app.id)) APPS.push(app); },
+
+  on(type, cb) {
+    if (!listeners.has(type)) listeners.set(type, new Set());
+    listeners.get(type).add(cb);
+    return () => listeners.get(type)?.delete(cb);
+  },
+
+  async signUp({ email, password, name }) {
+    await this.init();
+    if (!email || !password) throw new Error('Email and password are required');
+    if (state.security.password && state.account?.email === email) throw new Error('That account already exists — sign in instead');
+    const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
+    state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
+    applyAccount({ email, name, provider: 'password' });
+    state.memory.push({ id: uid(), text: `Account created for ${name || email}`, tags: ['account'], at: now(), source: 'system' });
+    await persist();
+    broadcast('session');
+    return state.account;
+  },
+
+  async signIn({ email, password }) {
+    await this.init();
+    if (!email || !password) throw new Error('Email and password are required');
+    if (!state.security.password) throw new Error('No account on this device yet — create one first');
+    if (state.account?.email && state.account.email !== email) throw new Error('That is not the account saved on this device');
+    const hash = await pbkdf2(password, state.security.password.salt);
+    if (hash !== state.security.password.hash) throw new Error('Wrong password');
+    applyAccount({ email, name: state.profile.displayName, provider: 'password' });
+    await persist();
+    broadcast('session');
+    return state.account;
+  },
+
+  /** OAuth providers need a real backend; fail honestly instead of faking a login. */
+  async signInWithProvider(provider) {
+    await this.init();
+    if (!window.HYDRA_API) {
+      throw new Error(`${provider} sign-in needs the HYDRA Cloud backend. Guest and email sign-in work offline.`);
+    }
+    window.location.href = `${window.HYDRA_API}/auth/${provider}?redirect=${encodeURIComponent(location.href)}`;
+    return null;
+  },
+
+  async guest(name = 'Guest') {
+    await this.init();
+    applyAccount({ email: `guest-${deviceId().slice(0, 8)}@local`, name, provider: 'guest' });
+    await persist();
+    broadcast('session');
+    return state.account;
+  },
+
+  /** Turns an existing local login into the universal identity. */
+  async adopt(name) {
+    await this.init();
+    if (state.account) return state.account;
+    return this.guest(name || 'Operator');
+  },
+
+  async updateProfile(patch = {}) {
+    await this.init();
+    state.profile = { ...state.profile, ...patch };
+    await persist();
+    broadcast('profile');
+    return state.profile;
+  },
+
+  async signOut({ all = false } = {}) {
+    await this.init();
+    const id = deviceId();
+    if (all) {
+      state.authEpoch += 1;
+      state.sessions = [];
+      state.devices = [];
+      state.account = null;
+    } else {
+      state.sessions = (state.sessions || []).filter((s) => s.deviceId !== id);
+      state.account = null;
+    }
+    await persist();
+    broadcast('session');
+  },
+
+  /* ------------------------------ memory ------------------------------- */
+
+  async remember(text, { tags = [], source = 'chat' } = {}) {
+    await this.init();
+    const clean = String(text || '').trim();
+    if (!clean) return null;
+    const existing = state.memory.find((m) => m.text.toLowerCase() === clean.toLowerCase());
+    if (existing) return existing;
+    const entry = { id: uid(), text: clean, tags, at: now(), source };
+    state.memory.unshift(entry);
+    state.memory = state.memory.slice(0, 800);
+    state.relationship.points += 1;
+    state.relationship.level = Math.min(99, 1 + Math.floor(state.relationship.points / 25));
+    await persist();
+    broadcast('memory');
+    return entry;
+  },
+
+  async forget(id) {
+    await this.init();
+    state.memory = state.memory.filter((m) => m.id !== id);
+    await persist();
+    broadcast('memory');
+  },
+
+  async forgetText(text) {
+    await this.init();
+    const key = String(text || '').trim().toLowerCase();
+    state.memory = state.memory.filter((m) => m.text.toLowerCase() !== key);
+    await persist();
+    broadcast('memory');
+  },
+
+  memories(limit = 100) { return (state?.memory || []).slice(0, limit); },
+
+  recall(query, limit = 5) {
+    const words = String(query || '').toLowerCase().split(/\W+/).filter((w) => w.length > 2);
+    return (state?.memory || [])
+      .map((m) => ({ ...m, score: words.reduce((n, w) => n + (m.text.toLowerCase().includes(w) ? 1 : 0), 0) }))
+      .filter((m) => m.score > 0)
+      .sort((a, b) => b.score - a.score || b.at - a.at)
+      .slice(0, limit);
+  },
+
+  /* --------------------------- notifications --------------------------- */
+
+  async notify({ title, body = '', app = 'companion', tone = 'info' }) {
+    await this.init();
+    const entry = { id: uid(), title, body, app, tone, at: now(), read: false };
+    state.notifications.unshift(entry);
+    state.notifications = state.notifications.slice(0, 60);
+    await persist();
+    broadcast('notify');
+    return entry;
+  },
+
+  notifications(limit = 30) { return (state?.notifications || []).slice(0, limit); },
+
+  async markRead(id) {
+    await this.init();
+    const item = state.notifications.find((n) => n.id === id);
+    if (item) item.read = true;
+    await persist();
+    broadcast('notify');
+  },
+
+  /* ------------------------------- data -------------------------------- */
+
+  async put(coll, item) {
+    await this.init();
+    const bucket = state.data[coll] || (state.data[coll] = []);
+    const entry = { id: item.id || uid(), at: item.at || now(), ...item };
+    const index = bucket.findIndex((row) => row.id === entry.id);
+    if (index >= 0) bucket[index] = { ...bucket[index], ...entry, updatedAt: now() };
+    else bucket.unshift(entry);
+    state.data[coll] = bucket.slice(0, 400);
+    await persist();
+    broadcast('data');
+    return entry;
+  },
+
+  async remove(coll, id) {
+    await this.init();
+    state.data[coll] = (state.data[coll] || []).filter((row) => row.id !== id);
+    await persist();
+    broadcast('data');
+  },
+
+  list(coll) { return (state?.data?.[coll] || []).slice(); },
+
+  /* ------------------------------ security ----------------------------- */
+
+  async enable2FA() {
+    await this.init();
+    const secret = base32(crypto.getRandomValues(new Uint8Array(20)));
+    state.security.twoFactor = { enabled: false, secret, pending: true };
+    await persist();
+    broadcast('security');
+    const label = encodeURIComponent(state.profile.email || 'user');
+    return { secret, uri: `otpauth://totp/HYDRA:${label}?secret=${secret}&issuer=HYDRA&algorithm=SHA1&digits=6&period=30` };
+  },
+
+  async confirm2FA(code) {
+    await this.init();
+    const { secret } = state.security.twoFactor;
+    if (!secret) throw new Error('Start two-factor setup first');
+    if (!(await totpValid(secret, code))) throw new Error('That code is not valid — check your authenticator clock');
+    state.security.twoFactor = { enabled: true, secret, at: now() };
+    await persist();
+    broadcast('security');
+    return true;
+  },
+
+  async disable2FA() {
+    await this.init();
+    state.security.twoFactor = { enabled: false, secret: '' };
+    await persist();
+    broadcast('security');
+  },
+
+  async enableBiometric() {
+    await this.init();
+    if (!window.PublicKeyCredential) throw new Error('This browser has no platform authenticator');
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'HYDRA', id: location.hostname },
+        user: {
+          id: new TextEncoder().encode(state.account?.id || deviceId()),
+          name: state.profile.email || 'hydra@local',
+          displayName: state.profile.displayName || 'HYDRA operator',
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+        timeout: 60000,
+      },
+    });
+    state.security.webauthn = { id: b64.encode(credential.rawId), at: now() };
+    await persist();
+    broadcast('security');
+    return true;
+  },
+
+  async signInBiometric() {
+    await this.init();
+    const stored = state.security.webauthn;
+    if (!stored) throw new Error('No biometric key registered on this device');
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ id: b64.decode(stored.id), type: 'public-key' }],
+        userVerification: 'required',
+        timeout: 60000,
+      },
+    });
+    applyAccount({ email: state.profile.email, name: state.profile.displayName, provider: 'biometric' });
+    await persist();
+    broadcast('session');
+    return state.account;
+  },
+
+  devices() { return state?.devices || []; },
+  sessions() { return state?.sessions || []; },
+
+  /* ------------------------------- sync -------------------------------- */
+
+  /** Queues a write for the optional backend; local state is always saved. */
+  async push(op) {
+    if (!window.HYDRA_API) return;
+    const job = { ...op, at: now(), device: deviceId() };
+    if (!navigator.onLine) {
+      queue.push(job);
+      localStorage.setItem('hydra.universal.queue', JSON.stringify(queue));
+      return;
+    }
+    try {
+      await fetch(`${window.HYDRA_API}/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account: state?.account?.id, ops: [job] }),
+      });
+    } catch {
+      queue.push(job);
+      localStorage.setItem('hydra.universal.queue', JSON.stringify(queue));
+    }
+  },
+};
+
+async function flushQueue() {
+  if (!window.HYDRA_API || !queue.length) return;
+  const jobs = queue.splice(0);
+  try {
+    await fetch(`${window.HYDRA_API}/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account: universal.user?.id, ops: jobs }),
+    });
+  } catch {
+    queue.unshift(...jobs);
+  }
+  localStorage.setItem('hydra.universal.queue', JSON.stringify(queue));
+}
+
+/* -------------------------------- TOTP --------------------------------- */
+
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function base32(bytes) {
+  let bits = 0;
+  let value = 0;
+  let out = '';
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += B32[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B32[(value << (5 - bits)) & 31];
+  return out;
+}
+
+function base32Decode(text) {
+  let bits = 0;
+  let value = 0;
+  const out = [];
+  for (const char of text.replace(/=+$/, '').toUpperCase()) {
+    const index = B32.indexOf(char);
+    if (index < 0) continue;
+    value = (value << 5) | index;
+    bits += 5;
+    if (bits >= 8) {
+      out.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return new Uint8Array(out);
+}
+
+async function totp(secret, counter) {
+  const key = await crypto.subtle.importKey('raw', base32Decode(secret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const buffer = new ArrayBuffer(8);
+  new DataView(buffer).setUint32(4, counter);
+  const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', key, buffer));
+  const offset = hmac[hmac.length - 1] & 15;
+  const code = ((hmac[offset] & 127) << 24) | (hmac[offset + 1] << 16) | (hmac[offset + 2] << 8) | hmac[offset + 3];
+  return String(code % 1000000).padStart(6, '0');
+}
+
+async function totpValid(secret, code) {
+  const step = Math.floor(now() / 30000);
+  for (const drift of [-1, 0, 1]) {
+    if ((await totp(secret, step + drift)) === String(code).trim()) return true;
+  }
+  return false;
+}
+
+export default universal;
+
+return { APPS, universal };
+
+});
 __def("updater", function () {
 /**
  * HYDRA — version and update checks. There is no server: an optional
@@ -9125,7 +10063,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.3.2';
+const VERSION = '2.4.0';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;

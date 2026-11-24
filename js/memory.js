@@ -6,6 +6,7 @@
 
 import { bus, uid } from './utils.js';
 import { storage } from './storage.js';
+import universal from './universal.js';
 
 const HISTORY_LIMIT = 240;
 const FACT_LIMIT = 120;
@@ -89,13 +90,35 @@ class MemoryEngine {
     this.facts.unshift(fact);
     if (this.facts.length > FACT_LIMIT) this.facts.length = FACT_LIMIT;
     this.persistFacts();
+    universal.remember(fact.text, { tags, source }).catch(() => {});
     bus.emit('memory:fact', fact);
     return fact;
   }
 
   forget(id) {
+    const fact = this.facts.find((f) => f.id === id);
     this.facts = this.facts.filter((f) => f.id !== id);
     this.persistFacts();
+    if (fact) universal.forgetText(fact.text).catch(() => {});
+  }
+
+  /** Pulls facts written by another HYDRA app into this one. */
+  adoptShared(memories = []) {
+    let added = 0;
+    for (const entry of memories) {
+      const text = String(entry.text || '').trim();
+      if (!text) continue;
+      if (this.facts.some((f) => f.text.toLowerCase() === text.toLowerCase())) continue;
+      this.facts.unshift({ id: uid('f'), text: text.slice(0, 400), tags: entry.tags || [], source: entry.source || 'shared', at: entry.at || Date.now() });
+      added += 1;
+    }
+    if (added) {
+      this.facts.sort((a, b) => b.at - a.at);
+      this.facts.length = Math.min(this.facts.length, FACT_LIMIT);
+      this.persistFacts();
+      bus.emit('memory:fact', this.facts[0]);
+    }
+    return added;
   }
 
   persistFacts() {

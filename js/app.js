@@ -33,6 +33,8 @@ import { initMotion } from './motion.js';
 import { initWorkspace } from './workspace.js';
 import { initDevice } from './device.js';
 import { auth } from './auth.js';
+import universal from './universal.js';
+import { initAppSwitcher } from './app-switcher.js';
 import { initDeck } from './deck.js';
 import { presence } from './presence.js';
 import { objects } from './objects.js';
@@ -1303,13 +1305,14 @@ export async function boot() {
   initDeck();
   initExtras();
   initWorkspace();
-  window.__hydra = { companion, emotion, setView, bus, presence, objects, cv };
+  window.__hydra = { companion, emotion, setView, bus, presence, objects, cv, universal, memory, auth };
   try { initDevice(); } catch (err) { console.error('[device]', err); }
   try { auth.init(); } catch (err) {
     console.error('[auth]', err);
     document.querySelector('#auth')?.remove();
     document.body.classList.remove('auth-locked');
   }
+  startUniversal();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     const hadController = Boolean(navigator.serviceWorker.controller);
     let reloaded = false;
@@ -1356,4 +1359,36 @@ export async function boot() {
 
   updater.maybeCheck();
   bus.emit('app:ready');
+}
+
+
+/* --------------------- universal account bridge --------------------- */
+async function startUniversal() {
+  await universal.init();
+  const local = auth.current();
+  if (local && !universal.signedIn) await universal.adopt(local);
+  memory.adoptShared(universal.memories(200));
+  initAppSwitcher({ currentApp: 'companion' }).catch((err) => console.error('[switcher]', err));
+
+  universal.on('memory', () => {
+    const added = memory.adoptShared(universal.memories(200));
+    if (added) bus.emit('memory:fact', memory.facts[0]);
+  });
+
+  universal.on('notify', () => {
+    const latest = universal.notifications(1)[0];
+    if (!latest || latest.app === 'companion') return;
+    bus.emit('notify', { title: latest.title, body: latest.body, tone: latest.tone || 'info' });
+    companion.say(`${latest.title}.`, { hold: 3600 });
+  });
+
+  universal.on('session', () => {
+    if (!universal.signedIn) auth.signOut();
+  });
+
+  bus.on('auth:change', async ({ user }) => {
+    if (!user) return;
+    await universal.init();
+    if (!universal.signedIn) await universal.adopt(user);
+  });
 }
