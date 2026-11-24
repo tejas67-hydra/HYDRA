@@ -76,11 +76,25 @@
     '50mm lens, soft falloff, fine grain, high detail',
     'portrait lens, clean edges, gentle bokeh, sharp focus',
   ];
-  const NEGATIVE =
-    'text, watermark, signature, logo, extra limbs, deformed hands, blurry, ' +
-    'low resolution, harsh flash, cluttered background, duplicated face';
+  const ENGINES = {
+    free: {
+      label: 'Free engine',
+      key: null,
+      help: 'No key needed — pictures come from Pollinations, a free public image service. It can be slow at busy times.',
+    },
+    gemini: {
+      label: 'Google Gemini',
+      key: 'hydra.imgkey.gemini',
+      help: 'Needs a Google AI Studio key (free tier): <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>',
+    },
+    openai: {
+      label: 'OpenAI',
+      key: 'hydra.imgkey.openai',
+      help: 'Needs an OpenAI key: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. gpt-image-1 bills per picture.',
+    },
+  };
 
-  const state = { name: '', avatar: '', salt: 0, ready: false };
+  const state = { name: '', avatar: '', salt: 0, ready: false, busy: false, set: 0 };
 
   const $ = (id) => document.getElementById(id);
   const universal = () => window.hydraUniversal;
@@ -132,6 +146,8 @@
     state.ready = true;
     paint();
     buildPrompt();
+    paintEngine();
+    buildGallery();
   }
 
   /* ---------------------------- prompt builder ---------------------------- */
@@ -181,11 +197,11 @@
     };
   }
 
-  function drawAvatar() {
+  function drawAvatar(variant = 0) {
     const size = 192;
     const style = $('style').value;
     const palette = PALETTES[$('palette').value] || PALETTES.violet;
-    const seed = hash(`${state.name}|${style}|${$('palette').value}|${state.salt}`);
+    const seed = hash(`${state.name}|${style}|${$('palette').value}|${state.salt}|${state.set}|${variant}`);
     const rand = rng(seed);
     const [c1, c2, base] = palette.colors;
 
@@ -272,30 +288,181 @@
     return canvas.toDataURL('image/jpeg', 0.88);
   }
 
+  /* ---------------------------- photo providers --------------------------- */
+
+  function engineKey(engine) {
+    const conf = ENGINES[engine];
+    return conf?.key ? localStorage.getItem(conf.key) || '' : '';
+  }
+
+  function pickEngine() {
+    const chosen = $('engine').value;
+    if (chosen !== 'auto') return chosen;
+    if (engineKey('openai')) return 'openai';
+    if (engineKey('gemini')) return 'gemini';
+    return 'free';
+  }
+
+  function paintEngine() {
+    const engine = $('engine').value;
+    const conf = ENGINES[engine];
+    const help = $('keyhelp');
+    if (engine === 'auto') {
+      const saved = ['openai', 'gemini'].filter((name) => engineKey(name));
+      help.innerHTML = saved.length
+        ? `Will use ${ENGINES[saved[0]].label} because a key is saved on this device.`
+        : 'No key saved, so the free engine will be used. ' + ENGINES.free.help;
+      $('imgkey').placeholder = 'Pick an engine to save its key';
+    } else {
+      help.innerHTML = conf.help;
+      $('imgkey').placeholder = conf.key ? 'Paste the key here' : 'No key needed';
+      $('imgkey').value = conf.key ? engineKey(engine) : '';
+      $('imgkey').disabled = !conf.key;
+    }
+    $('savekey').disabled = !conf?.key;
+  }
+
+  async function freeImage(prompt) {
+    const seed = Math.floor(Math.random() * 1000000);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
+      + `?width=512&height=512&seed=${seed}&nologo=true`;
+    await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = resolve;
+      image.onerror = () => reject(new Error(
+        'The free engine did not return a picture. Try again, or save a Gemini or OpenAI key for a reliable engine.',
+      ));
+      image.src = url;
+    });
+    return url;
+  }
+
+  async function geminiImage(prompt, key) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(key)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || `Gemini answered ${res.status}. Check the key.`);
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const image = parts.find((part) => part.inlineData?.data || part.inline_data?.data);
+    const raw = image?.inlineData?.data || image?.inline_data?.data;
+    if (!raw) throw new Error('Gemini returned no picture. Try wording the prompt as a portrait.');
+    return toSquare(`data:image/png;base64,${raw}`);
+  }
+
+  async function openaiImage(prompt, key) {
+    const res = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error?.message || `OpenAI answered ${res.status}. Check the key and billing.`);
+    const item = data.data?.[0] || {};
+    if (item.b64_json) return toSquare(`data:image/png;base64,${item.b64_json}`);
+    if (item.url) return toSquare(item.url);
+    throw new Error('OpenAI returned no picture.');
+  }
+
+  async function generatePhoto() {
+    if (state.busy) return;
+    const prompt = $('prompt').value.trim();
+    if (!prompt) {
+      $('photo-status').textContent = 'Type what you want the photo to show first.';
+      $('photo-status').className = 'status bad';
+      return;
+    }
+    const engine = pickEngine();
+    const key = engineKey(engine);
+    if (engine !== 'free' && !key) {
+      $('photo-status').innerHTML = `${ENGINES[engine].label} needs a key. ${ENGINES[engine].help}`;
+      $('photo-status').className = 'status bad';
+      return;
+    }
+
+    state.busy = true;
+    $('photo').disabled = true;
+    const line = $('photo-status');
+    line.className = 'status';
+    line.textContent = `Generating with ${ENGINES[engine].label}… this can take up to 30 seconds.`;
+
+    try {
+      const data = engine === 'openai'
+        ? await openaiImage(prompt, key)
+        : engine === 'gemini'
+          ? await geminiImage(prompt, key)
+          : await freeImage(prompt);
+      if (!data) throw new Error('That picture could not be read. Try again.');
+      applyAvatar(data);
+      const ok = await save({ avatar: data });
+      line.textContent = ok ? 'Photo generated and saved to your profile.' : 'Photo generated on this device only.';
+      line.className = 'status good';
+    } catch (err) {
+      line.textContent = err.message || 'Could not generate that picture.';
+      line.className = 'status bad';
+    } finally {
+      state.busy = false;
+      $('photo').disabled = false;
+    }
+  }
+
+  /* ------------------------------- gallery ------------------------------- */
+
+  function buildGallery() {
+    const box = $('gallery');
+    if (!box) return;
+    box.replaceChildren();
+    for (let variant = 0; variant < 12; variant += 1) {
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.title = 'Use this avatar';
+      const image = document.createElement('img');
+      image.alt = '';
+      image.src = drawAvatar(variant);
+      tile.append(image);
+      tile.addEventListener('click', async () => {
+        applyAvatar(image.src);
+        const ok = await save({ avatar: image.src });
+        status(ok ? 'Avatar picked and saved.' : 'Avatar picked on this device only.', ok ? 'good' : '');
+      });
+      box.append(tile);
+    }
+  }
+
   /* ------------------------------- actions ------------------------------- */
+
+  function toSquare(source) {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => {
+        const size = 192;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const side = Math.min(image.width, image.height);
+        ctx.drawImage(
+          image,
+          (image.width - side) / 2, (image.height - side) / 2, side, side,
+          0, 0, size, size,
+        );
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      image.onerror = () => resolve('');
+      image.src = String(source || '');
+    });
+  }
 
   function shrink(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        const image = new Image();
-        image.onload = () => {
-          const size = 192;
-          const canvas = document.createElement('canvas');
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
-          const side = Math.min(image.width, image.height);
-          ctx.drawImage(
-            image,
-            (image.width - side) / 2, (image.height - side) / 2, side, side,
-            0, 0, size, size,
-          );
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
-        };
-        image.onerror = () => resolve('');
-        image.src = String(reader.result || '');
-      };
+      reader.onload = async () => resolve(await toSquare(String(reader.result || '')));
+      reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
     });
   }
@@ -361,7 +528,25 @@
       buildPrompt();
     });
     $('copy').addEventListener('click', () => copy($('prompt').value, 'Prompt'));
-    $('copyn').addEventListener('click', () => copy(NEGATIVE, 'Negative prompt'));
+    $('photo').addEventListener('click', generatePhoto);
+    $('engine').addEventListener('change', paintEngine);
+    $('savekey').addEventListener('click', () => {
+      const engine = $('engine').value;
+      const conf = ENGINES[engine];
+      if (!conf?.key) return;
+      const value = $('imgkey').value.trim();
+      if (value) localStorage.setItem(conf.key, value);
+      else localStorage.removeItem(conf.key);
+      paintEngine();
+      $('photo-status').textContent = value
+        ? `${conf.label} key saved on this device.`
+        : `${conf.label} key removed.`;
+      $('photo-status').className = 'status good';
+    });
+    $('reshuffle').addEventListener('click', () => {
+      state.set += 1;
+      buildGallery();
+    });
 
     $('upload').addEventListener('click', () => $('file').click());
     $('file').addEventListener('change', async (event) => {

@@ -74,6 +74,18 @@
   .status.good { color: var(--mint); }
   .status.bad { color: #f87171; }
   .prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 10px; }
+  .gallery button {
+    padding: 0; border-radius: 50%; aspect-ratio: 1; overflow: hidden; border: 2px solid transparent;
+    background: rgba(255, 255, 255, .04);
+  }
+  .gallery button:hover { border-color: var(--accent); transform: scale(1.04); }
+  .gallery img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .wide { grid-column: 1 / -1; }
+  .keyline { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .keyline .grow { flex: 1; min-width: 180px; }
+  .tiny { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .tiny a { color: #d8b4fe; }
   footer { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: .1em; }
 </style>
 </head>
@@ -108,8 +120,8 @@
     </section>
 
     <section class="card">
-      <h2>Profile photo prompt</h2>
-      <p class="lead">Pick a look, copy the prompt into any image AI, or let HYDRA draw the avatar for you right here.</p>
+      <h2>Make a photo</h2>
+      <p class="lead">Type what you want, press Generate photo, and it becomes your profile picture. Or copy the prompt into any image AI you already use.</p>
       <div class="stack">
         <div class="row">
           <div class="grow">
@@ -152,18 +164,45 @@
           <input id="extra" maxlength="120" placeholder="glasses, headphones, short hair, silver jacket…" />
         </div>
         <div class="prompt-head">
-          <label for="prompt" style="margin:0">Generated prompt</label>
+          <label for="prompt" style="margin:0">Your prompt — edit it however you like</label>
           <div class="row">
             <button id="reroll" class="ghost" type="button">New wording</button>
-            <button id="copy" type="button">Copy prompt</button>
+            <button id="copy" class="ghost" type="button">Copy</button>
           </div>
         </div>
-        <textarea id="prompt" readonly></textarea>
+        <textarea id="prompt" placeholder="a friendly robot with a glossy visor, violet neon light, profile picture"></textarea>
         <div class="row">
-          <button id="copyn" class="ghost" type="button">Copy negative prompt</button>
-          <button id="use" type="button">Use this look for my avatar</button>
+          <button id="photo" class="primary" type="button">Generate photo</button>
+          <button id="use" class="ghost" type="button">Draw it offline instead</button>
         </div>
-        <div class="note">The prompt is plain text, so it works with ChatGPT, Gemini, Midjourney, Leonardo or any image tool. Generating an avatar here needs no account and no internet.</div>
+        <div class="status" id="photo-status"></div>
+
+        <div class="keyline">
+          <div class="grow">
+            <label for="engine">Image engine</label>
+            <select id="engine">
+              <option value="auto">Automatic (uses a key if you saved one)</option>
+              <option value="free">Free engine — no key needed</option>
+              <option value="gemini">Google Gemini (needs a Gemini key)</option>
+              <option value="openai">OpenAI (needs an OpenAI key)</option>
+            </select>
+          </div>
+          <div class="grow">
+            <label for="imgkey">API key for the selected engine</label>
+            <input id="imgkey" type="password" autocomplete="off" placeholder="Saved on this device only" />
+          </div>
+          <button id="savekey" class="ghost" type="button">Save key</button>
+        </div>
+        <div class="tiny" id="keyhelp"></div>
+        <div class="note">The free engine works with no account and no key. A key makes the picture sharper and lets you use the model you already pay for. Keys stay in this browser's storage and are never sent anywhere except the provider you picked.</div>
+      </div>
+    </section>
+    <section class="card wide">
+      <h2>Ready-made avatars</h2>
+      <p class="lead">Pick one and it is your picture straight away — no prompt, no waiting.</p>
+      <div class="gallery" id="gallery"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="reshuffle" class="ghost" type="button">Show another set</button>
       </div>
     </section>
   </div>

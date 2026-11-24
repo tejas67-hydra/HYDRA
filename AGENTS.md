@@ -280,3 +280,8 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
 - Events from `broadcast()` are dispatched on `window`, so page code must listen
   with `window.addEventListener('hydra:session', …)`. A `document` listener never
   sees them, which is why the studio kept a stale name until this was fixed.
+- Profile photos can be generated in the studio from three engines: Pollinations
+  (no key, loaded through an `<img>` tag because their API now needs a Turnstile
+  token and blocks `fetch`), Google Gemini `gemini-2.5-flash-image` and OpenAI
+  `gpt-image-1`. Keys live in `localStorage` under `hydra.imgkey.gemini` and
+  `hydra.imgkey.openai`, so nothing has to be deployed on the server.
