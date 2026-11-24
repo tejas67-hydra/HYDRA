@@ -285,3 +285,8 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   token and blocks `fetch`), Google Gemini `gemini-2.5-flash-image` and OpenAI
   `gpt-image-1`. Keys live in `localStorage` under `hydra.imgkey.gemini` and
   `hydra.imgkey.openai`, so nothing has to be deployed on the server.
+- `POST /api/image` generates a profile photo on the server so a shared key never
+  ships in the public page. It needs `OPENAI_API_KEY` or `GEMINI_API_KEY` in the
+  server environment (Render → Environment), is limited to 20 pictures per user
+  per hour, and answers 503 when no key is configured so the studio falls back
+  to the free engine.

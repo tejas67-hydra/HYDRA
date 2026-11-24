@@ -8654,12 +8654,12 @@ __def("profile-studio", function () {
     gemini: {
       label: 'Google Gemini',
       key: 'hydra.imgkey.gemini',
-      help: 'Needs a Google AI Studio key (free tier): <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>',
+      help: 'Needs a Google AI Studio key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The free tier allows only a few images per day; billing raises the limit.',
     },
     openai: {
       label: 'OpenAI',
       key: 'hydra.imgkey.openai',
-      help: 'Needs an OpenAI key: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. gpt-image-1 bills per picture.',
+      help: 'Needs an OpenAI key with credits: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. Image models bill per picture.',
     },
   };
 
@@ -8918,6 +8918,12 @@ __def("profile-studio", function () {
       },
     );
     const data = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      throw new Error(
+        'Gemini has no image quota left on this key right now. The free tier is capped per day — '
+        + 'wait for the reset, enable billing on the Google project, or switch to another engine.',
+      );
+    }
     if (!res.ok) throw new Error(data.error?.message || `Gemini answered ${res.status}. Check the key.`);
     const parts = data.candidates?.[0]?.content?.parts || [];
     const image = parts.find((part) => part.inlineData?.data || part.inline_data?.data);
@@ -8926,18 +8932,54 @@ __def("profile-studio", function () {
     return toSquare(`data:image/png;base64,${raw}`);
   }
 
+  const OPENAI_MODELS = ['gpt-image-1-mini', 'gpt-image-1.5', 'gpt-image-1', 'gpt-image-2'];
+
   async function openaiImage(prompt, key) {
-    const res = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 }),
-    });
+    let lastError = '';
+    for (const model of OPENAI_MODELS) {
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, prompt, size: '1024x1024', quality: 'low', n: 1 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const message = data.error?.message || `OpenAI answered ${res.status}.`;
+      if (res.ok) {
+        const item = data.data?.[0] || {};
+        if (item.b64_json) return toSquare(`data:image/png;base64,${item.b64_json}`);
+        if (item.url) return toSquare(item.url);
+        throw new Error('OpenAI returned no picture.');
+      }
+      if (/credit|billing|quota/i.test(message)) {
+        throw new Error(`OpenAI: ${message}`);
+      }
+      if (res.status === 404 || /model/i.test(message)) {
+        lastError = message;
+        continue;
+      }
+      throw new Error(message);
+    }
+    throw new Error(lastError || 'OpenAI could not make that picture with this key.');
+  }
+
+  async function serverImage(prompt, engine) {
+    const base = window.HYDRA_API || '';
+    const token = localStorage.getItem('hydra.token');
+    if (!base || !token) return null;
+    let res;
+    try {
+      res = await fetch(`${base}/api/image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prompt, engine }),
+      });
+    } catch {
+      return null;
+    }
+    if (res.status === 404 || res.status === 503) return null;
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error?.message || `OpenAI answered ${res.status}. Check the key and billing.`);
-    const item = data.data?.[0] || {};
-    if (item.b64_json) return toSquare(`data:image/png;base64,${item.b64_json}`);
-    if (item.url) return toSquare(item.url);
-    throw new Error('OpenAI returned no picture.');
+    if (!res.ok) throw new Error(data.error || `The HYDRA image service answered ${res.status}.`);
+    return data.image ? { image: await toSquare(data.image), engine: data.engine || 'shared key' } : null;
   }
 
   async function generatePhoto() {
@@ -8950,11 +8992,6 @@ __def("profile-studio", function () {
     }
     const engine = pickEngine();
     const key = engineKey(engine);
-    if (engine !== 'free' && !key) {
-      $('photo-status').innerHTML = `${ENGINES[engine].label} needs a key. ${ENGINES[engine].help}`;
-      $('photo-status').className = 'status bad';
-      return;
-    }
 
     state.busy = true;
     $('photo').disabled = true;
@@ -8963,15 +9000,35 @@ __def("profile-studio", function () {
     line.textContent = `Generating with ${ENGINES[engine].label}… this can take up to 30 seconds.`;
 
     try {
-      const data = engine === 'openai'
-        ? await openaiImage(prompt, key)
-        : engine === 'gemini'
-          ? await geminiImage(prompt, key)
-          : await freeImage(prompt);
+      let data = null;
+      let source = ENGINES[engine].label;
+      if (key) {
+        data = engine === 'openai' ? await openaiImage(prompt, key) : await geminiImage(prompt, key);
+      } else {
+        let shared = null;
+        try {
+          shared = await serverImage(prompt, engine);
+        } catch (err) {
+          if (engine !== 'free') throw err;
+        }
+        if (shared) {
+          data = shared.image;
+          source = `HYDRA's shared ${shared.engine} key`;
+        } else if (engine === 'free') {
+          data = await freeImage(prompt);
+        } else {
+          throw new Error(
+            `${ENGINES[engine].label} needs a key, and this HYDRA server has no shared one. `
+            + 'Save your own key below, or switch the engine to the free one.',
+          );
+        }
+      }
       if (!data) throw new Error('That picture could not be read. Try again.');
       applyAvatar(data);
       const ok = await save({ avatar: data });
-      line.textContent = ok ? 'Photo generated and saved to your profile.' : 'Photo generated on this device only.';
+      line.textContent = ok
+        ? `Photo generated with ${source} and saved to your profile.`
+        : `Photo generated with ${source} on this device only.`;
       line.className = 'status good';
     } catch (err) {
       line.textContent = err.message || 'Could not generate that picture.';

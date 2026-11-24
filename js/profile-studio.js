@@ -393,6 +393,26 @@
     throw new Error(lastError || 'OpenAI could not make that picture with this key.');
   }
 
+  async function serverImage(prompt, engine) {
+    const base = window.HYDRA_API || '';
+    const token = localStorage.getItem('hydra.token');
+    if (!base || !token) return null;
+    let res;
+    try {
+      res = await fetch(`${base}/api/image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prompt, engine }),
+      });
+    } catch {
+      return null;
+    }
+    if (res.status === 404 || res.status === 503) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `The HYDRA image service answered ${res.status}.`);
+    return data.image ? { image: await toSquare(data.image), engine: data.engine || 'shared key' } : null;
+  }
+
   async function generatePhoto() {
     if (state.busy) return;
     const prompt = $('prompt').value.trim();
@@ -403,11 +423,6 @@
     }
     const engine = pickEngine();
     const key = engineKey(engine);
-    if (engine !== 'free' && !key) {
-      $('photo-status').innerHTML = `${ENGINES[engine].label} needs a key. ${ENGINES[engine].help}`;
-      $('photo-status').className = 'status bad';
-      return;
-    }
 
     state.busy = true;
     $('photo').disabled = true;
@@ -416,15 +431,35 @@
     line.textContent = `Generating with ${ENGINES[engine].label}… this can take up to 30 seconds.`;
 
     try {
-      const data = engine === 'openai'
-        ? await openaiImage(prompt, key)
-        : engine === 'gemini'
-          ? await geminiImage(prompt, key)
-          : await freeImage(prompt);
+      let data = null;
+      let source = ENGINES[engine].label;
+      if (key) {
+        data = engine === 'openai' ? await openaiImage(prompt, key) : await geminiImage(prompt, key);
+      } else {
+        let shared = null;
+        try {
+          shared = await serverImage(prompt, engine);
+        } catch (err) {
+          if (engine !== 'free') throw err;
+        }
+        if (shared) {
+          data = shared.image;
+          source = `HYDRA's shared ${shared.engine} key`;
+        } else if (engine === 'free') {
+          data = await freeImage(prompt);
+        } else {
+          throw new Error(
+            `${ENGINES[engine].label} needs a key, and this HYDRA server has no shared one. `
+            + 'Save your own key below, or switch the engine to the free one.',
+          );
+        }
+      }
       if (!data) throw new Error('That picture could not be read. Try again.');
       applyAvatar(data);
       const ok = await save({ avatar: data });
-      line.textContent = ok ? 'Photo generated and saved to your profile.' : 'Photo generated on this device only.';
+      line.textContent = ok
+        ? `Photo generated with ${source} and saved to your profile.`
+        : `Photo generated with ${source} on this device only.`;
       line.className = 'status good';
     } catch (err) {
       line.textContent = err.message || 'Could not generate that picture.';

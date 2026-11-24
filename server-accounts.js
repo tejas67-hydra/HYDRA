@@ -382,6 +382,73 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
     }
   });
 
+  const imageBudget = new Map();
+
+  app.post('/api/image', requireAuth, async (req, res) => {
+    const prompt = String(req.body?.prompt || '').trim().slice(0, 800);
+    if (prompt.length < 3) return res.status(400).json({ error: 'Describe the picture first.' });
+
+    const hour = Math.floor(Date.now() / 3_600_000);
+    const slot = `${req.session.userId}:${hour}`;
+    const used = imageBudget.get(slot) || 0;
+    if (used >= 20) return res.status(429).json({ error: 'Image limit reached for this hour. Try again later.' });
+    imageBudget.set(slot, used + 1);
+
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY;
+    if (!openaiKey && !geminiKey) {
+      return res.status(503).json({ error: 'This HYDRA server has no shared image key configured.' });
+    }
+
+    try {
+      if (openaiKey) {
+        for (const model of ['gpt-image-1-mini', 'gpt-image-1.5', 'gpt-image-1', 'gpt-image-2']) {
+          const response = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+            body: JSON.stringify({ model, prompt, size: '1024x1024', quality: 'low', n: 1 }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (response.ok) {
+            const b64 = data.data?.[0]?.b64_json;
+            if (b64) return res.json({ image: `data:image/png;base64,${b64}`, engine: `openai:${model}` });
+            const url = data.data?.[0]?.url;
+            if (url) return res.json({ image: url, engine: `openai:${model}` });
+            return res.status(502).json({ error: 'OpenAI returned no picture.' });
+          }
+          const message = data.error?.message || `OpenAI answered ${response.status}.`;
+          if (!/model/i.test(message) && response.status !== 404) {
+            return res.status(response.status === 429 ? 429 : 502).json({ error: message });
+          }
+        }
+        return res.status(502).json({ error: 'OpenAI rejected every image model on this account.' });
+      }
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(geminiKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        },
+      );
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        return res.status(429).json({ error: 'Gemini has no image quota left right now.' });
+      }
+      if (!response.ok) {
+        return res.status(502).json({ error: data.error?.message || `Gemini answered ${response.status}.` });
+      }
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      const inline = parts.find((part) => part.inlineData?.data || part.inline_data?.data);
+      const raw = inline?.inlineData?.data || inline?.inline_data?.data;
+      if (!raw) return res.status(502).json({ error: 'Gemini returned no picture.' });
+      return res.json({ image: `data:image/png;base64,${raw}`, engine: 'gemini' });
+    } catch (err) {
+      res.status(502).json({ error: err.message });
+    }
+  });
+
   app.get('/api/sync', requireAuth, async (req, res) => {
     try {
       const doc = await get('SELECT * FROM sync_docs WHERE user_id = ?', [req.session.userId]);
