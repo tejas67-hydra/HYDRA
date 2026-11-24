@@ -277,3 +277,6 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   style flourish) and stored as JPEG; it is deterministic from
   name + style + palette + salt, so "New wording" and "Use this look" produce a
   fresh variant without a network call.
+- Events from `broadcast()` are dispatched on `window`, so page code must listen
+  with `window.addEventListener('hydra:session', …)`. A `document` listener never
+  sees them, which is why the studio kept a stale name until this was fixed.
