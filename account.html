@@ -159,6 +159,16 @@
   $('version').textContent = `v${VERSION}`;
   await universal.init();
 
+  const authCode = params.get('authCode');
+  if (authCode) {
+    const exchanged = await callApi('/api/auth/token', { code: authCode });
+    if (exchanged.ok) {
+      await universal.useServerSession({ token: exchanged.data.token, user: exchanged.data.user });
+      params.delete('authCode');
+      history.replaceState({}, '', `${location.pathname}?${params}`);
+    }
+  }
+
   const api = universal.apiUrl;
   $('api-input').value = api;
 
@@ -188,10 +198,11 @@
   }
 
   async function callApi(path, body) {
+    const token = localStorage.getItem('hydra.token');
     const res = await fetch(api + path, {
       method: body === undefined ? 'GET' : 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     return { ok: res.ok, status: res.status, data: await res.json().catch(() => ({})) };

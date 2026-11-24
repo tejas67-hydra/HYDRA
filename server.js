@@ -29,6 +29,9 @@ app.use(cors({
     return callback(null, false);
   },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length'],
+  maxAge: 86400,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -568,10 +571,20 @@ function updateUserExcel() {
 
 // Middleware to check if user is authenticated
 function requireAuth(req, res, next) {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Unauthorized. Please login.' });
+  if (req.session.userId) return next();
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  if (token && app.locals.resolveToken) {
+    app.locals.resolveToken(token)
+      .then((userId) => {
+        if (!userId) return res.status(401).json({ error: 'Unauthorized. Please login.' });
+        req.session.userId = userId;
+        next();
+      })
+      .catch(() => res.status(401).json({ error: 'Unauthorized. Please login.' }));
+    return;
   }
-  next();
+  return res.status(401).json({ error: 'Unauthorized. Please login.' });
 }
 
 // Middleware to check if user is admin
@@ -769,8 +782,10 @@ app.post('/api/login', async (req, res) => {
 
       updateUserExcel();
 
+      const apiToken = app.locals.issueApiToken ? await app.locals.issueApiToken(user.user_id) : null;
       res.json({
         message: 'Login successful.',
+        token: apiToken,
         daysAway,
         user: {
           userId: user.user_id,

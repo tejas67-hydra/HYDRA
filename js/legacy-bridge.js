@@ -67,10 +67,19 @@ window.fetch = async (input, init = {}) => {
 
   if (url.includes('/api/') && apiBase()) {
     try {
+      const token = localStorage.getItem('hydra.token');
+      const headers = { ...(init.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const proxied = await realFetch(apiBase() + url.replace(/^.*?\/api\//, '/api/'), {
         credentials: 'include',
         ...init,
+        headers,
       });
+      if (proxied.ok && /\/(login|register)$/.test(url)) {
+        proxied.clone().json()
+          .then((data) => { if (data?.token) localStorage.setItem('hydra.token', data.token); })
+          .catch(() => {});
+      }
       // 401 means the server does not know this account (or has no session for
       // it), and 502/504 mean the host is asleep: both use the on-device account.
       const fallback = proxied.status === 401 || [502, 504].includes(proxied.status);

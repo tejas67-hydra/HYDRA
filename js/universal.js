@@ -20,10 +20,15 @@ async function serverCall(path, options = {}) {
   const base = apiUrl();
   if (!base) return null;
   try {
+    const token = localStorage.getItem('hydra.token');
     const res = await fetch(base + path, {
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
       ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
     });
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
@@ -379,6 +384,21 @@ async function pushSync(attempt = 0) {
   }
 }
 
+async function restoreFromToken() {
+  if (!apiUrl() || !localStorage.getItem('hydra.token')) return false;
+  const res = await serverCall('/api/account');
+  if (!res?.ok) {
+    if (res?.status === 401) localStorage.removeItem('hydra.token');
+    return false;
+  }
+  const user = res.data.user || {};
+  applyAccount({ email: user.email, name: user.name || state?.profile?.displayName, provider: 'server' });
+  if (state?.account) state.account.userId = user.userId;
+  await persistQuiet();
+  emit('change', { state, origin: 'token' });
+  return true;
+}
+
 async function pullSync() {
   if (!apiUrl() || !state?.account) return null;
   const res = await serverCall('/api/sync');
@@ -412,6 +432,19 @@ export const universal = {
     };
   },
 
+  async useServerSession({ token, user } = {}) {
+    await this.init();
+    if (token) localStorage.setItem('hydra.token', token);
+    if (user) {
+      applyAccount({ email: user.email, name: user.name, provider: 'oauth' });
+      if (state.account) state.account.userId = user.userId;
+      await persist();
+      broadcast('session');
+    }
+    await this.pullSync();
+    return state.account;
+  },
+
   async syncNow() {
     await this.init();
     const pulled = await pullSync();
@@ -421,7 +454,10 @@ export const universal = {
 
   async init() {
     state = (await readStored()) || blank();
-    if (!state.account) registerDevice();
+    if (!state.account) {
+      const restored = await restoreFromToken();
+      if (!restored) registerDevice();
+    }
     emit('change', { state, origin: 'init' });
     if (state.account && apiUrl() && !initSyncStarted) {
       initSyncStarted = true;
@@ -458,6 +494,7 @@ export const universal = {
     if (server?.ok) {
       const login = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
       if (login && !login.ok) throw new Error(login.data.error || 'Account created, but signing in failed');
+      if (login?.data?.token) localStorage.setItem('hydra.token', login.data.token);
     }
     const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
     state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
@@ -474,6 +511,7 @@ export const universal = {
     const server = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
     if (server && !server.ok) throw new Error(server.data.error || 'Wrong email or password');
     if (server?.ok) {
+      if (server.data.token) localStorage.setItem('hydra.token', server.data.token);
       const user = server.data.user || {};
       const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
       state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
@@ -531,6 +569,7 @@ export const universal = {
   async signOut({ all = false } = {}) {
     await this.init();
     await serverCall('/api/logout', { method: 'POST', body: '{}' });
+    localStorage.removeItem('hydra.token');
     const id = deviceId();
     if (all) {
       state.authEpoch += 1;

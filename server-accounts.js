@@ -39,6 +39,12 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
       created INTEGER NOT NULL,
       PRIMARY KEY (provider, provider_id)
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS api_tokens (
+      token_hash TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      created INTEGER NOT NULL,
+      expires INTEGER NOT NULL
+    )`);
     db.run(`CREATE TABLE IF NOT EXISTS sync_docs (
       user_id TEXT PRIMARY KEY,
       rev INTEGER DEFAULT 0,
@@ -85,6 +91,37 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
       return { delivered: false, reason: err.message };
     }
   }
+
+  const API_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
+
+  async function issueApiToken(userId) {
+    const token = crypto.randomBytes(32).toString('hex');
+    await run('INSERT INTO api_tokens (token_hash, user_id, created, expires) VALUES (?,?,?,?)',
+      [hashToken(token), userId, Date.now(), Date.now() + API_TOKEN_TTL]);
+    return token;
+  }
+
+  async function resolveToken(token) {
+    const row = await get('SELECT * FROM api_tokens WHERE token_hash = ?', [hashToken(String(token))]);
+    if (!row || row.expires < Date.now()) return null;
+    return row.user_id;
+  }
+
+  app.locals.issueApiToken = issueApiToken;
+  app.locals.resolveToken = resolveToken;
+
+  app.post('/api/auth/token', async (req, res) => {
+    try {
+      const row = await consumeToken(req.body && req.body.code, 'oauth');
+      if (!row) return res.status(400).json({ error: 'That sign-in link is invalid or has expired.' });
+      const user = await get('SELECT * FROM users WHERE user_id = ?', [row.user_id]);
+      if (!user) return res.status(404).json({ error: 'Account not found' });
+      const token = await issueApiToken(user.user_id);
+      res.json({ token, user: publicUser(user) });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
   const publicUser = (user) => ({
@@ -285,7 +322,9 @@ module.exports = function registerAccountRoutes({ app, db, bcrypt, requireAuth, 
           [req.params.provider, profile.id, user.user_id, Date.now()]);
       }
       startSession(req, user);
-      res.redirect(`${next}?linked=${req.params.provider}`);
+      const code = await issueToken(user.user_id, 'oauth');
+      const separator = next.includes('?') ? '&' : '?';
+      res.redirect(`${next}${separator}linked=${req.params.provider}&authCode=${code}`);
     } catch (err) {
       fail(err.message);
     }

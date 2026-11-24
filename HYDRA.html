@@ -5386,7 +5386,7 @@ body.motion-on .palette__item:nth-child(n + 6) { animation-delay: 100ms; }
           <div class="companion-status__avatar"><span></span></div>
           <div class="grow">
             <strong>HYDRA</strong>
-            <span><i class="online-dot"></i> Online · mood <b id="companion-mood">calm</b> · <b id="build-chip" title="HYDRA build">v2.7.0</b></span>
+            <span><i class="online-dot"></i> Online · mood <b id="companion-mood">calm</b> · <b id="build-chip" title="HYDRA build">v2.7.1</b></span>
           </div>
           <div class="mini-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         </div>
@@ -12357,10 +12357,19 @@ window.fetch = async (input, init = {}) => {
 
   if (url.includes('/api/') && apiBase()) {
     try {
+      const token = localStorage.getItem('hydra.token');
+      const headers = { ...(init.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const proxied = await realFetch(apiBase() + url.replace(/^.*?\/api\//, '/api/'), {
         credentials: 'include',
         ...init,
+        headers,
       });
+      if (proxied.ok && /\/(login|register)$/.test(url)) {
+        proxied.clone().json()
+          .then((data) => { if (data?.token) localStorage.setItem('hydra.token', data.token); })
+          .catch(() => {});
+      }
       // 401 means the server does not know this account (or has no session for
       // it), and 502/504 mean the host is asleep: both use the on-device account.
       const fallback = proxied.status === 401 || [502, 504].includes(proxied.status);
@@ -16496,10 +16505,15 @@ async function serverCall(path, options = {}) {
   const base = apiUrl();
   if (!base) return null;
   try {
+    const token = localStorage.getItem('hydra.token');
     const res = await fetch(base + path, {
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
       ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
     });
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
@@ -16855,6 +16869,21 @@ async function pushSync(attempt = 0) {
   }
 }
 
+async function restoreFromToken() {
+  if (!apiUrl() || !localStorage.getItem('hydra.token')) return false;
+  const res = await serverCall('/api/account');
+  if (!res?.ok) {
+    if (res?.status === 401) localStorage.removeItem('hydra.token');
+    return false;
+  }
+  const user = res.data.user || {};
+  applyAccount({ email: user.email, name: user.name || state?.profile?.displayName, provider: 'server' });
+  if (state?.account) state.account.userId = user.userId;
+  await persistQuiet();
+  emit('change', { state, origin: 'token' });
+  return true;
+}
+
 async function pullSync() {
   if (!apiUrl() || !state?.account) return null;
   const res = await serverCall('/api/sync');
@@ -16888,6 +16917,19 @@ const universal = {
     };
   },
 
+  async useServerSession({ token, user } = {}) {
+    await this.init();
+    if (token) localStorage.setItem('hydra.token', token);
+    if (user) {
+      applyAccount({ email: user.email, name: user.name, provider: 'oauth' });
+      if (state.account) state.account.userId = user.userId;
+      await persist();
+      broadcast('session');
+    }
+    await this.pullSync();
+    return state.account;
+  },
+
   async syncNow() {
     await this.init();
     const pulled = await pullSync();
@@ -16897,7 +16939,10 @@ const universal = {
 
   async init() {
     state = (await readStored()) || blank();
-    if (!state.account) registerDevice();
+    if (!state.account) {
+      const restored = await restoreFromToken();
+      if (!restored) registerDevice();
+    }
     emit('change', { state, origin: 'init' });
     if (state.account && apiUrl() && !initSyncStarted) {
       initSyncStarted = true;
@@ -16934,6 +16979,7 @@ const universal = {
     if (server?.ok) {
       const login = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
       if (login && !login.ok) throw new Error(login.data.error || 'Account created, but signing in failed');
+      if (login?.data?.token) localStorage.setItem('hydra.token', login.data.token);
     }
     const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
     state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
@@ -16950,6 +16996,7 @@ const universal = {
     const server = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
     if (server && !server.ok) throw new Error(server.data.error || 'Wrong email or password');
     if (server?.ok) {
+      if (server.data.token) localStorage.setItem('hydra.token', server.data.token);
       const user = server.data.user || {};
       const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
       state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
@@ -17007,6 +17054,7 @@ const universal = {
   async signOut({ all = false } = {}) {
     await this.init();
     await serverCall('/api/logout', { method: 'POST', body: '{}' });
+    localStorage.removeItem('hydra.token');
     const id = deviceId();
     if (all) {
       state.authEpoch += 1;
@@ -17293,7 +17341,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.7.0';
+const VERSION = '2.7.1';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;
