@@ -256,3 +256,7 @@ There is no test runner. Use `node --check` for syntax, the import/export audit 
   (module syntax stripped) into `HYDRA.html`, and strips `export default` /
   default imports from the bundle. Without that, `hydra.bundle.js` is a syntax
   error as a classic script and the file:// build never boots.
+- The production API only sends CORS headers for `https://tejas67-hydra.github.io`.
+  While developing, point `window.HYDRA_API` in `js/config.js` at
+  `http://localhost:3100` and run `node server.js`; otherwise sign-in falls back to
+  the on-device account and no bearer token appears.
