@@ -422,6 +422,7 @@ async function pullSync() {
     if (changed) {
       await persistQuiet();
       emit('change', { state, origin: 'sync' });
+      broadcast('profile');
     }
   }
   return res.data;

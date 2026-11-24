@@ -205,6 +205,8 @@
   }
 
   async function loadAccount() {
+    me.name = '';
+    me.email = '';
     me.avatar = localStorage.getItem(ppKey) || '';
     const u = window.hydraUniversal;
     if (u) {
@@ -213,7 +215,7 @@
         if (u.signedIn) {
           me.name = u.profile?.displayName || '';
           me.email = u.profile?.email || u.state?.account?.email || '';
-          if (!me.avatar && u.profile?.avatar) me.avatar = u.profile.avatar;
+          me.avatar = u.profile?.avatar || me.avatar;
         }
       } catch { /* the bar still works without the account */ }
     } else if (api() && token()) {
