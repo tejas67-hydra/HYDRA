@@ -555,7 +555,10 @@
     });
 
     paintFullscreen();
+    // universal.js may boot after this script, so retry once the page settles.
     loadAccount();
+    window.addEventListener('load', loadAccount);
+    setTimeout(loadAccount, 1500);
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});

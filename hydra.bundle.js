@@ -7331,7 +7331,10 @@ __def("nav", function () {
     });
 
     paintFullscreen();
+    // universal.js may boot after this script, so retry once the page settles.
     loadAccount();
+    window.addEventListener('load', loadAccount);
+    setTimeout(loadAccount, 1500);
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -10853,7 +10856,11 @@ const universal = {
       await this.pullSync();
       return state.account;
     }
-    if (!state.security.password) throw new Error('No account on this device yet — create one first');
+    if (!state.security.password) {
+      throw new Error(apiUrl()
+        ? "Can't reach the HYDRA server. Check your connection, or create an on-device account."
+        : 'No account on this device yet — create one first');
+    }
     if (state.account?.email && state.account.email !== email) throw new Error('That is not the account saved on this device');
     const hash = await pbkdf2(password, state.security.password.salt);
     if (hash !== state.security.password.hash) throw new Error('Wrong password');
