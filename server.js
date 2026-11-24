@@ -11,6 +11,9 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://tejas67-hydra.github.io,http://localhost:12000,http://localhost:3000')
+  .split(',').map((value) => value.trim()).filter(Boolean);
+app.set('trust proxy', 1);
 const ADMIN_CODE = '0909';
 const SALT_ROUNDS = 12;
 
@@ -19,14 +22,20 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 600
 });
 app.use('/api/', limiter);
 
@@ -38,6 +47,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
@@ -46,7 +56,9 @@ app.use(session({
 app.use(express.static(__dirname));
 
 // SQLite Database setup
-const dbPath = path.join(__dirname, 'hydra.db');
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const dbPath = path.join(DATA_DIR, 'hydra.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Database connection error:', err);
@@ -131,7 +143,366 @@ function initializeDatabase() {
       duration_seconds REAL DEFAULT 0,
       ip_address TEXT
     )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS memories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      memory_key TEXT NOT NULL,
+      memory_value TEXT,
+      updated_at TEXT NOT NULL,
+      UNIQUE(user_id, memory_key)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS known_devices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      fingerprint TEXT NOT NULL,
+      label TEXT,
+      first_seen TEXT NOT NULL,
+      last_seen TEXT NOT NULL,
+      confirmed INTEGER DEFAULT 0,
+      UNIQUE(user_id, fingerprint)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS achievements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      code TEXT NOT NULL,
+      title TEXT NOT NULL,
+      unlocked_at TEXT NOT NULL,
+      UNIQUE(user_id, code)
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    )`);
+
+    const userColumns = [
+      ['memory_enabled', 'INTEGER DEFAULT 0'],
+      ['nickname', 'TEXT'],
+      ['preferred_greeting', 'TEXT'],
+      ['saved_notes', 'TEXT'],
+      ['tasks_completed', 'INTEGER DEFAULT 0'],
+      ['last_conversation', 'TEXT']
+    ];
+    userColumns.forEach(([column, definition]) => {
+      db.run(`ALTER TABLE users ADD COLUMN ${column} ${definition}`, (err) => {
+        if (err && !/duplicate column/i.test(err.message)) {
+          console.error('Schema update error:', err.message);
+        }
+      });
+    });
   });
+}
+
+function dbGet(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
+  });
+}
+
+function dbAll(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows || [])));
+  });
+}
+
+function dbRun(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function onRun(err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
+const MEMORY_KEYS = ['nickname', 'favorite_tools', 'preferred_greeting', 'custom_preferences', 'saved_notes', 'last_conversation'];
+
+const ACHIEVEMENT_DEFS = [
+  { code: 'first_login', title: 'First Login' },
+  { code: 'ten_hours', title: '10 Hours of Usage' },
+  { code: 'power_user', title: 'Power User' },
+  { code: 'ai_explorer', title: 'AI Explorer' },
+  { code: 'administrator', title: 'Administrator' },
+  { code: 'hydra_veteran', title: 'HYDRA Veteran' }
+];
+
+function safeUser(user) {
+  if (!user) return null;
+  const copy = { ...user };
+  delete copy.password;
+  return copy;
+}
+
+async function memoryConsent(userId) {
+  const user = await dbGet('SELECT memory_enabled FROM users WHERE user_id = ?', [userId]);
+  const consent = await dbGet(
+    'SELECT memory_value FROM memories WHERE user_id = ? AND memory_key = ?',
+    [userId, 'consent']
+  );
+  const granted = consent && consent.memory_value === 'granted' && user && user.memory_enabled === 1;
+  return { granted, asked: Boolean(consent) };
+}
+
+async function upsertMemory(userId, key, value) {
+  await dbRun(
+    `INSERT INTO memories (user_id, memory_key, memory_value, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id, memory_key) DO UPDATE SET memory_value = excluded.memory_value, updated_at = excluded.updated_at`,
+    [userId, key, value, getCurrentTimestamp()]
+  );
+}
+
+async function noteDevice(userId, device) {
+  const fingerprint = device && device.fingerprint ? String(device.fingerprint).slice(0, 120) : '';
+  if (!fingerprint) return { newDevice: false, confirmed: true };
+  const label = device.label ? String(device.label).slice(0, 160) : 'Unknown device';
+  const existing = await dbGet(
+    'SELECT * FROM known_devices WHERE user_id = ? AND fingerprint = ?',
+    [userId, fingerprint]
+  );
+  const now = getCurrentTimestamp();
+  if (!existing) {
+    const prior = await dbGet('SELECT COUNT(*) AS count FROM known_devices WHERE user_id = ?', [userId]);
+    const firstDevice = !prior || prior.count === 0;
+    await dbRun(
+      `INSERT INTO known_devices (user_id, fingerprint, label, first_seen, last_seen, confirmed)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [userId, fingerprint, label, now, now, firstDevice ? 1 : 0]
+    );
+    return { newDevice: !firstDevice, confirmed: firstDevice, label };
+  }
+  await dbRun('UPDATE known_devices SET last_seen = ?, label = ? WHERE id = ?', [now, label, existing.id]);
+  return { newDevice: existing.confirmed !== 1, confirmed: existing.confirmed === 1, label: existing.label };
+}
+
+function pageLabel(page) {
+  const labels = {
+    home: 'the HYDRA Control Panel',
+    dashboard: 'the Dashboard',
+    'hydra-ai': 'the AI Assistant',
+    profile: 'your profile',
+    memory: 'Privacy & Memory',
+    navigation: 'Navigation',
+    companionship: 'Companionship',
+    os: 'HYDRA OS',
+    manual: 'the manual',
+    curse: 'Curse Head',
+    health: 'Health Head',
+    third: 'the Gatekeeper'
+  };
+  return labels[page] || page || 'your workspace';
+}
+
+async function syncAchievements(user, featureCounts) {
+  const accountAge = Math.floor((Date.now() - new Date(user.account_created)) / 86400000);
+  const aiUses = (featureCounts['hydra-ai'] || 0) + (featureCounts['AI Chat'] || 0) + (featureCounts.ai || 0);
+  const earned = {
+    first_login: (user.login_count || 0) >= 1,
+    ten_hours: (user.total_lifetime_usage || 0) >= 36000,
+    power_user: (user.login_streak || 0) >= 7 || (user.login_count || 0) >= 25,
+    ai_explorer: aiUses >= 5,
+    administrator: user.role === 'Administrator' && user.admin_verified === 1,
+    hydra_veteran: accountAge >= 30 || (user.login_count || 0) >= 50
+  };
+  const unlocked = [];
+  for (const def of ACHIEVEMENT_DEFS) {
+    if (!earned[def.code]) continue;
+    const row = await dbGet(
+      'SELECT unlocked_at FROM achievements WHERE user_id = ? AND code = ?',
+      [user.user_id, def.code]
+    );
+    if (!row) {
+      const unlockedAt = getCurrentTimestamp();
+      await dbRun(
+        'INSERT INTO achievements (user_id, code, title, unlocked_at) VALUES (?, ?, ?, ?)',
+        [user.user_id, def.code, def.title, unlockedAt]
+      );
+      unlocked.push({ code: def.code, title: def.title, unlockedAt, fresh: true });
+    } else {
+      unlocked.push({ code: def.code, title: def.title, unlockedAt: row.unlocked_at, fresh: false });
+    }
+  }
+  return ACHIEVEMENT_DEFS.map((def) => {
+    const hit = unlocked.find((item) => item.code === def.code);
+    return hit || { code: def.code, title: def.title, unlockedAt: null, fresh: false };
+  });
+}
+
+async function buildCompanion(userId, device) {
+  const user = await dbGet('SELECT * FROM users WHERE user_id = ?', [userId]);
+  if (!user) return null;
+  const consent = await memoryConsent(userId);
+  const security = await noteDevice(userId, device || {});
+  const name = user.nickname || user.preferred_display_name || user.name;
+  const hour = new Date().getHours();
+  let dayPart = 'Hello';
+  if (hour >= 5 && hour < 12) dayPart = 'Good morning';
+  else if (hour >= 12 && hour < 17) dayPart = 'Good afternoon';
+  else if (hour >= 17 && hour < 22) dayPart = 'Good evening';
+  else dayPart = 'Good night';
+
+  const greeting = user.preferred_greeting
+    ? user.preferred_greeting.replace(/\{name\}/g, name)
+    : `${dayPart}, ${name}.`;
+
+  const lines = [`${greeting}`, 'Everything looks ready.'];
+  const suggestions = [];
+  let habits = [];
+  let recentPages = [];
+  let favoriteFeature = user.favorite_feature || null;
+  let mostActiveDay = null;
+  let weekly = [];
+  let lastConversation = null;
+
+  if (consent.granted) {
+    const activities = await dbAll(
+      `SELECT feature, action, timestamp FROM user_activity WHERE user_id = ? ORDER BY timestamp DESC LIMIT 400`,
+      [userId]
+    );
+    const counts = {};
+    const dayCounts = {};
+    const weekMap = { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 };
+    const weekAgo = Date.now() - 7 * 86400000;
+    activities.forEach((row) => {
+      if (!row.feature) return;
+      counts[row.feature] = (counts[row.feature] || 0) + 1;
+      const when = new Date(row.timestamp);
+      const dayName = when.toLocaleDateString('en-US', { weekday: 'short' });
+      dayCounts[dayName] = (dayCounts[dayName] || 0) + 1;
+      if (when.getTime() >= weekAgo) weekMap[dayName] = (weekMap[dayName] || 0) + 1;
+    });
+    const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (!favoriteFeature && ranked[0]) favoriteFeature = ranked[0][0];
+    const dayRank = Object.entries(dayCounts).sort((a, b) => b[1] - a[1]);
+    mostActiveDay = dayRank[0] ? dayRank[0][0] : null;
+    weekly = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => ({ day, count: weekMap[day] || 0 }));
+    recentPages = [];
+    activities.forEach((row) => {
+      if (row.action === 'tab_switch' && row.feature && !recentPages.includes(row.feature)) recentPages.push(row.feature);
+    });
+    recentPages = recentPages.slice(0, 5);
+
+    const top = ranked[0] ? ranked[0][0] : null;
+    if (top === 'dashboard') habits.push('You usually open the Dashboard first.');
+    else if (top === 'hydra-ai' || top === 'AI Chat' || top === 'ai') habits.push('You spend most of your time using the AI Assistant.');
+    else if (top) habits.push(`You spend most of your time using ${pageLabel(top)}.`);
+    if (favoriteFeature) habits.push('Would you like me to pin your favorite tools?');
+
+    if (user.last_page_visited) {
+      lines.push(`Last time you were working on ${pageLabel(user.last_page_visited)}. Would you like to continue?`);
+      suggestions.push({
+        type: 'continue',
+        message: 'Would you like to continue your previous session?',
+        action: user.last_page_visited
+      });
+    }
+    if ((user.export_count || 0) > 0) {
+      suggestions.push({
+        type: 'pattern',
+        message: 'I noticed you usually export reports after editing users.',
+        action: 'export'
+      });
+    }
+    if (user.role === 'Administrator') {
+      const exportedToday = await dbGet(
+        `SELECT COUNT(*) AS count FROM user_activity
+         WHERE user_id = ? AND feature = 'export' AND timestamp > datetime('now', '-1 day')`,
+        [userId]
+      );
+      if (!exportedToday || exportedToday.count === 0) {
+        suggestions.push({
+          type: 'backup',
+          message: "You haven't backed up your data today.",
+          action: 'export'
+        });
+      }
+    }
+    lastConversation = user.last_conversation || null;
+    if (lastConversation) {
+      suggestions.push({
+        type: 'conversation',
+        message: 'I kept your last conversation. Want to pick it up?',
+        action: 'hydra-ai'
+      });
+    }
+
+    const achievements = await syncAchievements(user, counts);
+    const goals = await dbAll('SELECT id, text, done, created_at FROM goals WHERE user_id = ? ORDER BY id DESC', [userId]);
+    const memories = await dbAll(
+      `SELECT memory_key, memory_value, updated_at FROM memories
+       WHERE user_id = ? AND memory_key != 'consent' ORDER BY updated_at DESC`,
+      [userId]
+    );
+    return finishCompanion({
+      user, name, greeting, lines, suggestions, habits, recentPages, favoriteFeature,
+      mostActiveDay, weekly, lastConversation, achievements, goals, memories, consent, security
+    });
+  }
+
+  return finishCompanion({
+    user, name, greeting, lines: [`${greeting}`, "I've prepared your workspace."],
+    suggestions, habits, recentPages, favoriteFeature, mostActiveDay, weekly,
+    lastConversation, achievements: ACHIEVEMENT_DEFS.map((def) => ({ ...def, unlockedAt: null, fresh: false })),
+    goals: [], memories: [], consent, security
+  });
+}
+
+function finishCompanion(ctx) {
+  const now = new Date();
+  const lastLogin = ctx.user.last_login ? new Date(ctx.user.last_login) : now;
+  const daysAway = Math.floor((now - lastLogin) / 86400000);
+  const emotional = [];
+  if (daysAway >= 7) emotional.push("You haven't used HYDRA in a week. Welcome back!");
+  if ((ctx.user.current_session_time || 0) >= 3 * 3600) {
+    emotional.push("You've been working for 3 hours. Consider taking a short break.");
+  }
+  const welcome = `Welcome back, ${ctx.name}. HYDRA systems are online.`;
+  return {
+    needsConsent: !ctx.consent.asked,
+    memoryEnabled: ctx.consent.granted,
+    welcome,
+    greeting: ctx.greeting,
+    lines: ctx.lines,
+    emotional,
+    habits: ctx.habits,
+    suggestions: ctx.suggestions,
+    security: ctx.security.newDevice
+      ? { newDevice: true, message: "This appears to be a new device. Please confirm it's you." }
+      : { newDevice: false, message: null },
+    profile: {
+      name: ctx.name,
+      email: ctx.user.email,
+      role: ctx.user.role,
+      theme: ctx.user.theme || 'dark',
+      language: ctx.user.language || 'en',
+      favoriteFeature: ctx.favoriteFeature,
+      lastPage: ctx.consent.granted ? ctx.user.last_page_visited : null,
+      voiceEnabled: ctx.user.voice_enabled === 1,
+      nickname: ctx.user.nickname || '',
+      preferredGreeting: ctx.user.preferred_greeting || '',
+      savedNotes: ctx.consent.granted ? (ctx.user.saved_notes || '') : ''
+    },
+    stats: {
+      usageSeconds: ctx.user.total_lifetime_usage || 0,
+      sessionSeconds: ctx.user.current_session_time || 0,
+      loginStreak: ctx.user.login_streak || 0,
+      tasksCompleted: ctx.user.tasks_completed || 0,
+      favoriteFeature: ctx.favoriteFeature,
+      mostActiveDay: ctx.mostActiveDay,
+      weekly: ctx.weekly,
+      loginCount: ctx.user.login_count || 0
+    },
+    achievements: ctx.achievements,
+    goals: ctx.goals,
+    memories: ctx.memories,
+    recentPages: ctx.recentPages,
+    lastConversation: ctx.lastConversation
+  };
 }
 
 // Helper functions
@@ -216,6 +587,33 @@ function requireAdmin(req, res, next) {
 // API Routes
 
 // Register
+app.post('/api/tts', async (req, res) => {
+  const key = process.env.ELEVENLABS_API_KEY;
+  if (!key) return res.status(503).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
+  const text = String((req.body && req.body.text) || '').slice(0, 2000);
+  if (!text) return res.status(400).json({ error: 'text is required' });
+  const voice = (req.body && req.body.voiceId) || process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+  try {
+    const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`, {
+      method: 'POST',
+      headers: { 'xi-api-key': key, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
+      body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5' }),
+    });
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({ error: (await upstream.text()).slice(0, 300) });
+    }
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(Buffer.from(await upstream.arrayBuffer()));
+  } catch (err) {
+    res.status(502).json({ error: 'Voice relay failed: ' + err.message });
+  }
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'hydra-api', uptime: process.uptime(), version: process.env.npm_package_version || '1.0.0' });
+});
+
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -295,6 +693,9 @@ app.post('/api/login', async (req, res) => {
       const lastLogin = getCurrentTimestamp();
       const loginCount = user.login_count + 1;
       const firstLogin = user.first_login || lastLogin;
+      const daysAway = user.last_login
+        ? Math.floor((Date.now() - new Date(user.last_login).getTime()) / 86400000)
+        : 0;
 
       // Calculate login streak
       let newStreak = user.login_streak || 0;
@@ -338,6 +739,20 @@ app.post('/api/login', async (req, res) => {
       req.session.userName = user.name;
       req.session.isAdmin = user.role === 'Administrator';
       req.session.adminVerified = user.admin_verified === 1;
+      req.session.daysAway = daysAway;
+
+      const device = req.body.device || {};
+      if (device.browser || device.os) {
+        db.run(
+          `UPDATE users SET browser = ?, operating_system = ?, device_name = ? WHERE user_id = ?`,
+          [
+            device.browser ? String(device.browser).slice(0, 180) : user.browser,
+            device.os ? String(device.os).slice(0, 80) : user.operating_system,
+            device.label ? String(device.label).slice(0, 80) : user.device_name,
+            user.user_id
+          ]
+        );
+      }
 
       // Log usage session
       const sessionStart = getCurrentTimestamp();
@@ -355,6 +770,7 @@ app.post('/api/login', async (req, res) => {
 
       res.json({
         message: 'Login successful.',
+        daysAway,
         user: {
           userId: user.user_id,
           name: user.name,
@@ -603,65 +1019,57 @@ app.post('/api/heartbeat', requireAuth, (req, res) => {
 });
 
 // Log user activity (for recommendations)
-app.post('/api/log-activity', requireAuth, (req, res) => {
-  const { action, feature } = req.body;
-
-  db.run(`INSERT INTO user_activity (user_id, action, feature, timestamp, ip_address)
-          VALUES (?, ?, ?, ?, ?)`,
-    [req.session.userId, action || 'visited', feature || 'unknown', getCurrentTimestamp(), req.ip],
-    (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to log activity.' });
-      }
-      res.json({ message: 'Activity logged.' });
-    }
-  );
+app.post('/api/log-activity', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    if (!consent.granted) return res.json({ message: 'Memory is off. Activity was not stored.' });
+    const { action, feature } = req.body;
+    await dbRun(
+      `INSERT INTO user_activity (user_id, action, feature, timestamp, ip_address) VALUES (?, ?, ?, ?, ?)`,
+      [req.session.userId, action || 'visited', String(feature || 'unknown').slice(0, 80), getCurrentTimestamp(), req.ip]
+    );
+    res.json({ message: 'Activity logged.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to log activity.' });
+  }
 });
 
 // Update user preferences
 app.put('/api/preferences', requireAuth, (req, res) => {
-  const {
-    preferred_display_name,
-    language,
-    favorite_feature,
-    theme,
-    voice_enabled,
-    notification_settings,
-    ui_preferences,
-    quick_actions
-  } = req.body;
-
-  db.run(`UPDATE users SET
-          preferred_display_name = ?,
-          language = ?,
-          favorite_feature = ?,
-          theme = ?,
-          voice_enabled = ?,
-          notification_settings = ?,
-          ui_preferences = ?,
-          quick_actions = ?,
-          last_activity = ?
-          WHERE user_id = ?`,
-    [
-      preferred_display_name,
-      language,
-      favorite_feature,
-      theme,
-      voice_enabled ? 1 : 0,
-      notification_settings ? JSON.stringify(notification_settings) : null,
-      ui_preferences ? JSON.stringify(ui_preferences) : null,
-      quick_actions ? JSON.stringify(quick_actions) : null,
-      getCurrentTimestamp(),
-      req.session.userId
-    ],
-    (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to update preferences.' });
-      }
-      updateUserExcel();
-      res.json({ message: 'Preferences updated successfully.' });
+  const columnMap = {
+    preferred_display_name: 'preferred_display_name',
+    language: 'language',
+    favorite_feature: 'favorite_feature',
+    theme: 'theme',
+    voice_enabled: 'voice_enabled',
+    notification_settings: 'notification_settings',
+    ui_preferences: 'ui_preferences',
+    quick_actions: 'quick_actions',
+    memory_enabled: 'memory_enabled',
+    nickname: 'nickname',
+    preferred_greeting: 'preferred_greeting',
+    saved_notes: 'saved_notes'
+  };
+  const fields = [];
+  const values = [];
+  Object.entries(columnMap).forEach(([key, column]) => {
+    if (req.body[key] === undefined) return;
+    let value = req.body[key];
+    if (key === 'voice_enabled' || key === 'memory_enabled') value = value ? 1 : 0;
+    if (['notification_settings', 'ui_preferences', 'quick_actions'].includes(key) && value && typeof value !== 'string') {
+      value = JSON.stringify(value);
     }
-  );
+    fields.push(`${column} = ?`);
+    values.push(value);
+  });
+  if (!fields.length) return res.status(400).json({ error: 'No preferences to update.' });
+  fields.push('last_activity = ?');
+  values.push(getCurrentTimestamp(), req.session.userId);
+  db.run(`UPDATE users SET ${fields.join(', ')} WHERE user_id = ?`, values, (err) => {
+    if (err) return res.status(500).json({ error: 'Failed to update preferences.' });
+    updateUserExcel();
+    res.json({ message: 'Preferences updated successfully.' });
+  });
 });
 
 // Get personalized recommendations
@@ -764,8 +1172,9 @@ app.get('/api/profile/full', requireAuth, (req, res) => {
           return res.status(500).json({ error: 'Database error.' });
         }
 
+        const safe = safeUser(user);
         res.json({
-          ...user,
+          ...safe,
           accountAge,
           notification_settings: user.notification_settings ? JSON.parse(user.notification_settings) : {},
           ui_preferences: user.ui_preferences ? JSON.parse(user.ui_preferences) : {},
@@ -778,18 +1187,19 @@ app.get('/api/profile/full', requireAuth, (req, res) => {
 });
 
 // Update last page visited
-app.post('/api/last-page', requireAuth, (req, res) => {
-  const { page } = req.body;
-
-  db.run(`UPDATE users SET last_page_visited = ?, last_activity = ? WHERE user_id = ?`,
-    [page, getCurrentTimestamp(), req.session.userId],
-    (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to update last page.' });
-      }
-      res.json({ message: 'Last page updated.' });
-    }
-  );
+app.post('/api/last-page', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    if (!consent.granted) return res.json({ message: 'Memory is off.' });
+    const page = String(req.body.page || '').slice(0, 40);
+    await dbRun(
+      'UPDATE users SET last_page_visited = ?, last_activity = ? WHERE user_id = ?',
+      [page, getCurrentTimestamp(), req.session.userId]
+    );
+    res.json({ message: 'Last page updated.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update last page.' });
+  }
 });
 
 // Get smart notifications
@@ -855,6 +1265,153 @@ app.get('/api/notifications', requireAuth, (req, res) => {
 
     res.json(notifications);
   });
+});
+
+app.get('/api/companion', requireAuth, async (req, res) => {
+  try {
+    const companion = await buildCompanion(req.session.userId, {
+      fingerprint: req.query.fingerprint,
+      label: req.query.label
+    });
+    if (!companion) return res.status(404).json({ error: 'User not found.' });
+    if (typeof req.session.daysAway === 'number' && req.session.daysAway >= 7) {
+      const line = "You haven't used HYDRA in a week. Welcome back!";
+      if (!companion.emotional.includes(line)) companion.emotional.unshift(line);
+    }
+    res.json(companion);
+  } catch (error) {
+    console.error('Companion error:', error);
+    res.status(500).json({ error: 'Could not load HYDRA companion.' });
+  }
+});
+
+app.post('/api/memory/consent', requireAuth, async (req, res) => {
+  try {
+    const granted = Boolean(req.body.granted);
+    await upsertMemory(req.session.userId, 'consent', granted ? 'granted' : 'denied');
+    await dbRun('UPDATE users SET memory_enabled = ? WHERE user_id = ?', [granted ? 1 : 0, req.session.userId]);
+    res.json({ memoryEnabled: granted });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not update memory consent.' });
+  }
+});
+
+app.get('/api/memory', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    const rows = await dbAll(
+      `SELECT id, memory_key, memory_value, updated_at FROM memories WHERE user_id = ? ORDER BY memory_key`,
+      [req.session.userId]
+    );
+    res.json({ memoryEnabled: consent.granted, memories: rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not read memories.' });
+  }
+});
+
+app.put('/api/memory', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    if (!consent.granted) return res.status(403).json({ error: 'Turn memory on before saving.' });
+    const items = Array.isArray(req.body.items) ? req.body.items : [req.body];
+    for (const item of items) {
+      if (!MEMORY_KEYS.includes(item.key)) continue;
+      const value = String(item.value ?? '').slice(0, 2000);
+      await upsertMemory(req.session.userId, item.key, value);
+      if (item.key === 'nickname') await dbRun('UPDATE users SET nickname = ? WHERE user_id = ?', [value, req.session.userId]);
+      if (item.key === 'preferred_greeting') await dbRun('UPDATE users SET preferred_greeting = ? WHERE user_id = ?', [value, req.session.userId]);
+      if (item.key === 'saved_notes') await dbRun('UPDATE users SET saved_notes = ? WHERE user_id = ?', [value, req.session.userId]);
+      if (item.key === 'favorite_tools') await dbRun('UPDATE users SET favorite_feature = ? WHERE user_id = ?', [value.split(',')[0].trim(), req.session.userId]);
+      if (item.key === 'last_conversation') await dbRun('UPDATE users SET last_conversation = ? WHERE user_id = ?', [value, req.session.userId]);
+    }
+    res.json({ message: 'Memory saved.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not save memory.' });
+  }
+});
+
+app.delete('/api/memory/:key', requireAuth, async (req, res) => {
+  try {
+    if (req.params.key === 'all') {
+      await dbRun('DELETE FROM memories WHERE user_id = ? AND memory_key != ?', [req.session.userId, 'consent']);
+      await dbRun('DELETE FROM goals WHERE user_id = ?', [req.session.userId]);
+      await dbRun('DELETE FROM user_activity WHERE user_id = ?', [req.session.userId]);
+      await dbRun(
+        `UPDATE users SET nickname = NULL, preferred_greeting = NULL, saved_notes = NULL,
+         last_conversation = NULL, last_page_visited = NULL, favorite_feature = NULL WHERE user_id = ?`,
+        [req.session.userId]
+      );
+      return res.json({ message: 'Saved memories deleted.' });
+    }
+    if (!MEMORY_KEYS.includes(req.params.key)) return res.status(400).json({ error: 'Unknown memory.' });
+    await dbRun('DELETE FROM memories WHERE user_id = ? AND memory_key = ?', [req.session.userId, req.params.key]);
+    res.json({ message: 'Memory deleted.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not delete memory.' });
+  }
+});
+
+app.post('/api/memory/conversation', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    if (!consent.granted) return res.json({ message: 'Memory is off.' });
+    const text = String(req.body.text || '').trim().slice(0, 280);
+    if (!text) return res.status(400).json({ error: 'Nothing to remember.' });
+    await upsertMemory(req.session.userId, 'last_conversation', text);
+    await dbRun('UPDATE users SET last_conversation = ? WHERE user_id = ?', [text, req.session.userId]);
+    res.json({ message: 'Conversation remembered.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not store conversation.' });
+  }
+});
+
+app.post('/api/goals', requireAuth, async (req, res) => {
+  try {
+    const consent = await memoryConsent(req.session.userId);
+    if (!consent.granted) return res.status(403).json({ error: 'Turn memory on to save goals.' });
+    const text = String(req.body.text || '').trim().slice(0, 180);
+    if (!text) return res.status(400).json({ error: 'Goal text is required.' });
+    const result = await dbRun(
+      'INSERT INTO goals (user_id, text, done, created_at) VALUES (?, ?, 0, ?)',
+      [req.session.userId, text, getCurrentTimestamp()]
+    );
+    res.status(201).json({ id: result.lastID, text, done: 0 });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not save goal.' });
+  }
+});
+
+app.post('/api/goals/:id/complete', requireAuth, async (req, res) => {
+  try {
+    await dbRun('UPDATE goals SET done = 1 WHERE id = ? AND user_id = ?', [req.params.id, req.session.userId]);
+    await dbRun('UPDATE users SET tasks_completed = tasks_completed + 1 WHERE user_id = ?', [req.session.userId]);
+    res.json({ message: "Congratulations! You've completed your task." });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not complete goal.' });
+  }
+});
+
+app.delete('/api/goals/:id', requireAuth, async (req, res) => {
+  try {
+    await dbRun('DELETE FROM goals WHERE id = ? AND user_id = ?', [req.params.id, req.session.userId]);
+    res.json({ message: 'Goal removed.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not remove goal.' });
+  }
+});
+
+app.post('/api/device/confirm', requireAuth, async (req, res) => {
+  try {
+    const fingerprint = String(req.body.fingerprint || '').slice(0, 120);
+    if (!fingerprint) return res.status(400).json({ error: 'Missing device.' });
+    await dbRun(
+      'UPDATE known_devices SET confirmed = 1, last_seen = ? WHERE user_id = ? AND fingerprint = ?',
+      [getCurrentTimestamp(), req.session.userId, fingerprint]
+    );
+    res.json({ message: "Confirmed. Welcome back — this device is trusted." });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not confirm device.' });
+  }
 });
 
 // Fallback for SPA

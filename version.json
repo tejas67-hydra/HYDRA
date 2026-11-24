@@ -1,10 +1,10 @@
 {
-  "version": "2.5.0",
-  "build": "2026.12.12",
+  "version": "2.6.0",
+  "build": "2026.12.13",
   "notes": [
-    "Your original app (HYDRA Classic) joined the ecosystem: same login, same memory, same switcher",
-    "Classic login form works again without its Node backend running",
-    "Three apps in the switcher: Companion, Workspace, Classic",
-    "New app icon: the three-headed HYDRA dragon"
+    "The API is deploy-ready: one-click Render blueprint, plus Docker, Fly and Railway configs",
+    "New /api/tts so voice works without putting your ElevenLabs key in the browser",
+    "Cross-site cookies and CORS set up for github.io to your API",
+    "If the API is asleep the apps fall back to the on-device account instead of breaking"
   ]
 }

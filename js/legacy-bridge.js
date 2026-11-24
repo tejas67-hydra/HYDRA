@@ -11,6 +11,7 @@ import universal from './universal.js';
 import { initAppSwitcher } from './app-switcher.js';
 
 const realFetch = window.fetch.bind(window);
+const apiBase = () => String(window.HYDRA_API || '').replace(/\/+$/, '');
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -48,6 +49,35 @@ function bodyOf(init) {
 
 window.fetch = async (input, init = {}) => {
   const url = typeof input === 'string' ? input : input?.url || '';
+
+  // Their voice path calls the local Python relay; send it to the API instead.
+  if (url.includes('127.0.0.1:4174/speak') && apiBase()) {
+    let text = '';
+    try {
+      text = JSON.parse(init.body || '{}').text || '';
+    } catch {
+      text = '';
+    }
+    return realFetch(`${apiBase()}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  if (url.includes('/api/') && apiBase()) {
+    try {
+      const proxied = await realFetch(apiBase() + url.replace(/^.*?\/api\//, '/api/'), {
+        credentials: 'include',
+        ...init,
+      });
+      // 502/504 mean the host itself is down or waking up: use the local answers.
+      if (![502, 504].includes(proxied.status)) return proxied;
+    } catch {
+      /* offline or API asleep: fall back to the on-device account */
+    }
+  }
+
   if (!url.includes('/api/')) return realFetch(input, init);
 
   const path = '/' + url.split('/api/')[1].split('?')[0];

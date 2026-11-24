@@ -2991,6 +2991,17 @@ function initCompanion() {
 return { companion, initCompanion };
 
 });
+__def("config", function () {
+/**
+ * Where the HYDRA API lives. Empty means "no backend": every app keeps
+ * working offline from the on-device account, and features that need the
+ * server say so instead of failing silently.
+ */
+window.HYDRA_API = '';
+
+return {};
+
+});
 __def("cv", function () {
 /**
  * HYDRA — computer vision suite.
@@ -5499,6 +5510,7 @@ import universal from './universal.js';
 const { initAppSwitcher } = __req('app-switcher');
 
 const realFetch = window.fetch.bind(window);
+const apiBase = () => String(window.HYDRA_API || '').replace(/\/+$/, '');
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -5536,6 +5548,35 @@ function bodyOf(init) {
 
 window.fetch = async (input, init = {}) => {
   const url = typeof input === 'string' ? input : input?.url || '';
+
+  // Their voice path calls the local Python relay; send it to the API instead.
+  if (url.includes('127.0.0.1:4174/speak') && apiBase()) {
+    let text = '';
+    try {
+      text = JSON.parse(init.body || '{}').text || '';
+    } catch {
+      text = '';
+    }
+    return realFetch(`${apiBase()}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  if (url.includes('/api/') && apiBase()) {
+    try {
+      const proxied = await realFetch(apiBase() + url.replace(/^.*?\/api\//, '/api/'), {
+        credentials: 'include',
+        ...init,
+      });
+      // 502/504 mean the host itself is down or waking up: use the local answers.
+      if (![502, 504].includes(proxied.status)) return proxied;
+    } catch {
+      /* offline or API asleep: fall back to the on-device account */
+    }
+  }
+
   if (!url.includes('/api/')) return realFetch(input, init);
 
   const path = '/' + url.split('/api/')[1].split('?')[0];
@@ -10250,7 +10291,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;
