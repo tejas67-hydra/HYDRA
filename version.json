@@ -1,10 +1,8 @@
 {
-  "version": "2.6.0",
-  "build": "2026.12.13",
+  "version": "2.6.1",
+  "build": "2026.12.14",
   "notes": [
-    "The API is deploy-ready: one-click Render blueprint, plus Docker, Fly and Railway configs",
-    "New /api/tts so voice works without putting your ElevenLabs key in the browser",
-    "Cross-site cookies and CORS set up for github.io to your API",
-    "If the API is asleep the apps fall back to the on-device account instead of breaking"
+    "API field in the app switcher: paste your server URL and every app uses it",
+    "Real server login when the API is up, on-device account when it is not"
   ]
 }

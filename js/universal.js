@@ -14,7 +14,9 @@ const DEVICE_KEY = 'hydra.universal.device';
 const DB_NAME = 'hydra-universal';
 const DB_STORE = 'keys';
 
-export const APPS = [
+export const apiUrl = () => String(window.HYDRA_API || (typeof localStorage !== 'undefined' ? localStorage.getItem('hydra.api') : '') || '').replace(/\/+$/, '');
+
+const APPS = [
   { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
   { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
   { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html' },
@@ -240,6 +242,8 @@ function applyAccount({ email, name, provider, avatar = '' }) {
 }
 
 export const universal = {
+  get apiUrl() { return apiUrl(); },
+
   async init() {
     state = (await readStored()) || blank();
     if (!state.account) registerDevice();

@@ -11,7 +11,7 @@ import universal from './universal.js';
 import { initAppSwitcher } from './app-switcher.js';
 
 const realFetch = window.fetch.bind(window);
-const apiBase = () => String(window.HYDRA_API || '').replace(/\/+$/, '');
+const apiBase = () => String(window.HYDRA_API || localStorage.getItem('hydra.api') || '').replace(/\/+$/, '');
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -71,8 +71,11 @@ window.fetch = async (input, init = {}) => {
         credentials: 'include',
         ...init,
       });
-      // 502/504 mean the host itself is down or waking up: use the local answers.
-      if (![502, 504].includes(proxied.status)) return proxied;
+      // 401 on a read means "no server session" (the user is on the on-device
+      // account), and 502/504 mean the host is asleep: both use local answers.
+      const isAuthCall = /\/(login|register|logout)$/.test(url);
+      const fallback = proxied.status === 401 ? !isAuthCall : [502, 504].includes(proxied.status);
+      if (!fallback) return proxied;
     } catch {
       /* offline or API asleep: fall back to the on-device account */
     }

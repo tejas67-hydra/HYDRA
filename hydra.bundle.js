@@ -956,6 +956,15 @@ async function initAppSwitcher({ mount = null, currentApp = 'companion' } = {}) 
         el('span', {}, 'Devices ', el('strong', {}, String(universal.devices().length))),
         el('span', { style: 'margin-left:auto;font-size:11px' },
           universal.devices().map((d) => d.name).slice(0, 3).join(', '))),
+      el('div', { class: 'line app-switch__api' },
+        el('span', {}, 'API ', el('strong', {}, universal.apiUrl ? 'connected' : 'offline')),
+        el('input', {
+          class: 'app-switch__api-input',
+          id: 'api-url',
+          placeholder: 'https://your-api.onrender.com',
+          value: universal.apiUrl || '',
+        }),
+        el('button', { class: 'app-switch__btn', id: 'api-save', type: 'button' }, 'Save')),
     ];
     return el('div', { class: 'app-switch__security' }, ...rows);
   }
@@ -975,6 +984,14 @@ async function initAppSwitcher({ mount = null, currentApp = 'companion' } = {}) 
   });
   overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target.id !== 'api-save') return;
+    const value = (overlay.querySelector('#api-url')?.value || '').trim().replace(/\/+$/, '');
+    if (value) localStorage.setItem('hydra.api', value);
+    else localStorage.removeItem('hydra.api');
+    location.reload();
+  });
 
   universal.on('session', render);
   universal.on('profile', render);
@@ -5510,7 +5527,7 @@ import universal from './universal.js';
 const { initAppSwitcher } = __req('app-switcher');
 
 const realFetch = window.fetch.bind(window);
-const apiBase = () => String(window.HYDRA_API || '').replace(/\/+$/, '');
+const apiBase = () => String(window.HYDRA_API || localStorage.getItem('hydra.api') || '').replace(/\/+$/, '');
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -5570,8 +5587,11 @@ window.fetch = async (input, init = {}) => {
         credentials: 'include',
         ...init,
       });
-      // 502/504 mean the host itself is down or waking up: use the local answers.
-      if (![502, 504].includes(proxied.status)) return proxied;
+      // 401 on a read means "no server session" (the user is on the on-device
+      // account), and 502/504 mean the host is asleep: both use local answers.
+      const isAuthCall = /\/(login|register|logout)$/.test(url);
+      const fallback = proxied.status === 401 ? !isAuthCall : [502, 504].includes(proxied.status);
+      if (!fallback) return proxied;
     } catch {
       /* offline or API asleep: fall back to the on-device account */
     }
@@ -9697,6 +9717,8 @@ const DEVICE_KEY = 'hydra.universal.device';
 const DB_NAME = 'hydra-universal';
 const DB_STORE = 'keys';
 
+const apiUrl = () => String(window.HYDRA_API || (typeof localStorage !== 'undefined' ? localStorage.getItem('hydra.api') : '') || '').replace(/\/+$/, '');
+
 const APPS = [
   { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
   { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
@@ -9923,6 +9945,8 @@ function applyAccount({ email, name, provider, avatar = '' }) {
 }
 
 const universal = {
+  get apiUrl() { return apiUrl(); },
+
   async init() {
     state = (await readStored()) || blank();
     if (!state.account) registerDevice();
@@ -10279,7 +10303,7 @@ async function totpValid(secret, code) {
 
 export default universal;
 
-return { APPS, universal };
+return { apiUrl, universal };
 
 });
 __def("updater", function () {
@@ -10291,7 +10315,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.6.0';
+const VERSION = '2.6.1';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;

@@ -234,6 +234,15 @@ export async function initAppSwitcher({ mount = null, currentApp = 'companion' }
         el('span', {}, 'Devices ', el('strong', {}, String(universal.devices().length))),
         el('span', { style: 'margin-left:auto;font-size:11px' },
           universal.devices().map((d) => d.name).slice(0, 3).join(', '))),
+      el('div', { class: 'line app-switch__api' },
+        el('span', {}, 'API ', el('strong', {}, universal.apiUrl ? 'connected' : 'offline')),
+        el('input', {
+          class: 'app-switch__api-input',
+          id: 'api-url',
+          placeholder: 'https://your-api.onrender.com',
+          value: universal.apiUrl || '',
+        }),
+        el('button', { class: 'app-switch__btn', id: 'api-save', type: 'button' }, 'Save')),
     ];
     return el('div', { class: 'app-switch__security' }, ...rows);
   }
@@ -253,6 +262,14 @@ export async function initAppSwitcher({ mount = null, currentApp = 'companion' }
   });
   overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target.id !== 'api-save') return;
+    const value = (overlay.querySelector('#api-url')?.value || '').trim().replace(/\/+$/, '');
+    if (value) localStorage.setItem('hydra.api', value);
+    else localStorage.removeItem('hydra.api');
+    location.reload();
+  });
 
   universal.on('session', render);
   universal.on('profile', render);
