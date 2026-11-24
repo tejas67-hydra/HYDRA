@@ -125,7 +125,10 @@
       } catch { /* the studio still works offline */ }
     }
     state.avatar = avatar;
-    if (!typed) state.name = name;
+    if (!typed) {
+      state.name = name;
+      if (field) field.value = name;
+    }
     state.ready = true;
     paint();
     buildPrompt();
@@ -405,8 +408,8 @@
   }
 
   window.addEventListener('hydra:universal-ready', load);
-  document.addEventListener('hydra:session', load);
-  document.addEventListener('hydra:pp', (event) => {
+  window.addEventListener('hydra:session', load);
+  window.addEventListener('hydra:pp', (event) => {
     if (event.detail?.avatar !== undefined && event.detail.avatar !== state.avatar) {
       state.avatar = event.detail.avatar;
       paint();
