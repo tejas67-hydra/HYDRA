@@ -8104,7 +8104,7 @@ const DEFAULTS = {
   ollamaUrl: 'http://localhost:11434',
   temperature: 0.7,
   systemPrompt: '',
-  voiceOutput: true,
+  voiceOutput: false,
   voiceRate: 1,
   voicePitch: 1,
   elevenKey: '',
@@ -8127,6 +8127,12 @@ const DEFAULTS = {
 };
 
 const settings = createStore(DEFAULTS, { key: 'settings' });
+
+// Replies used to be spoken by default. Silence anyone who never chose it.
+if (!localStorage.getItem('hydra.voice.quiet')) {
+  settings.set({ voiceOutput: false });
+  localStorage.setItem('hydra.voice.quiet', '1');
+}
 
 const setSetting = (key, value) => settings.set({ [key]: value });
 
@@ -10609,7 +10615,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.7.1';
+const VERSION = '2.7.2';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;
@@ -11634,6 +11640,10 @@ class VoiceEngine {
     bus.on('voice:start', (opts) => this.start(opts));
     bus.on('voice:stop', () => this.stop());
     bus.on('voice:speak', (text) => this.speak(text));
+    bus.on('voice:stop', () => this.cancelSpeech());
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && this.speaking) this.cancelSpeech();
+    });
     bus.on('voice:cancel', () => this.cancelSpeech());
     return this;
   }

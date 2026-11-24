@@ -138,9 +138,22 @@ visor glow. Stats → Emotion lab lets you preview every state by hand.
 
 ## Sign in
 
-The app opens on a local sign-in screen. Credentials are hashed and kept in this browser;
-there is no server and nothing is sent anywhere. Create an account once, then the session is
-remembered. Settings → Account can lock the screen or sign out.
+Sign in with an email and a password against the HYDRA API, so the same account works in the
+Companion, the Workspace and on every device. A username without an `@` becomes
+`username@hydra.local`. The session is kept as a bearer token in this browser, which is what
+lets a page served from GitHub Pages talk to the API on Render even when third-party cookies
+are blocked.
+
+If the API is unreachable, the app falls back to the account stored on this device, so it still
+opens offline.
+
+`account.html` covers the rest: verify the email, reset the password, connect GitHub or Google,
+see the devices on the account, and push or pull the synced state by hand. Without
+`RESEND_API_KEY` the verification and reset links are returned to the page and written to the
+server log instead of being emailed.
+
+Voice replies are off by default. Turn them on in Settings → Voice, and press Escape to stop
+one mid-sentence.
 
 ## Add HYDRA to your devices
 

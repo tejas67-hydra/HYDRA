@@ -1,7 +1,8 @@
 {
-  "version": "2.7.1",
+  "version": "2.7.2",
   "build": "2026.12.20",
   "notes": [
+    "HYDRA no longer speaks replies unless you switch voice output on",
     "Sign-in now survives reloads and works across sites with a bearer token",
     "The apps now sign in to the real API: your account works on every device",
     "Email verification and password reset, with a link when no mail provider is set",

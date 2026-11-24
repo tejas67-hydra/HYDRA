@@ -36,6 +36,10 @@ class VoiceEngine {
     bus.on('voice:start', (opts) => this.start(opts));
     bus.on('voice:stop', () => this.stop());
     bus.on('voice:speak', (text) => this.speak(text));
+    bus.on('voice:stop', () => this.cancelSpeech());
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && this.speaking) this.cancelSpeech();
+    });
     bus.on('voice:cancel', () => this.cancelSpeech());
     return this;
   }

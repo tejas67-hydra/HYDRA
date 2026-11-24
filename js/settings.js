@@ -46,7 +46,7 @@ export const DEFAULTS = {
   ollamaUrl: 'http://localhost:11434',
   temperature: 0.7,
   systemPrompt: '',
-  voiceOutput: true,
+  voiceOutput: false,
   voiceRate: 1,
   voicePitch: 1,
   elevenKey: '',
@@ -69,6 +69,12 @@ export const DEFAULTS = {
 };
 
 export const settings = createStore(DEFAULTS, { key: 'settings' });
+
+// Replies used to be spoken by default. Silence anyone who never chose it.
+if (!localStorage.getItem('hydra.voice.quiet')) {
+  settings.set({ voiceOutput: false });
+  localStorage.setItem('hydra.voice.quiet', '1');
+}
 
 export const setSetting = (key, value) => settings.set({ [key]: value });
 
