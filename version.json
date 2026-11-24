@@ -1,8 +1,11 @@
 {
-  "version": "2.6.4",
-  "build": "2026.12.17",
+  "version": "2.7.0",
+  "build": "2026.12.20",
   "notes": [
-    "API field in the app switcher: paste your server URL and every app uses it",
-    "Real server login when the API is up, on-device account when it is not"
+    "The apps now sign in to the real API: your account works on every device",
+    "Email verification and password reset, with a link when no mail provider is set",
+    "GitHub and Google sign-in, ready for client credentials",
+    "Cross-device sync for memory, notifications, profile and workspace data",
+    "New account page: verification, password, providers, devices, sync"
   ]
 }

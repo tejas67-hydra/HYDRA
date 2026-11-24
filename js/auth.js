@@ -4,6 +4,7 @@
 
 import { $, bus } from './utils.js';
 import { storage } from './storage.js';
+import universal from './universal.js';
 
 const ACCOUNT = 'auth.account';
 const SESSION = 'auth.session';
@@ -41,8 +42,13 @@ class Auth {
 
     $('#auth-create')?.addEventListener('click', () => this.create().catch((err) => this.fail(err)));
     $('#auth-guest')?.addEventListener('click', () => this.enter('Guest', 'Continuing as guest'));
-    $('#auth-recover')?.addEventListener('click', () => {
-      this.say('Accounts are stored on this device only. Create an account with the same name to set a new password.', 'ok');
+    $('#auth-recover')?.addEventListener('click', async () => {
+      await universal.init();
+      if (universal.apiUrl) {
+        location.href = 'account.html';
+        return;
+      }
+      this.say('No HYDRA API is configured, so the account only exists on this device. Create it with the same name to set a new password.', 'ok');
     });
     this.eye?.addEventListener('click', () => {
       const shown = this.pass.type === 'text';
@@ -71,6 +77,22 @@ class Auth {
       this.say('Enter a username and a password.', 'error');
       this.shake();
       return;
+    }
+    await universal.init();
+    if (universal.apiUrl) {
+      const email = name.includes('@') ? name : `${name}@hydra.local`;
+      try {
+        await universal.signIn({ email, password: pass });
+        this.enter(name, 'Signed in');
+        return;
+      } catch (err) {
+        const offline = /fetch|network|load failed|unavailable/i.test(err?.message || '');
+        if (!offline) {
+          this.say(err?.message || 'Sign-in failed.', 'error');
+          this.shake();
+          return;
+        }
+      }
     }
     const account = storage.get(ACCOUNT);
     if (!account) {
@@ -102,6 +124,20 @@ class Auth {
       this.pass.focus();
       this.shake();
       return;
+    }
+    await universal.init();
+    if (universal.apiUrl && !name.includes('@local')) {
+      const email = name.includes('@') ? name : `${name}@hydra.local`;
+      try {
+        await universal.signUp({ email, password: pass, name });
+      } catch (err) {
+        const offline = /fetch|network|load failed|unavailable/i.test(err?.message || '');
+        if (!offline) {
+          this.say(err?.message || 'Could not create the account.', 'error');
+          this.shake();
+          return;
+        }
+      }
     }
     const account = { user: name, hash: await hash(pass), at: Date.now() };
     storage.set(ACCOUNT, account);

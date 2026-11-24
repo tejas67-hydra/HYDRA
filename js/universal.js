@@ -16,6 +16,22 @@ const DB_STORE = 'keys';
 
 export const apiUrl = () => String(window.HYDRA_API || (typeof localStorage !== 'undefined' ? localStorage.getItem('hydra.api') : '') || '').replace(/\/+$/, '');
 
+async function serverCall(path, options = {}) {
+  const base = apiUrl();
+  if (!base) return null;
+  try {
+    const res = await fetch(base + path, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } catch {
+    return null;
+  }
+}
+
 const APPS = [
   { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html', glyph: 'C' },
   { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html', glyph: 'W' },
@@ -104,8 +120,18 @@ const b64 = {
   decode: (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0)),
 };
 
+async function persistQuiet() {
+  applyingRemote = true;
+  try {
+    await persist();
+  } finally {
+    applyingRemote = false;
+  }
+}
+
 async function persist() {
   if (!state) return;
+  const quiet = applyingRemote;
   state.updatedAt = now();
   state.rev += 1;
   const key = await getKey();
@@ -121,6 +147,7 @@ async function persist() {
   } catch {
     localStorage.setItem(LS_KEY, JSON.stringify({ v: 1, enc: false, data: state }));
   }
+  if (!quiet) scheduleSync();
 }
 
 async function readStored() {
@@ -203,6 +230,10 @@ function deviceName() {
   return 'Browser';
 }
 
+function deviceInfo() {
+  return { id: deviceId(), label: deviceName(), browser: navigator.userAgent.slice(0, 120) };
+}
+
 async function pbkdf2(password, saltB64) {
   const salt = b64.decode(saltB64);
   const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
@@ -241,13 +272,163 @@ function applyAccount({ email, name, provider, avatar = '' }) {
   openSession(provider);
 }
 
+/* ------------------------------- sync ---------------------------------- */
+
+let syncTimer = null;
+let initSyncStarted = false;
+let syncing = false;
+let applyingRemote = false;
+
+const SYNC_COLLECTIONS = ['memory', 'notifications'];
+
+function syncDoc() {
+  return {
+    v: 1,
+    account: state.account ? { id: state.account.id, email: state.account.email, provider: state.account.provider, createdAt: state.account.createdAt } : null,
+    profile: state.profile,
+    memory: state.memory,
+    notifications: state.notifications,
+    data: state.data,
+    relationship: state.relationship,
+    updatedAt: state.updatedAt,
+  };
+}
+
+function mergeList(mine = [], theirs = []) {
+  const byId = new Map();
+  for (const item of [...theirs, ...mine]) {
+    const key = item.id || `${String(item.text || item.title || '').slice(0, 60)}:${item.at || 0}`;
+    const prev = byId.get(key);
+    if (!prev || (item.at || 0) >= (prev.at || 0)) byId.set(key, item);
+  }
+  return [...byId.values()].sort((a, b) => (b.at || 0) - (a.at || 0));
+}
+
+function mergeRemote(remote) {
+  if (!remote || typeof remote !== 'object') return false;
+  let changed = false;
+  if (!state.account && remote.account) {
+    state.account = remote.account;
+    changed = true;
+  }
+  if ((remote.profile?.updatedAt || 0) > (state.profile?.updatedAt || 0)) {
+    state.profile = { ...state.profile, ...remote.profile };
+    changed = true;
+  }
+  for (const key of SYNC_COLLECTIONS) {
+    const merged = mergeList(state[key], remote[key]);
+    if (merged.length !== (state[key] || []).length) {
+      state[key] = merged;
+      changed = true;
+    }
+  }
+  const remoteData = remote.data || {};
+  state.data = state.data || {};
+  for (const key of Object.keys(remoteData)) {
+    if (!Array.isArray(remoteData[key])) continue;
+    const merged = mergeList(state.data[key], remoteData[key]);
+    if (merged.length !== (state.data[key] || []).length) {
+      state.data[key] = merged;
+      changed = true;
+    }
+  }
+  if ((remote.relationship?.points || 0) > (state.relationship?.points || 0)) {
+    state.relationship = remote.relationship;
+    changed = true;
+  }
+  return changed;
+}
+
+function scheduleSync() {
+  if (!apiUrl() || !state?.account || applyingRemote) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => pushSync().catch(() => {}), 1500);
+}
+
+async function pushSync(attempt = 0) {
+  if (syncing || !apiUrl() || !state?.account) return null;
+  syncing = true;
+  try {
+    const res = await serverCall('/api/sync', {
+      method: 'POST',
+      body: JSON.stringify({ baseRev: state.serverRev || 0, data: syncDoc() }),
+    });
+    if (!res) return null;
+    if (res.ok) {
+      state.serverRev = res.data.rev;
+      state.lastSync = res.data.updated;
+      await persistQuiet();
+      emit('sync', { rev: state.serverRev, at: state.lastSync });
+      return res.data;
+    }
+    if (res.status === 409 && attempt < 2) {
+      applyingRemote = true;
+      const changed = mergeRemote(res.data.data);
+      state.serverRev = res.data.rev;
+      applyingRemote = false;
+      if (changed) {
+        await persistQuiet();
+        emit('change', { state, origin: 'sync' });
+      }
+      syncing = false;
+      return pushSync(attempt + 1);
+    }
+    return null;
+  } finally {
+    syncing = false;
+  }
+}
+
+async function pullSync() {
+  if (!apiUrl() || !state?.account) return null;
+  const res = await serverCall('/api/sync');
+  if (!res?.ok) return null;
+  if (!res.data.data) {
+    state.serverRev = 0;
+    return pushSync();
+  }
+  if (Number(res.data.rev) > (state.serverRev || 0)) {
+    applyingRemote = true;
+    const changed = mergeRemote(res.data.data);
+    state.serverRev = res.data.rev;
+    state.lastSync = res.data.updated;
+    applyingRemote = false;
+    if (changed) {
+      await persistQuiet();
+      emit('change', { state, origin: 'sync' });
+    }
+  }
+  return res.data;
+}
+
 export const universal = {
   get apiUrl() { return apiUrl(); },
+
+  get syncStatus() {
+    return {
+      enabled: Boolean(apiUrl() && state?.account),
+      rev: state?.serverRev || 0,
+      lastSync: state?.lastSync || null,
+    };
+  },
+
+  async syncNow() {
+    await this.init();
+    const pulled = await pullSync();
+    const pushed = await pushSync();
+    return { pulled, pushed, status: this.syncStatus };
+  },
 
   async init() {
     state = (await readStored()) || blank();
     if (!state.account) registerDevice();
     emit('change', { state, origin: 'init' });
+    if (state.account && apiUrl() && !initSyncStarted) {
+      initSyncStarted = true;
+      pullSync().catch(() => {});
+      setInterval(() => pullSync().catch(() => {}), 60000);
+      window.addEventListener('focus', () => pullSync().catch(() => {}));
+    }
     return state;
   },
 
@@ -269,6 +450,15 @@ export const universal = {
     await this.init();
     if (!email || !password) throw new Error('Email and password are required');
     if (state.security.password && state.account?.email === email) throw new Error('That account already exists — sign in instead');
+    const server = await serverCall('/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ name: name || email.split('@')[0], email, password, device: deviceInfo() }),
+    });
+    if (server && !server.ok) throw new Error(server.data.error || 'Could not create the account');
+    if (server?.ok) {
+      const login = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
+      if (login && !login.ok) throw new Error(login.data.error || 'Account created, but signing in failed');
+    }
     const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
     state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
     applyAccount({ email, name, provider: 'password' });
@@ -281,6 +471,19 @@ export const universal = {
   async signIn({ email, password }) {
     await this.init();
     if (!email || !password) throw new Error('Email and password are required');
+    const server = await serverCall('/api/login', { method: 'POST', body: JSON.stringify({ email, password, device: deviceInfo() }) });
+    if (server && !server.ok) throw new Error(server.data.error || 'Wrong email or password');
+    if (server?.ok) {
+      const user = server.data.user || {};
+      const salt = b64.encode(crypto.getRandomValues(new Uint8Array(16)));
+      state.security.password = { salt, hash: await pbkdf2(password, salt), at: now() };
+      applyAccount({ email: user.email || email, name: user.name || state.profile.displayName, provider: 'password' });
+      state.account.userId = user.userId || state.account.id;
+      await persist();
+      broadcast('session');
+      await this.pullSync();
+      return state.account;
+    }
     if (!state.security.password) throw new Error('No account on this device yet — create one first');
     if (state.account?.email && state.account.email !== email) throw new Error('That is not the account saved on this device');
     const hash = await pbkdf2(password, state.security.password.salt);
@@ -294,10 +497,11 @@ export const universal = {
   /** OAuth providers need a real backend; fail honestly instead of faking a login. */
   async signInWithProvider(provider) {
     await this.init();
-    if (!window.HYDRA_API) {
-      throw new Error(`${provider} sign-in needs the HYDRA Cloud backend. Guest and email sign-in work offline.`);
+    const base = apiUrl();
+    if (!base) {
+      throw new Error(`${provider} sign-in needs the HYDRA API. Guest and email sign-in work offline.`);
     }
-    window.location.href = `${window.HYDRA_API}/auth/${provider}?redirect=${encodeURIComponent(location.href)}`;
+    window.location.href = `${base}/api/auth/${provider}/start?next=${encodeURIComponent(location.href)}`;
     return null;
   },
 
@@ -318,7 +522,7 @@ export const universal = {
 
   async updateProfile(patch = {}) {
     await this.init();
-    state.profile = { ...state.profile, ...patch };
+    state.profile = { ...state.profile, ...patch, updatedAt: now() };
     await persist();
     broadcast('profile');
     return state.profile;
@@ -326,6 +530,7 @@ export const universal = {
 
   async signOut({ all = false } = {}) {
     await this.init();
+    await serverCall('/api/logout', { method: 'POST', body: '{}' });
     const id = deviceId();
     if (all) {
       state.authEpoch += 1;

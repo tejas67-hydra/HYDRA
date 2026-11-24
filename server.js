@@ -11,6 +11,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const APP_URL = process.env.APP_URL || 'https://tejas67-hydra.github.io/HYDRA';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://tejas67-hydra.github.io,http://localhost:12000,http://localhost:3000')
   .split(',').map((value) => value.trim()).filter(Boolean);
 app.set('trust proxy', 1);
@@ -1413,6 +1414,8 @@ app.post('/api/device/confirm', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Could not confirm device.' });
   }
 });
+
+require('./server-accounts')({ app, db, bcrypt, requireAuth, APP_URL });
 
 // Fallback for SPA
 app.get('*', (req, res) => {

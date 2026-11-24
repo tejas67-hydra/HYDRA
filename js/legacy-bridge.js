@@ -71,10 +71,9 @@ window.fetch = async (input, init = {}) => {
         credentials: 'include',
         ...init,
       });
-      // 401 on a read means "no server session" (the user is on the on-device
-      // account), and 502/504 mean the host is asleep: both use local answers.
-      const isAuthCall = /\/(login|register|logout)$/.test(url);
-      const fallback = proxied.status === 401 ? !isAuthCall : [502, 504].includes(proxied.status);
+      // 401 means the server does not know this account (or has no session for
+      // it), and 502/504 mean the host is asleep: both use the on-device account.
+      const fallback = proxied.status === 401 || [502, 504].includes(proxied.status);
       if (!fallback) return proxied;
     } catch {
       /* offline or API asleep: fall back to the on-device account */

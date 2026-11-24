@@ -164,6 +164,7 @@ export async function initAppSwitcher({ mount = null, currentApp = 'companion' }
         el('span', {}, 'Account ', el('strong', {}, name),
           universal.signedIn ? ` · ${universal.devices().length} device(s)` : ' · not signed in'),
         el('div', { class: 'app-switch__actions' },
+          el('a', { class: 'app-switch__btn', href: 'account.html', style: 'text-decoration:none;display:inline-flex;align-items:center' }, 'Account settings'),
           el('button', {
             type: 'button',
             onclick: async () => {
