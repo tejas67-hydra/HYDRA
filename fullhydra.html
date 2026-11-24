@@ -7301,7 +7301,7 @@ button:not(:disabled):active {
   function initPwa() {
     const installableOrigin = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if ('serviceWorker' in navigator && installableOrigin) {
-      navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+      Promise.resolve({ scope: 'disabled' }) /* universal bridge owns caching */.then((registration) => {
         // Check for updates every time the page loads
         registration.update();
 
@@ -12077,5 +12077,8 @@ button:not(:disabled):active {
 })();
 
   </script>
+
+  <!-- HYDRA universal account bridge: shared session, memory and app switcher -->
+  <script type="module" src="js/legacy-bridge.js"></script>
 </body>
 </html>

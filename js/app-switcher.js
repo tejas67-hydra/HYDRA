@@ -16,6 +16,12 @@ const STYLE = `
 .app-switch-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; }
 .app-switch-btn .name { flex: 1; text-align: left; opacity: .9; }
 .app-switch-btn .caret { opacity: .5; }
+.app-switch-btn--floating {
+  position: fixed; right: 16px; bottom: 16px; width: auto; margin: 0; z-index: 8900;
+  padding: 9px 15px; border-radius: 999px; backdrop-filter: blur(18px);
+  background: rgba(20,11,36,.9); box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  border-color: rgba(168,85,247,.45);
+}
 
 .app-switch {
   position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center;
@@ -114,6 +120,10 @@ export async function initAppSwitcher({ mount = null, currentApp = 'companion' }
 
   const target = mount || document.querySelector('.sidebar__brand, .sidebar__top, .sidebar');
   if (target) target.append(button);
+  else {
+    button.classList.add('app-switch-btn--floating');
+    document.body.append(button);
+  }
 
   const overlay = el('div', { class: 'app-switch', id: 'app-switch' });
   const veil = el('div', { class: 'switch-veil', id: 'switch-veil' });

@@ -1,5 +1,5 @@
 /* HYDRA service worker — offline shell, runtime caching for local assets. */
-const CACHE = 'hydra-v2.4.0';
+const CACHE = 'hydra-v2.5.0';
 const CORE = ['./', './index.html', './style.css', './hydra.bundle.js', './script.js', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

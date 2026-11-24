@@ -6,7 +6,7 @@
 import { bus } from './utils.js';
 import { storage } from './storage.js';
 
-export const VERSION = '2.4.0';
+export const VERSION = '2.5.0';
 export const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;

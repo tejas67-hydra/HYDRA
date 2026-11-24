@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
-  "build": "2026.12.11",
+  "version": "2.5.0",
+  "build": "2026.12.12",
   "notes": [
-    "One HYDRA account: sign in once, every HYDRA app on the site shares it",
-    "Shared memory: something told to the companion shows up in Workspace and back",
-    "App switcher with fade and blur, plus shared notifications and theme",
-    "Account security panel: TOTP two-factor, biometric key, device list, sign out everywhere"
+    "Your original app (HYDRA Classic) joined the ecosystem: same login, same memory, same switcher",
+    "Classic login form works again without its Node backend running",
+    "Three apps in the switcher: Companion, Workspace, Classic",
+    "New app icon: the three-headed HYDRA dragon"
   ]
 }

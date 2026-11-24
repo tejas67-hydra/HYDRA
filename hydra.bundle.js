@@ -738,6 +738,12 @@ const STYLE = `
 .app-switch-btn .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; }
 .app-switch-btn .name { flex: 1; text-align: left; opacity: .9; }
 .app-switch-btn .caret { opacity: .5; }
+.app-switch-btn--floating {
+  position: fixed; right: 16px; bottom: 16px; width: auto; margin: 0; z-index: 8900;
+  padding: 9px 15px; border-radius: 999px; backdrop-filter: blur(18px);
+  background: rgba(20,11,36,.9); box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  border-color: rgba(168,85,247,.45);
+}
 
 .app-switch {
   position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center;
@@ -836,6 +842,10 @@ async function initAppSwitcher({ mount = null, currentApp = 'companion' } = {}) 
 
   const target = mount || document.querySelector('.sidebar__brand, .sidebar__top, .sidebar');
   if (target) target.append(button);
+  else {
+    button.classList.add('app-switch-btn--floating');
+    document.body.append(button);
+  }
 
   const overlay = el('div', { class: 'app-switch', id: 'app-switch' });
   const veil = el('div', { class: 'switch-veil', id: 'switch-veil' });
@@ -5475,6 +5485,182 @@ const learning = new Learning();
 return { learning };
 
 });
+__def("legacy-bridge", function () {
+/**
+ * Bridge for the original HYDRA app (fullhydra.html).
+ *
+ * That app expects a Node backend at /api for login, profile and session
+ * checks. GitHub Pages has no backend, which is why its login never worked
+ * there. This bridge answers those endpoints from the universal account, so
+ * one HYDRA sign-in covers every app, and adds the shared app switcher.
+ */
+
+import universal from './universal.js';
+const { initAppSwitcher } = __req('app-switcher');
+
+const realFetch = window.fetch.bind(window);
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+}
+
+function profilePayload() {
+  const user = universal.user || {};
+  const profile = universal.profile;
+  return {
+    id: user.id,
+    email: profile.email,
+    name: profile.displayName || 'Operator',
+    preferred_display_name: profile.displayName || 'Operator',
+    plan: profile.plan || 'free',
+    role: 'Operator',
+    theme: profile.theme,
+    language: profile.language,
+    timezone: profile.timezone,
+    avatar: profile.avatar,
+    created_at: user.createdAt,
+    last_login: Date.now(),
+    login_count: universal.sessions().length,
+    devices: universal.devices().length,
+    memories: universal.memories(20).length,
+  };
+}
+
+function bodyOf(init) {
+  try {
+    return init?.body ? JSON.parse(init.body) : {};
+  } catch {
+    return {};
+  }
+}
+
+window.fetch = async (input, init = {}) => {
+  const url = typeof input === 'string' ? input : input?.url || '';
+  if (!url.includes('/api/')) return realFetch(input, init);
+
+  const path = '/' + url.split('/api/')[1].split('?')[0];
+  const method = String(init.method || 'GET').toUpperCase();
+  const body = bodyOf(init);
+
+  if (path === '/login' && method === 'POST') {
+    const email = String(body.email || '').trim();
+    const password = String(body.password || '');
+    if (!email || !password) return json({ error: 'Email and password are required' }, 400);
+    await universal.init();
+    try {
+      if (!universal.signedIn && !universal.state.security.password) {
+        await universal.signUp({ email, password, name: email.split('@')[0] });
+      } else if (!universal.signedIn) {
+        await universal.signIn({ email, password });
+      }
+      return json({ user: profilePayload() });
+    } catch (err) {
+      return json({ error: err.message }, 401);
+    }
+  }
+
+  if (path === '/register' && method === 'POST') {
+    const email = String(body.email || '').trim();
+    const password = String(body.password || '');
+    try {
+      await universal.init();
+      await universal.signUp({ email, password, name: body.name || email.split('@')[0] });
+      return json({ user: profilePayload() });
+    } catch (err) {
+      return json({ error: err.message }, 400);
+    }
+  }
+
+  if (path === '/logout') {
+    await universal.init();
+    await universal.signOut();
+    localStorage.removeItem('hydra.auth.user');
+    return json({ ok: true });
+  }
+
+  if (path === '/profile/full' || path === '/profile' || path === '/preferences') {
+    await universal.init();
+    if (!universal.signedIn) return json({ error: 'Not signed in' }, 401);
+    return json(profilePayload());
+  }
+
+  if (path === '/recommendations') return json([]);
+  if (path === '/notifications') return json({ items: universal.notifications(10) });
+  if (path === '/last' || path === '/analytics') return json({});
+  if (path === '/heartbeat' || path === '/log' || path === '/verify') return json({ ok: true });
+
+  return json({ error: 'Not available without the HYDRA Cloud backend' }, 503);
+};
+
+function hideLoginModal() {
+  const modal = document.getElementById('mainGoogleLogin');
+  if (!modal) return;
+  modal.classList.remove('is-visible');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function paintSignedIn() {
+  const profile = universal.profile;
+  const name = profile.displayName || profile.email || 'Operator';
+  localStorage.setItem('hydra.auth.user', JSON.stringify({
+    id: universal.user?.id,
+    email: profile.email,
+    name,
+    plan: profile.plan,
+    provider: universal.user?.provider,
+    role: 'Operator',
+  }));
+  hideLoginModal();
+  try {
+    window.checkAuthState?.();
+    window.updateAuthUI?.();
+  } catch (err) {
+    console.warn('[bridge]', err);
+  }
+  const greeting = document.getElementById('greetingTitle');
+  const subtitle = document.getElementById('greetingSubtitle');
+  if (greeting) greeting.textContent = `Welcome back, ${name}`;
+  if (subtitle) subtitle.textContent = 'Signed in with your HYDRA account — every app, one memory.';
+}
+
+/** Their app keeps facts as one newline-separated string. */
+function mergeMemory() {
+  const shared = universal.memories(60).map((m) => m.text).filter(Boolean);
+  if (!shared.length) return;
+  const key = 'hydra.memory';
+  const existing = localStorage.getItem(key) || '';
+  const known = new Set(existing.split('\n').map((line) => line.trim().toLowerCase()).filter(Boolean));
+  const fresh = shared.filter((text) => !known.has(text.trim().toLowerCase()));
+  if (!fresh.length) return;
+  localStorage.setItem(key, [existing.trim(), ...fresh].filter(Boolean).join('\n'));
+}
+
+async function boot() {
+  await universal.init();
+  if (universal.signedIn) paintSignedIn();
+  mergeMemory();
+  initAppSwitcher({ currentApp: 'legacy' }).catch((err) => console.error('[switcher]', err));
+
+  universal.on('session', () => {
+    if (universal.signedIn) paintSignedIn();
+    else localStorage.removeItem('hydra.auth.user');
+  });
+  universal.on('memory', mergeMemory);
+
+  // Their boot sequence shows the login modal a moment after load.
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries += 1;
+    if (universal.signedIn) paintSignedIn();
+    if (tries > 12) clearInterval(timer);
+  }, 500);
+}
+
+boot();
+
+return {};
+
+});
 __def("lottie-data", function () {
 /** Inline Lottie: a HUD ring used while HYDRA scans a frame. */
 const arc = (ind, size, from, to, opacity, width) => ({
@@ -9473,6 +9659,7 @@ const DB_STORE = 'keys';
 const APPS = [
   { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
   { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
+  { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html' },
 ];
 
 const listeners = new Map();
@@ -10063,7 +10250,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.4.0';
+const VERSION = '2.5.0';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;
