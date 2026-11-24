@@ -17,9 +17,9 @@ const DB_STORE = 'keys';
 export const apiUrl = () => String(window.HYDRA_API || (typeof localStorage !== 'undefined' ? localStorage.getItem('hydra.api') : '') || '').replace(/\/+$/, '');
 
 const APPS = [
-  { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
-  { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
-  { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html' },
+  { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html', glyph: 'C' },
+  { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html', glyph: 'W' },
+  { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html', glyph: 'H' },
 ];
 
 const listeners = new Map();

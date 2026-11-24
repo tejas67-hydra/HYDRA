@@ -870,7 +870,7 @@ async function initAppSwitcher({ mount = null, currentApp = 'companion' } = {}) 
           type: 'button',
           onclick: () => go(app),
         },
-        el('span', { class: 'app-card__badge' }, app.name.split(' ').pop()[0]),
+        el('span', { class: 'app-card__badge' }, app.glyph || app.name.split(' ').pop()[0]),
         el('span', {},
           el('div', { class: 'app-card__name' }, app.name),
           el('div', { class: 'app-card__tag' }, app.tagline)),
@@ -9720,9 +9720,9 @@ const DB_STORE = 'keys';
 const apiUrl = () => String(window.HYDRA_API || (typeof localStorage !== 'undefined' ? localStorage.getItem('hydra.api') : '') || '').replace(/\/+$/, '');
 
 const APPS = [
-  { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html' },
-  { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html' },
-  { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html' },
+  { id: 'companion', name: 'HYDRA Companion', tagline: 'Robot AI', url: 'index.html', glyph: 'C' },
+  { id: 'workspace', name: 'HYDRA Workspace', tagline: 'AI productivity', url: 'emo.html', glyph: 'W' },
+  { id: 'legacy', name: 'HYDRA Classic', tagline: 'Your original app', url: 'fullhydra.html', glyph: 'H' },
 ];
 
 const listeners = new Map();
@@ -10315,7 +10315,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.6.1';
+const VERSION = '2.6.2';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;

@@ -148,7 +148,7 @@ export async function initAppSwitcher({ mount = null, currentApp = 'companion' }
           type: 'button',
           onclick: () => go(app),
         },
-        el('span', { class: 'app-card__badge' }, app.name.split(' ').pop()[0]),
+        el('span', { class: 'app-card__badge' }, app.glyph || app.name.split(' ').pop()[0]),
         el('span', {},
           el('div', { class: 'app-card__name' }, app.name),
           el('div', { class: 'app-card__tag' }, app.tagline)),
