@@ -799,6 +799,11 @@ const STYLE = `
   width: 96px; padding: 6px 9px; border-radius: 9px; border: 1px solid rgba(168,85,247,.3);
   background: rgba(8,4,16,.8); color: #efe8ff; font: inherit; font-size: 12px; letter-spacing: .18em;
 }
+.app-switch__api { flex-wrap: wrap; }
+.app-switch__security input.app-switch__api-input {
+  flex: 1 1 160px; width: auto; min-width: 130px; letter-spacing: normal; font-size: 11px;
+}
+.app-switch__security input.app-switch__api-input::placeholder { color: rgba(220,200,255,.35); }
 .app-switch__secret {
   font-family: ui-monospace, monospace; font-size: 11px; color: #d8b4fe; word-break: break-all;
   background: rgba(168,85,247,.1); padding: 8px 10px; border-radius: 9px;
@@ -10315,7 +10320,7 @@ __def("updater", function () {
 const { bus } = __req('utils');
 const { storage } = __req('storage');
 
-const VERSION = '2.6.3';
+const VERSION = '2.6.4';
 const BUILD = '2026.11.30';
 const CHECK_KEY = 'updater.lastCheck';
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000;
