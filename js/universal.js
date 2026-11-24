@@ -591,6 +591,8 @@ export const universal = {
     await this.init();
     await serverCall('/api/logout', { method: 'POST', body: '{}' });
     localStorage.removeItem('hydra.token');
+    localStorage.removeItem('hydra.pp');
+    localStorage.removeItem('hydra.displayName');
     const id = deviceId();
     if (all) {
       state.authEpoch += 1;
